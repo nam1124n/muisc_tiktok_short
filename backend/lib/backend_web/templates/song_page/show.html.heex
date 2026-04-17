@@ -1,0 +1,74 @@
+<div class="page-shell">
+  <a class="back-link" href={~p"/songs"}>&larr; Back to song list</a>
+
+  <section class="hero">
+    <h1>{@song.title || "Processing song..."}</h1>
+    <p>
+      Chi tiết một bài nhạc AI đã tạo. Đây là trang web quản lý để kiểm tra metadata và audio demo.
+    </p>
+  </section>
+
+  <section class="detail-grid">
+    <article class="card">
+      <h2>Song Info</h2>
+
+      <div class="meta-list">
+        <div class="meta-row">
+          <p class="meta-label">ID</p>
+          <p class="meta-value mono">{@song.id}</p>
+        </div>
+
+        <div class="meta-row">
+          <p class="meta-label">User ID</p>
+          <p class="meta-value">{@song.user_id}</p>
+        </div>
+
+        <div class="meta-row">
+          <p class="meta-label">Title</p>
+          <p class="meta-value">{@song.title || "Waiting for fake generation..."}</p>
+        </div>
+
+        <div class="meta-row">
+          <p class="meta-label">Duration</p>
+          <p class="meta-value">{@song.duration_sec} sec</p>
+        </div>
+
+        <div class="meta-row">
+          <p class="meta-label">Status</p>
+          <p class="meta-value">
+            <span class={"status-pill status-#{@song.status}"}>
+              {@song.status}
+            </span>
+          </p>
+        </div>
+
+        <div class="meta-row">
+          <p class="meta-label">Created At</p>
+          <p class="meta-value mono">{@song.created_at}</p>
+        </div>
+
+        <div class="meta-row">
+          <p class="meta-label">Updated At</p>
+          <p class="meta-value mono">{@song.updated_at}</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="card">
+      <h2>Prompt</h2>
+      <div class="prompt-box">{@song.prompt}</div>
+
+      <h2 style="margin-top: 20px;">Audio Preview</h2>
+      <%= if @song.audio_url do %>
+        <audio controls preload="none">
+          <source src={@song.audio_url} type="audio/mpeg" />
+        </audio>
+        <p class="muted mono" style="margin-top: 12px;">{@song.audio_url}</p>
+      <% else %>
+        <div class="empty-state">
+          Audio demo chưa sẵn sàng. Hãy đợi khoảng 3 giây rồi refresh lại trang.
+        </div>
+      <% end %>
+    </article>
+  </section>
+</div>

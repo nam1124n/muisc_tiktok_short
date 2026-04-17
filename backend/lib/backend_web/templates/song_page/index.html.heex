@@ -1,0 +1,90 @@
+<div class="page-shell">
+  <section class="hero">
+    <h1>AI Music Admin</h1>
+    <p>
+      Trang này chỉ dùng để xem và quản lý danh sách bài nhạc AI đã tạo.
+      Form nhập prompt và nút Generate vẫn nằm ở app Flutter.
+    </p>
+
+    <div class="toolbar">
+      <span class="chip">Web quản lý: <strong>&nbsp;/songs</strong></span>
+      <span class="chip">API generate: <strong>&nbsp;POST /api/generate</strong></span>
+      <span class="chip">Health check: <strong>&nbsp;/health</strong></span>
+    </div>
+  </section>
+
+  <section class="stat-grid">
+    <article class="card">
+      <div class="stat-label">Total Songs</div>
+      <div class="stat-value">{@stats.total}</div>
+    </article>
+
+    <article class="card">
+      <div class="stat-label">Processing</div>
+      <div class="stat-value">{@stats.processing}</div>
+    </article>
+
+    <article class="card">
+      <div class="stat-label">Completed</div>
+      <div class="stat-value">{@stats.completed}</div>
+    </article>
+  </section>
+
+  <section class="card">
+    <h2>Generated Song List</h2>
+    <p class="muted">
+      Nếu danh sách đang trống, hãy gọi <span class="mono">POST /api/generate</span>
+      từ Flutter hoặc curl
+      để tạo dữ liệu mẫu.
+    </p>
+
+    <%= if Enum.empty?(@songs) do %>
+      <div class="empty-state">
+        Chưa có bài nhạc nào trong memory store.
+      </div>
+    <% else %>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Prompt</th>
+              <th>Duration</th>
+              <th>Status</th>
+              <th>Audio</th>
+              <th>Created At</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            <%= for song <- @songs do %>
+              <tr>
+                <td class="mono">{song.id}</td>
+                <td>{song.title || "Waiting for fake generation..."}</td>
+                <td>{song.prompt}</td>
+                <td>{song.duration_sec} sec</td>
+                <td>
+                  <span class={"status-pill status-#{song.status}"}>
+                    {song.status}
+                  </span>
+                </td>
+                <td>
+                  <%= if song.audio_url do %>
+                    <audio controls preload="none">
+                      <source src={song.audio_url} type="audio/mpeg" />
+                    </audio>
+                  <% else %>
+                    <span class="muted">Audio chưa sẵn sàng</span>
+                  <% end %>
+                </td>
+                <td class="mono">{song.created_at}</td>
+                <td><a href={~p"/songs/#{song.id}"}>View detail</a></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </section>
+</div>
