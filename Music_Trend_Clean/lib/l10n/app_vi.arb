@@ -1,0 +1,258 @@
+{
+  "@@locale": "vi",
+  "profileTitle": "Hồ sơ",
+  "language": "Ngôn ngữ",
+  "english": "Tiếng Anh",
+  "vietnamese": "Tiếng Việt",
+  "logout": "Đăng xuất",
+  "logoutTitle": "Đăng xuất",
+  "logoutMessage": "Bạn có muốn đăng xuất không?",
+  "cancel": "Không",
+  "confirm": "Có",
+  "welcomeBack": "Chào mừng quay lại",
+  "signInSubtitle": "Vui lòng nhập thông tin để đăng nhập",
+  "emailAddress": "Email",
+  "password": "Mật khẩu",
+  "forgotPassword": "Quên mật khẩu?",
+  "login": "Đăng nhập",
+  "noAccount": "Chưa có tài khoản?",
+  "signUp": "Đăng ký",
+  "loginSuccessMessage": "Chào mừng, {fullName}!",
+  "@loginSuccessMessage": {
+    "placeholders": {
+      "fullName": {
+        "type": "String"
+      }
+    }
+  },
+  "likedTabTitle": "Đã thích",
+  "likedTabDescription": "Danh sách bài hát yêu thích sẽ hiển thị tại đây.",
+  "editProfileTitle": "Chỉnh sửa hồ sơ",
+  "changeUsername": "Đổi tên người dùng",
+  "enterYourUsername": "Nhập tên người dùng",
+  "saveChanges": "Lưu thay đổi",
+  "usernameRequired": "Tên người dùng không được để trống.",
+  "searchLabel": "Tìm kiếm",
+  "genreLabel": "Theo năm",
+  "discoverLabel": "Khám phá",
+  "musicDiscoveryTitle": "Khám phá âm nhạc",
+  "discoverSearchHint": "Tìm kiếm bài hát, nghệ sĩ hoặc album",
+  "genreScreenTitle": "Nhạc ngắn theo năm",
+  "genreScreenSubtitle": "Những đoạn nhạc ngắn được gom theo từng năm để bạn nghe lại đúng vibe của từng giai đoạn.",
+  "playlistsLabel": "Danh sách phát",
+  "recentLabel": "Gần đây",
+  "favoritesLabel": "Yêu thích",
+  "followersLabel": "Người theo dõi",
+  "followingLabel": "Đang theo dõi",
+  "likesLabel": "Lượt thích",
+  "editProfileButton": "Chỉnh sửa hồ sơ",
+  "shareButton": "Chia sẻ",
+  "profileShareMessage": "Xem hồ sơ của {username} trên Music Trend App! Họ đã có {followers} người theo dõi.\nTải app để cùng nghe nhạc ngay.",
+  "@profileShareMessage": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      },
+      "followers": {
+        "type": "int"
+      }
+    }
+  },
+  "profileIdLabel": "ID: {id}",
+  "@profileIdLabel": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLabel": "Lỗi",
+  "createNewPlaylist": "Tạo playlist mới",
+  "trackCount": "{count} bài",
+  "@trackCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoverTabSuggestions": "Gợi ý",
+  "yourAudioLabel": "Âm thanh của bạn",
+  "importAudioFromVideo": "Nhập âm thanh từ video",
+  "importAudioFromVideoSubtitle": "Tự động trích xuất âm thanh từ clip của bạn",
+  "importAudioFromDevice": "Nhập âm thanh từ thiết bị",
+  "importAudioFromDeviceSubtitle": "Chọn âm thanh chất lượng cao từ máy của bạn",
+  "importButtonLabel": "+ Nhập",
+  "browseButtonLabel": "Duyệt",
+  "yourAudioEmptyTitle": "Chưa có âm thanh nào",
+  "yourAudioEmptySubtitle": "Nhập âm thanh yêu thích của bạn để bắt đầu sáng tạo. Mọi thứ bạn thêm sẽ xuất hiện tại đây.",
+  "getStartedNow": "Bắt đầu ngay",
+  "favoriteSongsEmpty": "Chưa có bài hát yêu thích nào",
+  "recentSongsEmpty": "Chưa có bài hát nghe gần đây",
+  "trendingTitle": "Thịnh hành",
+  "forYouTitle": "Dành cho bạn",
+  "fromFirestore": "Từ Firestore",
+  "trendingEmptyTitle": "Chưa có đủ lượt nghe để xếp hạng tuần này",
+  "trendingEmptySubtitle": "Top 4 sẽ tự cập nhật khi người dùng nghe đủ thời lượng.",
+  "listenersCount": "{count} người nghe",
+  "@listenersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "playsCount": "{count} lượt nghe",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "firestoreAudioLabel": "Audio từ Firestore",
+  "noSongDataTitle": "Chưa có dữ liệu bài hát",
+  "noSongDataSubtitle": "Thêm bài hát trong Firestore hoặc từ trang admin để giao diện này hiển thị dữ liệu thật.",
+  "searchHint": "Tìm bài hát, ca sĩ, mood, trend...",
+  "noMatchingSongs": "Không tìm thấy bài hát phù hợp",
+  "enterSearchPrompt": "Nhập câu tìm kiếm để AI phân tích",
+  "searchSourceLabel": "Nguồn: {provider}",
+  "@searchSourceLabel": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "forgotPasswordTitle": "Quên mật khẩu",
+  "sendResetEmail": "Gửi email đặt lại mật khẩu",
+  "emailRequiredMessage": "Vui lòng nhập email.",
+  "invalidEmailFormatMessage": "Email không đúng định dạng.",
+  "resetPasswordSentMessage": "Email đặt lại mật khẩu đã được gửi.",
+  "createAccountTitle": "Tạo tài khoản",
+  "createAccountSubtitle": "Tham gia để bắt đầu hành trình của bạn.",
+  "fullNameLabel": "Họ và tên",
+  "confirmPasswordLabel": "Xác nhận mật khẩu",
+  "passwordsDoNotMatch": "Mật khẩu không khớp",
+  "signUpSuccessMessage": "Đã tạo tài khoản cho {fullName}!",
+  "@signUpSuccessMessage": {
+    "placeholders": {
+      "fullName": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadyHaveAccount": "Đã có tài khoản?",
+  "backToLogin": "Quay lại đăng nhập",
+  "createAudioSuccessMessage": "Đã tạo audio mock thành công.",
+  "createAudioTitle": "Tạo Audio AI",
+  "promptLabel": "Prompt mô tả",
+  "promptHint": "Ví dụ: Tạo một đoạn nhạc chill lofi, piano nhẹ, mưa đêm thành phố, cảm giác thư giãn.",
+  "promptHelpText": "Prompt càng rõ về mood, nhạc cụ, tempo thì kết quả mock càng dễ thay bằng API thật sau này.",
+  "durationLabel": "Thời lượng",
+  "secondsLabel": "{seconds} giây",
+  "@secondsLabel": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "mockApiMessage": "Đang dùng API giả lập với URL: {baseUrl}\nKhi có API thật, chỉ cần đổi URL trong config.",
+  "@mockApiMessage": {
+    "placeholders": {
+      "baseUrl": {
+        "type": "String"
+      }
+    }
+  },
+  "generatingAudio": "Đang tạo audio...",
+  "createShortAudio": "Tạo audio ngắn",
+  "aiAudioStudio": "AI Audio Studio",
+  "generatedAudioMeta": "{seconds} giây • {provider}",
+  "@generatedAudioMeta": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      },
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "audioMockUrlLabel": "Audio URL mock",
+  "previewAudio": "Nghe thử",
+  "promptRequiredMessage": "Vui lòng nhập prompt để tạo audio.",
+  "promptTooShortMessage": "Prompt nên có ít nhất 10 ký tự để AI hiểu tốt hơn.",
+  "audioDurationRangeMessage": "Thời lượng audio phải từ 5 đến 60 giây.",
+  "adminPanelTitle": "Admin Panel — Quản lý bài hát",
+  "addSongLabel": "Thêm bài hát",
+  "accessDeniedTitle": "Truy cập bị từ chối",
+  "accessDeniedMessage": "Bạn không có quyền truy cập vào trang này.",
+  "goBack": "Quay lại",
+  "retry": "Thử lại",
+  "noSongsYetTitle": "Chưa có bài hát nào",
+  "noSongsYetSubtitle": "Nhấn + để thêm bài hát đầu tiên",
+  "deleteConfirmTitle": "Xác nhận xoá",
+  "deleteSongConfirmMessage": "Bạn có chắc muốn xoá \"{title}\" không?",
+  "@deleteSongConfirmMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "actionSuccessMessage": "Thao tác thành công!",
+  "deleteLabel": "Xoá",
+  "newSongTitle": "Thêm bài hát mới",
+  "yearSongAdminTitle": "Admin Panel — Nhạc theo năm",
+  "addYearSongLabel": "Thêm theo năm",
+  "newYearSongTitle": "Thêm nhạc theo năm",
+  "editYearSongTitle": "Sửa nhạc theo năm",
+  "editSongTitle": "Chỉnh sửa bài hát",
+  "coverImageLabel": "Ảnh bìa",
+  "chooseCoverImage": "Chọn ảnh bìa",
+  "audioFilePickerLabel": "File Audio (mp3, m4a...)",
+  "selectAudioFile": "Nhấn để chọn file âm thanh",
+  "songTitleLabel": "Tên bài hát",
+  "songTitleHint": "Ví dụ: Hoa Nở Không Màu",
+  "songTitleRequiredMessage": "Vui lòng nhập tên bài hát",
+  "artistNameLabel": "Tên nghệ sĩ",
+  "artistNameHint": "Ví dụ: Hoài Lâm",
+  "artistNameRequiredMessage": "Vui lòng nhập tên nghệ sĩ",
+  "yearLabel": "Năm",
+  "selectYearHint": "Chọn năm",
+  "yearRequiredMessage": "Vui lòng chọn năm",
+  "songTagsLabel": "Tag gợi ý",
+  "songTagsHint": "Ví dụ: buồn, chill, thất tình, ballad",
+  "songTagsHelperText": "Nhập các tag ngắn, cách nhau bằng dấu phẩy. Ưu tiên mood, vibe, genre hoặc ngữ cảnh nghe nhạc.",
+  "searchAliasesLabel": "Tên gọi dễ tìm",
+  "searchAliasesHint": "Ví dụ: nhạc tiktok buồn, đoạn điệp khúc viral",
+  "searchAliasesHelperText": "Dùng cho cách người dùng hay nhớ bài theo trend, câu hook hoặc tên gọi không chính thức.",
+  "energyLevelLabel": "Mức năng lượng",
+  "energyLevelHelperText": "1 là rất nhẹ/chill, 5 là mạnh/sôi động. Dữ liệu cũ sẽ mặc định ở mức 3.",
+  "uploadingSong": "Đang upload lên Cloudinary...",
+  "savingSongChanges": "Đang lưu thay đổi...",
+  "uploadAndSaveSong": "Upload & Lưu bài hát",
+  "saveSongChanges": "Lưu thay đổi bài hát",
+  "yearSongEmptyTitle": "Chưa có bài nào theo năm",
+  "yearSongEmptySubtitle": "Nhấn nút thêm để đưa bài hát vào kho nhạc theo năm từ 2018 đến 2026.",
+  "deleteYearSongConfirmMessage": "Bạn có chắc muốn xoá bài theo năm \"{title}\" không?",
+  "@deleteYearSongConfirmMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "currentAudioWillBeKept": "Giữ file hiện tại: {fileName}",
+  "@currentAudioWillBeKept": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "coverImageRequiredMessage": "Vui lòng chọn ảnh bìa!",
+  "audioFileRequiredMessage": "Vui lòng chọn file audio!"
+}

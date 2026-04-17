@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "983016538635",
+    "project_id": "appmusi-4ff75",
+    "storage_bucket": "appmusi-4ff75.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:983016538635:android:5965e5788dcd5e2a6abd0e",
+        "android_client_info": {
+          "package_name": "com.example.login_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjwVpgWQabsmUTvLJGsRopbKz0b_B2qKo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

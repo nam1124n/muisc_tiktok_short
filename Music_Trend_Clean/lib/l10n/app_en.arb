@@ -1,0 +1,258 @@
+{
+  "@@locale": "en",
+  "profileTitle": "Profile",
+  "language": "Language",
+  "english": "English",
+  "vietnamese": "Vietnamese",
+  "logout": "Logout",
+  "logoutTitle": "Logout",
+  "logoutMessage": "Do you want to log out?",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "welcomeBack": "Welcome back",
+  "signInSubtitle": "Please enter your details to sign in",
+  "emailAddress": "Email Address",
+  "password": "Password",
+  "forgotPassword": "Forgot password?",
+  "login": "Login",
+  "noAccount": "Don't have an account?",
+  "signUp": "Sign up",
+  "loginSuccessMessage": "Welcome, {fullName}!",
+  "@loginSuccessMessage": {
+    "placeholders": {
+      "fullName": {
+        "type": "String"
+      }
+    }
+  },
+  "likedTabTitle": "Liked",
+  "likedTabDescription": "Your favorite songs will appear here.",
+  "editProfileTitle": "Edit Profile",
+  "changeUsername": "Change Username",
+  "enterYourUsername": "Enter your username",
+  "saveChanges": "Save Changes",
+  "usernameRequired": "Username cannot be empty.",
+  "searchLabel": "Search",
+  "genreLabel": "By Year",
+  "discoverLabel": "Discover",
+  "musicDiscoveryTitle": "Discover Music",
+  "discoverSearchHint": "Search songs, artists or albums",
+  "genreScreenTitle": "Short Tracks by Year",
+  "genreScreenSubtitle": "Short tracks are grouped by year so you can revisit the vibe of each period.",
+  "playlistsLabel": "Playlists",
+  "recentLabel": "Recent",
+  "favoritesLabel": "Favorites",
+  "followersLabel": "Followers",
+  "followingLabel": "Following",
+  "likesLabel": "Likes",
+  "editProfileButton": "Edit Profile",
+  "shareButton": "Share",
+  "profileShareMessage": "Check out {username}'s beautiful profile on Music Trend App! They already have {followers} followers.\nDownload the app to listen to great music together!",
+  "@profileShareMessage": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      },
+      "followers": {
+        "type": "int"
+      }
+    }
+  },
+  "profileIdLabel": "ID: {id}",
+  "@profileIdLabel": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLabel": "Error",
+  "createNewPlaylist": "Create New Playlist",
+  "trackCount": "{count} Tracks",
+  "@trackCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoverTabSuggestions": "Suggestions",
+  "yourAudioLabel": "Your Audio",
+  "importAudioFromVideo": "Import audio from video",
+  "importAudioFromVideoSubtitle": "Automatically extract audio from your clips",
+  "importAudioFromDevice": "Import audio from device",
+  "importAudioFromDeviceSubtitle": "Choose high-quality audio from your device",
+  "importButtonLabel": "+ Import",
+  "browseButtonLabel": "Browse",
+  "yourAudioEmptyTitle": "No audio yet",
+  "yourAudioEmptySubtitle": "Import your favorite audio to start creating. Everything you add will appear here.",
+  "getStartedNow": "Get started now",
+  "favoriteSongsEmpty": "No favorite songs yet",
+  "recentSongsEmpty": "No recently played songs yet",
+  "trendingTitle": "Trending",
+  "forYouTitle": "For You",
+  "fromFirestore": "From Firestore",
+  "trendingEmptyTitle": "Not enough listens to rank this week",
+  "trendingEmptySubtitle": "The top 4 will update automatically when users listen long enough.",
+  "listenersCount": "{count} listeners",
+  "@listenersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "playsCount": "{count} plays",
+  "@playsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "firestoreAudioLabel": "Audio from Firestore",
+  "noSongDataTitle": "No song data available",
+  "noSongDataSubtitle": "Add songs in Firestore or from the admin page to show real data here.",
+  "searchHint": "Search songs, artists, mood, trends...",
+  "noMatchingSongs": "No matching songs found",
+  "enterSearchPrompt": "Enter a query for AI to analyze",
+  "searchSourceLabel": "Source: {provider}",
+  "@searchSourceLabel": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "forgotPasswordTitle": "Forgot Password",
+  "sendResetEmail": "Send reset email",
+  "emailRequiredMessage": "Please enter your email.",
+  "invalidEmailFormatMessage": "Invalid email format.",
+  "resetPasswordSentMessage": "The password reset email has been sent.",
+  "createAccountTitle": "Create Account",
+  "createAccountSubtitle": "Join us to get started with your journey.",
+  "fullNameLabel": "Full Name",
+  "confirmPasswordLabel": "Confirm Password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "signUpSuccessMessage": "Account created for {fullName}!",
+  "@signUpSuccessMessage": {
+    "placeholders": {
+      "fullName": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadyHaveAccount": "Already have an account?",
+  "backToLogin": "Back to Login",
+  "createAudioSuccessMessage": "Mock audio created successfully.",
+  "createAudioTitle": "Create AI Audio",
+  "promptLabel": "Description Prompt",
+  "promptHint": "Example: Create a chill lofi music piece with soft piano, city-night rain, and a relaxing mood.",
+  "promptHelpText": "The clearer the prompt is about mood, instruments, and tempo, the easier it will be to replace the mock result with a real API later.",
+  "durationLabel": "Duration",
+  "secondsLabel": "{seconds} sec",
+  "@secondsLabel": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "mockApiMessage": "Using mock API with URL: {baseUrl}\nWhen the real API is ready, just change the URL in config.",
+  "@mockApiMessage": {
+    "placeholders": {
+      "baseUrl": {
+        "type": "String"
+      }
+    }
+  },
+  "generatingAudio": "Generating audio...",
+  "createShortAudio": "Create short audio",
+  "aiAudioStudio": "AI Audio Studio",
+  "generatedAudioMeta": "{seconds} sec • {provider}",
+  "@generatedAudioMeta": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      },
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "audioMockUrlLabel": "Mock audio URL",
+  "previewAudio": "Preview",
+  "promptRequiredMessage": "Please enter a prompt to generate audio.",
+  "promptTooShortMessage": "The prompt should be at least 10 characters so the AI can understand it better.",
+  "audioDurationRangeMessage": "Audio duration must be between 5 and 60 seconds.",
+  "adminPanelTitle": "Admin Panel — Song Management",
+  "addSongLabel": "Add Song",
+  "accessDeniedTitle": "Access denied",
+  "accessDeniedMessage": "You do not have permission to access this page.",
+  "goBack": "Go back",
+  "retry": "Retry",
+  "noSongsYetTitle": "No songs yet",
+  "noSongsYetSubtitle": "Tap + to add your first song",
+  "deleteConfirmTitle": "Confirm delete",
+  "deleteSongConfirmMessage": "Are you sure you want to delete \"{title}\"?",
+  "@deleteSongConfirmMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "actionSuccessMessage": "Action completed successfully!",
+  "deleteLabel": "Delete",
+  "newSongTitle": "Add New Song",
+  "yearSongAdminTitle": "Admin Panel — By Year Music",
+  "addYearSongLabel": "Add by Year",
+  "newYearSongTitle": "Add By-Year Song",
+  "editYearSongTitle": "Edit By-Year Song",
+  "editSongTitle": "Edit Song",
+  "coverImageLabel": "Cover Image",
+  "chooseCoverImage": "Choose cover image",
+  "audioFilePickerLabel": "Audio File (mp3, m4a...)",
+  "selectAudioFile": "Tap to choose an audio file",
+  "songTitleLabel": "Song Title",
+  "songTitleHint": "Example: Hoa No Khong Mau",
+  "songTitleRequiredMessage": "Please enter the song title",
+  "artistNameLabel": "Artist Name",
+  "artistNameHint": "Example: Hoai Lam",
+  "artistNameRequiredMessage": "Please enter the artist name",
+  "yearLabel": "Year",
+  "selectYearHint": "Select year",
+  "yearRequiredMessage": "Please select a year",
+  "songTagsLabel": "Recommendation Tags",
+  "songTagsHint": "Example: sad, chill, heartbreak, ballad",
+  "songTagsHelperText": "Enter short tags separated by commas. Focus on mood, vibe, genre, or listening context.",
+  "searchAliasesLabel": "Search Aliases",
+  "searchAliasesHint": "Example: sad TikTok song, viral chorus clip",
+  "searchAliasesHelperText": "Use this for how users remember the song through trends, hook lines, or informal names.",
+  "energyLevelLabel": "Energy Level",
+  "energyLevelHelperText": "1 is very soft/chill, 5 is intense/high-energy. Old records default to level 3.",
+  "uploadingSong": "Uploading to Cloudinary...",
+  "savingSongChanges": "Saving changes...",
+  "uploadAndSaveSong": "Upload & Save Song",
+  "saveSongChanges": "Save Song Changes",
+  "yearSongEmptyTitle": "No by-year songs yet",
+  "yearSongEmptySubtitle": "Tap add to place songs into the by-year archive from 2018 to 2026.",
+  "deleteYearSongConfirmMessage": "Are you sure you want to delete the by-year song \"{title}\"?",
+  "@deleteYearSongConfirmMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "currentAudioWillBeKept": "Keeping current file: {fileName}",
+  "@currentAudioWillBeKept": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "coverImageRequiredMessage": "Please choose a cover image!",
+  "audioFileRequiredMessage": "Please choose an audio file!"
+}
