@@ -465,3 +465,12 @@ Nếu bạn cần hiểu thật nhanh dự án này đang làm gì, thì có th�
 - Search dùng Ollama để phân tích query rồi xếp hạng bài hát
 - Codebase được chia theo `domain`, `data`, `ui`, `app`
 # Music26
+
+# tool update bài hát
+
+dart run tool/import_yearly_songs.dart \
+  --root /home/namper/Downloads/music_2021 \
+  --email admin@gmail.com \
+  --password 123456 \
+  --apply
+

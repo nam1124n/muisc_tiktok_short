@@ -1,4 +1,4 @@
-import 'package:login_flutter/domain/entities/generated_audio_entity.dart';
+import 'package:login_flutter/domain/entities/generated_audio_task_entity.dart';
 import 'package:login_flutter/domain/repositories/audio_generation_repository.dart';
 
 class GetMySongsUseCase {
@@ -6,7 +6,7 @@ class GetMySongsUseCase {
 
   GetMySongsUseCase(this.repository);
 
-  Future<List<GeneratedAudioEntity>> call({required String userId}) {
+  Future<List<GeneratedAudioTaskEntity>> call({required String userId}) {
     return repository.getMySongs(userId: userId);
   }
 }

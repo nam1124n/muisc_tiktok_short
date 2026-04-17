@@ -85,7 +85,7 @@
   "importButtonLabel": "+ Import",
   "browseButtonLabel": "Browse",
   "yourAudioEmptyTitle": "No audio yet",
-  "yourAudioEmptySubtitle": "Import your favorite audio to start creating. Everything you add will appear here.",
+  "yourAudioEmptySubtitle": "Each AI music generation creates 2 versions. Those versions will appear here grouped by generation task.",
   "getStartedNow": "Get started now",
   "favoriteSongsEmpty": "No favorite songs yet",
   "recentSongsEmpty": "No recently played songs yet",
@@ -144,11 +144,11 @@
   },
   "alreadyHaveAccount": "Already have an account?",
   "backToLogin": "Back to Login",
-  "createAudioSuccessMessage": "Mock audio created successfully.",
+  "createAudioSuccessMessage": "Generation started. Your versions will appear in My Audios shortly.",
   "createAudioTitle": "Create AI Audio",
   "promptLabel": "Description Prompt",
   "promptHint": "Example: Create a chill lofi music piece with soft piano, city-night rain, and a relaxing mood.",
-  "promptHelpText": "The clearer the prompt is about mood, instruments, and tempo, the easier it will be to replace the mock result with a real API later.",
+  "promptHelpText": "The clearer the prompt is about mood, instruments, and vibe, the more usable both returned versions will be. The provider decides the actual duration.",
   "durationLabel": "Duration",
   "secondsLabel": "{seconds} sec",
   "@secondsLabel": {
@@ -168,6 +168,15 @@
   },
   "generatingAudio": "Generating audio...",
   "createShortAudio": "Create short audio",
+  "createTwoVersions": "Create 2 versions",
+  "createAudioApiNotice": "Each generation request returns 2 versions under one task. The provider decides the actual duration, so it is not locked to 15/30/45/60 seconds.\nCurrent backend: {baseUrl}",
+  "@createAudioApiNotice": {
+    "placeholders": {
+      "baseUrl": {
+        "type": "String"
+      }
+    }
+  },
   "aiAudioStudio": "AI Audio Studio",
   "generatedAudioMeta": "{seconds} sec • {provider}",
   "@generatedAudioMeta": {
@@ -180,11 +189,54 @@
       }
     }
   },
-  "audioMockUrlLabel": "Mock audio URL",
+  "generatedTaskMeta": "{count} versions • {provider}",
+  "@generatedTaskMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "generatedTaskStatusMeta": "{status} • {count}/{outputCount} versions",
+  "@generatedTaskStatusMeta": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "outputCount": {
+        "type": "int"
+      }
+    }
+  },
+  "generationQueuedHint": "Generation is processing. Open My Audios to follow updates.",
+  "generatedVersionLabel": "Version {label}",
+  "@generatedVersionLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "audioMockUrlLabel": "Audio URL",
   "previewAudio": "Preview",
   "promptRequiredMessage": "Please enter a prompt to generate audio.",
   "promptTooShortMessage": "The prompt should be at least 10 characters so the AI can understand it better.",
   "audioDurationRangeMessage": "Audio duration must be between 5 and 60 seconds.",
+  "deleteGeneratedTaskTitle": "Delete generation",
+  "deleteGeneratedTaskMessage": "Do you want to delete the generation \"{title}\" and both of its versions?",
+  "@deleteGeneratedTaskMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "adminPanelTitle": "Admin Panel — Song Management",
   "addSongLabel": "Add Song",
   "accessDeniedTitle": "Access denied",

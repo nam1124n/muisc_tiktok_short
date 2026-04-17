@@ -183,7 +183,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get yourAudioEmptySubtitle =>
-      'Import your favorite audio to start creating. Everything you add will appear here.';
+      'Each AI music generation creates 2 versions. Those versions will appear here grouped by generation task.';
 
   @override
   String get getStartedNow => 'Get started now';
@@ -288,7 +288,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backToLogin => 'Back to Login';
 
   @override
-  String get createAudioSuccessMessage => 'Mock audio created successfully.';
+  String get createAudioSuccessMessage =>
+      'Generation started. Your versions will appear in My Audios shortly.';
 
   @override
   String get createAudioTitle => 'Create AI Audio';
@@ -302,7 +303,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get promptHelpText =>
-      'The clearer the prompt is about mood, instruments, and tempo, the easier it will be to replace the mock result with a real API later.';
+      'The clearer the prompt is about mood, instruments, and vibe, the more usable both returned versions will be. The provider decides the actual duration.';
 
   @override
   String get durationLabel => 'Duration';
@@ -324,6 +325,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createShortAudio => 'Create short audio';
 
   @override
+  String get createTwoVersions => 'Create 2 versions';
+
+  @override
+  String createAudioApiNotice(String baseUrl) {
+    return 'Each generation request returns 2 versions under one task. The provider decides the actual duration, so it is not locked to 15/30/45/60 seconds.\nCurrent backend: $baseUrl';
+  }
+
+  @override
   String get aiAudioStudio => 'AI Audio Studio';
 
   @override
@@ -332,7 +341,26 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get audioMockUrlLabel => 'Mock audio URL';
+  String generatedTaskMeta(int count, String provider) {
+    return '$count versions • $provider';
+  }
+
+  @override
+  String generatedTaskStatusMeta(String status, int count, int outputCount) {
+    return '$status • $count/$outputCount versions';
+  }
+
+  @override
+  String get generationQueuedHint =>
+      'Generation is processing. Open My Audios to follow updates.';
+
+  @override
+  String generatedVersionLabel(String label) {
+    return 'Version $label';
+  }
+
+  @override
+  String get audioMockUrlLabel => 'Audio URL';
 
   @override
   String get previewAudio => 'Preview';
@@ -348,6 +376,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get audioDurationRangeMessage =>
       'Audio duration must be between 5 and 60 seconds.';
+
+  @override
+  String get deleteGeneratedTaskTitle => 'Delete generation';
+
+  @override
+  String deleteGeneratedTaskMessage(String title) {
+    return 'Do you want to delete the generation \"$title\" and both of its versions?';
+  }
 
   @override
   String get adminPanelTitle => 'Admin Panel — Song Management';

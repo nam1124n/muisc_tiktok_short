@@ -31,18 +31,9 @@ class CreateAudioNotifier extends StateNotifier<CreateAudioState> {
     );
   }
 
-  void onDurationChanged(int value) {
-    state = state.copyWith(
-      durationSeconds: value,
-      status: CreateAudioStatus.initial,
-      errorMessage: null,
-    );
-  }
-
   Future<void> generateAudio({
     required String promptRequiredMessage,
     required String promptTooShortMessage,
-    required String audioDurationRangeMessage,
   }) async {
     final prompt = state.prompt.trim();
 
@@ -50,7 +41,7 @@ class CreateAudioNotifier extends StateNotifier<CreateAudioState> {
       state = state.copyWith(
         status: CreateAudioStatus.error,
         errorMessage: promptRequiredMessage,
-        clearGeneratedAudio: true,
+        clearGeneratedTask: true,
       );
       return;
     }
@@ -59,16 +50,7 @@ class CreateAudioNotifier extends StateNotifier<CreateAudioState> {
       state = state.copyWith(
         status: CreateAudioStatus.error,
         errorMessage: promptTooShortMessage,
-        clearGeneratedAudio: true,
-      );
-      return;
-    }
-
-    if (state.durationSeconds < 5 || state.durationSeconds > 60) {
-      state = state.copyWith(
-        status: CreateAudioStatus.error,
-        errorMessage: audioDurationRangeMessage,
-        clearGeneratedAudio: true,
+        clearGeneratedTask: true,
       );
       return;
     }
@@ -76,7 +58,7 @@ class CreateAudioNotifier extends StateNotifier<CreateAudioState> {
     state = state.copyWith(
       status: CreateAudioStatus.loading,
       errorMessage: null,
-      clearGeneratedAudio: true,
+      clearGeneratedTask: true,
     );
 
     try {
@@ -85,25 +67,23 @@ class CreateAudioNotifier extends StateNotifier<CreateAudioState> {
           ? authState.user.id
           : 'guest_user';
 
-      final generatedAudio = await generateAudioUseCase(
+      final generatedTask = await generateAudioUseCase(
         userId: userId,
         prompt: prompt,
-        durationSeconds: state.durationSeconds,
       );
 
-      // Save it to my audios
-      ref.read(myAudiosProvider.notifier).addAudio(generatedAudio);
+      await ref.read(myAudiosProvider.notifier).saveTask(generatedTask);
 
       state = state.copyWith(
         status: CreateAudioStatus.success,
-        generatedAudio: generatedAudio,
+        generatedTask: generatedTask,
         errorMessage: null,
       );
     } catch (e) {
       state = state.copyWith(
         status: CreateAudioStatus.error,
         errorMessage: e.toString().replaceFirst('Exception: ', ''),
-        clearGeneratedAudio: true,
+        clearGeneratedTask: true,
       );
     }
   }

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_flutter/data/datasource/remote/audio_generation_remote_data_source.dart';
+import 'package:login_flutter/data/datasource/remote/generated_audio_library_remote_data_source.dart';
 import 'package:login_flutter/data/repositories/audio_generation_repository_impl.dart';
 import 'package:login_flutter/domain/repositories/audio_generation_repository.dart';
 import 'package:login_flutter/domain/usecases/generate_audio_usecase.dart';
@@ -8,6 +9,11 @@ import 'package:login_flutter/domain/usecases/get_my_songs_usecase.dart';
 final audioGenerationRemoteDataSourceProvider =
     Provider<AudioGenerationRemoteDataSource>((ref) {
       return AudioGenerationRemoteDataSource();
+    });
+
+final generatedAudioLibraryRemoteDataSourceProvider =
+    Provider<GeneratedAudioLibraryRemoteDataSource>((ref) {
+      return GeneratedAudioLibraryRemoteDataSource();
     });
 
 final audioGenerationRepositoryProvider = Provider<AudioGenerationRepository>((

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_flutter/app/config/audio_generation_config.dart';
 import 'package:login_flutter/domain/entities/generated_audio_entity.dart';
+import 'package:login_flutter/domain/entities/generated_audio_task_entity.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/audio/providers/audio_player_provider.dart';
@@ -17,8 +18,6 @@ class CreateAudioScreen extends ConsumerStatefulWidget {
 
 class _CreateAudioScreenState extends ConsumerState<CreateAudioScreen> {
   final TextEditingController _promptController = TextEditingController();
-
-  static const List<int> _durations = [15, 30, 45, 60];
 
   @override
   void dispose() {
@@ -47,7 +46,7 @@ class _CreateAudioScreenState extends ConsumerState<CreateAudioScreen> {
       }
 
       if (next.status == CreateAudioStatus.success &&
-          next.generatedAudio != null) {
+          next.generatedTask != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.createAudioSuccessMessage),
@@ -146,39 +145,6 @@ class _CreateAudioScreenState extends ConsumerState<CreateAudioScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    Text(
-                      l10n.durationLabel,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1F2937),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: _durations.map((seconds) {
-                        final isSelected = state.durationSeconds == seconds;
-                        return ChoiceChip(
-                          label: Text(l10n.secondsLabel(seconds)),
-                          selected: isSelected,
-                          selectedColor: const Color(0xFFE9DDFF),
-                          labelStyle: TextStyle(
-                            color: isSelected
-                                ? const Color(0xFF6D28D9)
-                                : const Color(0xFF374151),
-                            fontWeight: FontWeight.w600,
-                          ),
-                          onSelected: (_) {
-                            ref
-                                .read(createAudioNotifierProvider.notifier)
-                                .onDurationChanged(seconds);
-                          },
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 24),
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
@@ -186,7 +152,9 @@ class _CreateAudioScreenState extends ConsumerState<CreateAudioScreen> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
-                        l10n.mockApiMessage(AudioGenerationConfig.baseUrl),
+                        l10n.createAudioApiNotice(
+                          AudioGenerationConfig.baseUrl,
+                        ),
                         style: const TextStyle(
                           fontSize: 12,
                           height: 1.45,
@@ -208,8 +176,6 @@ class _CreateAudioScreenState extends ConsumerState<CreateAudioScreen> {
                                           l10n.promptRequiredMessage,
                                       promptTooShortMessage:
                                           l10n.promptTooShortMessage,
-                                      audioDurationRangeMessage:
-                                          l10n.audioDurationRangeMessage,
                                     );
                               },
                         style: ElevatedButton.styleFrom(
@@ -232,7 +198,7 @@ class _CreateAudioScreenState extends ConsumerState<CreateAudioScreen> {
                         label: Text(
                           state.status == CreateAudioStatus.loading
                               ? l10n.generatingAudio
-                              : l10n.createShortAudio,
+                              : l10n.createTwoVersions,
                           style: const TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 15,
@@ -243,12 +209,11 @@ class _CreateAudioScreenState extends ConsumerState<CreateAudioScreen> {
                   ],
                 ),
               ),
-              if (state.generatedAudio != null) ...[
+              if (state.generatedTask != null) ...[
                 const SizedBox(height: 20),
-                _GeneratedAudioCard(
-                  generatedAudio: state.generatedAudio!,
-                  onPreview: () =>
-                      _previewGeneratedAudio(state.generatedAudio!),
+                _GeneratedTaskCard(
+                  generatedTask: state.generatedTask!,
+                  onPreviewTrack: _previewGeneratedTrack,
                 ),
               ],
             ],
@@ -258,13 +223,13 @@ class _CreateAudioScreenState extends ConsumerState<CreateAudioScreen> {
     );
   }
 
-  void _previewGeneratedAudio(GeneratedAudioEntity generatedAudio) {
+  void _previewGeneratedTrack(GeneratedAudioEntity track) {
     final previewSong = SongEntity(
-      id: generatedAudio.id,
-      title: generatedAudio.title,
+      id: track.id,
+      title: track.title,
       artist: AppLocalizations.of(context)!.aiAudioStudio,
-      audioUrl: generatedAudio.audioUrl,
-      imageUrl: generatedAudio.imageUrl,
+      audioUrl: track.audioUrl,
+      imageUrl: track.imageUrl,
     );
 
     ref
@@ -273,14 +238,14 @@ class _CreateAudioScreenState extends ConsumerState<CreateAudioScreen> {
   }
 }
 
-class _GeneratedAudioCard extends StatelessWidget {
-  const _GeneratedAudioCard({
-    required this.generatedAudio,
-    required this.onPreview,
+class _GeneratedTaskCard extends StatelessWidget {
+  const _GeneratedTaskCard({
+    required this.generatedTask,
+    required this.onPreviewTrack,
   });
 
-  final GeneratedAudioEntity generatedAudio;
-  final VoidCallback onPreview;
+  final GeneratedAudioTaskEntity generatedTask;
+  final ValueChanged<GeneratedAudioEntity> onPreviewTrack;
 
   @override
   Widget build(BuildContext context) {
@@ -323,7 +288,7 @@ class _GeneratedAudioCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      generatedAudio.title,
+                      generatedTask.displayTitle,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -332,9 +297,10 @@ class _GeneratedAudioCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      l10n.generatedAudioMeta(
-                        generatedAudio.durationSeconds,
-                        generatedAudio.provider,
+                      l10n.generatedTaskStatusMeta(
+                        generatedTask.status,
+                        generatedTask.tracks.length,
+                        generatedTask.outputCount,
                       ),
                       style: TextStyle(color: Colors.grey[600], fontSize: 12),
                     ),
@@ -345,7 +311,7 @@ class _GeneratedAudioCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            generatedAudio.prompt,
+            generatedTask.prompt,
             style: TextStyle(
               color: Colors.grey[700],
               fontSize: 14,
@@ -353,53 +319,138 @@ class _GeneratedAudioCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF9FAFB),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.audioMockUrlLabel,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF374151),
+          if (generatedTask.tracks.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF9FAFB),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                ),
-                const SizedBox(height: 6),
-                SelectableText(
-                  generatedAudio.audioUrl,
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                    fontSize: 12,
-                    height: 1.45,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: onPreview,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8C52FF),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      l10n.generationQueuedHint,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        height: 1.45,
+                        color: Color(0xFF4B5563),
+                      ),
                     ),
                   ),
-                  icon: const Icon(Icons.play_arrow_rounded),
-                  label: Text(l10n.previewAudio),
+                ],
+              ),
+            )
+          else
+            Column(
+              children: generatedTask.tracks
+                  .map(
+                    (track) => Padding(
+                      padding: EdgeInsets.only(
+                        bottom: track == generatedTask.tracks.last ? 0 : 12,
+                      ),
+                      child: _GeneratedTrackTile(
+                        track: track,
+                        onPreview: () => onPreviewTrack(track),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GeneratedTrackTile extends StatelessWidget {
+  const _GeneratedTrackTile({required this.track, required this.onPreview});
+
+  final GeneratedAudioEntity track;
+  final VoidCallback onPreview;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final versionLabel = String.fromCharCode(65 + track.variantIndex);
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.generatedVersionLabel(versionLabel),
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF8C52FF),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            track.title,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF111827),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.generatedAudioMeta(
+              track.durationSeconds,
+              track.modelName.isNotEmpty ? track.modelName : track.provider,
+            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          ),
+          if (track.audioUrl.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              l10n.audioMockUrlLabel,
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF374151),
+              ),
+            ),
+            const SizedBox(height: 6),
+            SelectableText(
+              track.audioUrl,
+              style: TextStyle(
+                color: Colors.grey[700],
+                fontSize: 12,
+                height: 1.45,
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: onPreview,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8C52FF),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
-            ],
+              icon: const Icon(Icons.play_arrow_rounded),
+              label: Text(l10n.previewAudio),
+            ),
           ),
         ],
       ),

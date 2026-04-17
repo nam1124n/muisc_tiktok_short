@@ -1,37 +1,33 @@
-import 'package:login_flutter/domain/entities/generated_audio_entity.dart';
+import 'package:login_flutter/domain/entities/generated_audio_task_entity.dart';
 
 enum CreateAudioStatus { initial, loading, success, error }
 
 class CreateAudioState {
   final String prompt;
-  final int durationSeconds;
   final CreateAudioStatus status;
-  final GeneratedAudioEntity? generatedAudio;
+  final GeneratedAudioTaskEntity? generatedTask;
   final String? errorMessage;
 
   const CreateAudioState({
     this.prompt = '',
-    this.durationSeconds = 30,
     this.status = CreateAudioStatus.initial,
-    this.generatedAudio,
+    this.generatedTask,
     this.errorMessage,
   });
 
   CreateAudioState copyWith({
     String? prompt,
-    int? durationSeconds,
     CreateAudioStatus? status,
-    GeneratedAudioEntity? generatedAudio,
-    bool clearGeneratedAudio = false,
+    GeneratedAudioTaskEntity? generatedTask,
+    bool clearGeneratedTask = false,
     String? errorMessage,
   }) {
     return CreateAudioState(
       prompt: prompt ?? this.prompt,
-      durationSeconds: durationSeconds ?? this.durationSeconds,
       status: status ?? this.status,
-      generatedAudio: clearGeneratedAudio
+      generatedTask: clearGeneratedTask
           ? null
-          : (generatedAudio ?? this.generatedAudio),
+          : (generatedTask ?? this.generatedTask),
       errorMessage: errorMessage,
     );
   }

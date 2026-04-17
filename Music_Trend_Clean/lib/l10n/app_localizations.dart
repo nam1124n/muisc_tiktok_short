@@ -425,7 +425,7 @@ abstract class AppLocalizations {
   /// No description provided for @yourAudioEmptySubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Import your favorite audio to start creating. Everything you add will appear here.'**
+  /// **'Each AI music generation creates 2 versions. Those versions will appear here grouped by generation task.'**
   String get yourAudioEmptySubtitle;
 
   /// No description provided for @getStartedNow.
@@ -611,7 +611,7 @@ abstract class AppLocalizations {
   /// No description provided for @createAudioSuccessMessage.
   ///
   /// In en, this message translates to:
-  /// **'Mock audio created successfully.'**
+  /// **'Generation started. Your versions will appear in My Audios shortly.'**
   String get createAudioSuccessMessage;
 
   /// No description provided for @createAudioTitle.
@@ -635,7 +635,7 @@ abstract class AppLocalizations {
   /// No description provided for @promptHelpText.
   ///
   /// In en, this message translates to:
-  /// **'The clearer the prompt is about mood, instruments, and tempo, the easier it will be to replace the mock result with a real API later.'**
+  /// **'The clearer the prompt is about mood, instruments, and vibe, the more usable both returned versions will be. The provider decides the actual duration.'**
   String get promptHelpText;
 
   /// No description provided for @durationLabel.
@@ -668,6 +668,18 @@ abstract class AppLocalizations {
   /// **'Create short audio'**
   String get createShortAudio;
 
+  /// No description provided for @createTwoVersions.
+  ///
+  /// In en, this message translates to:
+  /// **'Create 2 versions'**
+  String get createTwoVersions;
+
+  /// No description provided for @createAudioApiNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Each generation request returns 2 versions under one task. The provider decides the actual duration, so it is not locked to 15/30/45/60 seconds.\nCurrent backend: {baseUrl}'**
+  String createAudioApiNotice(String baseUrl);
+
   /// No description provided for @aiAudioStudio.
   ///
   /// In en, this message translates to:
@@ -680,10 +692,34 @@ abstract class AppLocalizations {
   /// **'{seconds} sec • {provider}'**
   String generatedAudioMeta(int seconds, String provider);
 
+  /// No description provided for @generatedTaskMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} versions • {provider}'**
+  String generatedTaskMeta(int count, String provider);
+
+  /// No description provided for @generatedTaskStatusMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'{status} • {count}/{outputCount} versions'**
+  String generatedTaskStatusMeta(String status, int count, int outputCount);
+
+  /// No description provided for @generationQueuedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation is processing. Open My Audios to follow updates.'**
+  String get generationQueuedHint;
+
+  /// No description provided for @generatedVersionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {label}'**
+  String generatedVersionLabel(String label);
+
   /// No description provided for @audioMockUrlLabel.
   ///
   /// In en, this message translates to:
-  /// **'Mock audio URL'**
+  /// **'Audio URL'**
   String get audioMockUrlLabel;
 
   /// No description provided for @previewAudio.
@@ -709,6 +745,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Audio duration must be between 5 and 60 seconds.'**
   String get audioDurationRangeMessage;
+
+  /// No description provided for @deleteGeneratedTaskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete generation'**
+  String get deleteGeneratedTaskTitle;
+
+  /// No description provided for @deleteGeneratedTaskMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to delete the generation \"{title}\" and both of its versions?'**
+  String deleteGeneratedTaskMessage(String title);
 
   /// No description provided for @adminPanelTitle.
   ///

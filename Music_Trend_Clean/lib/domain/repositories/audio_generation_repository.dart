@@ -1,11 +1,10 @@
-import 'package:login_flutter/domain/entities/generated_audio_entity.dart';
+import 'package:login_flutter/domain/entities/generated_audio_task_entity.dart';
 
 abstract class AudioGenerationRepository {
-  Future<GeneratedAudioEntity> generateAudio({
+  Future<GeneratedAudioTaskEntity> generateAudio({
     required String userId,
     required String prompt,
-    required int durationSeconds,
   });
 
-  Future<List<GeneratedAudioEntity>> getMySongs({required String userId});
+  Future<List<GeneratedAudioTaskEntity>> getMySongs({required String userId});
 }

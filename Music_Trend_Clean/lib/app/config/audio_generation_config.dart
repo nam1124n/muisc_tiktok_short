@@ -8,7 +8,6 @@ class AudioGenerationConfig {
   static const String generationsPath = '/api/generations';
   static const String mySongsPath = '/api/my-songs';
 
-  static const int timeoutSeconds = 45;
-  static const int pollIntervalSeconds = 2;
-  static const int maxPollAttempts = 15;
+  static const int timeoutSeconds = 30;
+  static const int pendingRefreshIntervalSeconds = 10;
 }

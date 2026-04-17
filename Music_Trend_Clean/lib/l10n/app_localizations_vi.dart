@@ -184,7 +184,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get yourAudioEmptySubtitle =>
-      'Nhập âm thanh yêu thích của bạn để bắt đầu sáng tạo. Mọi thứ bạn thêm sẽ xuất hiện tại đây.';
+      'Mỗi lần tạo nhạc AI sẽ sinh ra 2 phiên bản. Các phiên bản đó sẽ xuất hiện tại đây theo từng lượt tạo.';
 
   @override
   String get getStartedNow => 'Bắt đầu ngay';
@@ -287,7 +287,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get backToLogin => 'Quay lại đăng nhập';
 
   @override
-  String get createAudioSuccessMessage => 'Đã tạo audio mock thành công.';
+  String get createAudioSuccessMessage =>
+      'Đã gửi yêu cầu tạo audio AI. Các phiên bản sẽ sớm xuất hiện trong My Audios.';
 
   @override
   String get createAudioTitle => 'Tạo Audio AI';
@@ -301,7 +302,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get promptHelpText =>
-      'Prompt càng rõ về mood, nhạc cụ, tempo thì kết quả mock càng dễ thay bằng API thật sau này.';
+      'Prompt càng rõ về mood, nhạc cụ và vibe thì 2 phiên bản trả về càng dễ dùng. API Suno-style sẽ tự quyết định thời lượng thực tế.';
 
   @override
   String get durationLabel => 'Thời lượng';
@@ -323,6 +324,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get createShortAudio => 'Tạo audio ngắn';
 
   @override
+  String get createTwoVersions => 'Tạo 2 phiên bản';
+
+  @override
+  String createAudioApiNotice(String baseUrl) {
+    return 'Mỗi lần tạo sẽ nhận 2 phiên bản từ một task. Thời lượng thực tế do provider quyết định, không bị khóa ở 15/30/45/60 giây.\nBackend hiện dùng: $baseUrl';
+  }
+
+  @override
   String get aiAudioStudio => 'AI Audio Studio';
 
   @override
@@ -331,7 +340,26 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get audioMockUrlLabel => 'Audio URL mock';
+  String generatedTaskMeta(int count, String provider) {
+    return '$count phiên bản • $provider';
+  }
+
+  @override
+  String generatedTaskStatusMeta(String status, int count, int outputCount) {
+    return '$status • $count/$outputCount phiên bản';
+  }
+
+  @override
+  String get generationQueuedHint =>
+      'Task đang được xử lý. Mở My Audios để theo dõi cập nhật.';
+
+  @override
+  String generatedVersionLabel(String label) {
+    return 'Phiên bản $label';
+  }
+
+  @override
+  String get audioMockUrlLabel => 'Audio URL';
 
   @override
   String get previewAudio => 'Nghe thử';
@@ -346,6 +374,14 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get audioDurationRangeMessage =>
       'Thời lượng audio phải từ 5 đến 60 giây.';
+
+  @override
+  String get deleteGeneratedTaskTitle => 'Xóa lượt tạo nhạc';
+
+  @override
+  String deleteGeneratedTaskMessage(String title) {
+    return 'Bạn có chắc muốn xóa lượt tạo \"$title\" và cả 2 phiên bản của nó không?';
+  }
 
   @override
   String get adminPanelTitle => 'Admin Panel — Quản lý bài hát';

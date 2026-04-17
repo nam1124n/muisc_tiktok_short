@@ -4,16 +4,18 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:login_flutter/app/config/audio_generation_config.dart';
 import 'package:login_flutter/data/dto/audio_generation/generated_audio_model.dart';
+import 'package:login_flutter/data/dto/audio_generation/generated_audio_task_model.dart';
 
 class AudioGenerationRemoteDataSource {
-  static const String _mockSampleAudioUrl =
+  static const String _mockSampleAudioUrlA =
       'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+  static const String _mockSampleAudioUrlB =
+      'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3';
 
-  Future<String> createGeneration({
+  Future<Map<String, dynamic>> createGeneration({
     required String baseUrl,
     required String userId,
     required String prompt,
-    required int durationSeconds,
   }) async {
     final response = await http
         .post(
@@ -21,11 +23,7 @@ class AudioGenerationRemoteDataSource {
             '${_normalizeBaseUrl(baseUrl)}${AudioGenerationConfig.generatePath}',
           ),
           headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'user_id': userId,
-            'prompt': prompt,
-            'duration_sec': durationSeconds,
-          }),
+          body: jsonEncode({'user_id': userId, 'prompt': prompt}),
         )
         .timeout(Duration(seconds: AudioGenerationConfig.timeoutSeconds));
 
@@ -35,13 +33,14 @@ class AudioGenerationRemoteDataSource {
     );
 
     final body = _decodeBodyAsMap(response.body);
-    final generationId = body['id']?.toString() ?? '';
+    final generationId =
+        body['taskId']?.toString() ?? body['task_id']?.toString() ?? '';
 
     if (generationId.isEmpty) {
       throw Exception('Backend không trả về generation id hợp lệ.');
     }
 
-    return generationId;
+    return body;
   }
 
   Future<Map<String, dynamic>> getGeneration({
@@ -64,7 +63,7 @@ class AudioGenerationRemoteDataSource {
     return _decodeBodyAsMap(response.body);
   }
 
-  Future<List<GeneratedAudioModel>> getMySongs({
+  Future<List<GeneratedAudioTaskModel>> getMySongs({
     required String baseUrl,
     required String userId,
   }) async {
@@ -82,28 +81,70 @@ class AudioGenerationRemoteDataSource {
     );
 
     final body = _decodeBodyAsMap(response.body);
-    final songs = (body['songs'] as List<dynamic>? ?? []);
+    final tasks =
+        (body['tasks'] as List<dynamic>? ??
+        body['songs'] as List<dynamic>? ??
+        []);
 
-    return songs
+    return tasks
         .whereType<Map<String, dynamic>>()
-        .map(GeneratedAudioModel.fromJson)
+        .map(GeneratedAudioTaskModel.fromJson)
         .toList();
   }
 
-  Future<GeneratedAudioModel> generateMockAudio({
+  Future<GeneratedAudioTaskModel> generateMockAudioTask({
+    required String userId,
     required String prompt,
-    required int durationSeconds,
   }) async {
     await Future<void>.delayed(const Duration(seconds: 2));
 
-    return GeneratedAudioModel(
-      id: 'mock_${DateTime.now().millisecondsSinceEpoch}',
-      title: _buildTitle(prompt),
+    final now = DateTime.now().toUtc();
+    final taskId = 'mock_${now.millisecondsSinceEpoch}';
+    final baseTitle = _buildTitle(prompt);
+
+    final tracks = [
+      GeneratedAudioModel(
+        id: '${taskId}_a',
+        taskId: taskId,
+        variantIndex: 0,
+        title: '$baseTitle A',
+        prompt: prompt,
+        audioUrl: _mockSampleAudioUrlA,
+        streamAudioUrl: _mockSampleAudioUrlA,
+        imageUrl: 'https://picsum.photos/seed/${taskId}_a/640/640',
+        durationSeconds: 135,
+        provider: 'mock-suno-api',
+        modelName: 'V5',
+        tags: _buildTags(prompt),
+        createdAt: now,
+      ),
+      GeneratedAudioModel(
+        id: '${taskId}_b',
+        taskId: taskId,
+        variantIndex: 1,
+        title: '$baseTitle B',
+        prompt: prompt,
+        audioUrl: _mockSampleAudioUrlB,
+        streamAudioUrl: _mockSampleAudioUrlB,
+        imageUrl: 'https://picsum.photos/seed/${taskId}_b/640/640',
+        durationSeconds: 136,
+        provider: 'mock-suno-api',
+        modelName: 'V5',
+        tags: _buildTags(prompt),
+        createdAt: now,
+      ),
+    ];
+
+    return GeneratedAudioTaskModel(
+      id: taskId,
+      userId: userId,
       prompt: prompt,
-      audioUrl: _mockSampleAudioUrl,
-      imageUrl: '',
-      durationSeconds: durationSeconds,
+      status: 'success',
       provider: 'mock-suno-api',
+      outputCount: tracks.length,
+      tracks: tracks,
+      createdAt: now,
+      updatedAt: now,
     );
   }
 
@@ -121,6 +162,15 @@ class AudioGenerationRemoteDataSource {
     }
 
     return words.join(' ');
+  }
+
+  List<String> _buildTags(String prompt) {
+    return prompt
+        .split(RegExp(r'[,;\n]'))
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .take(6)
+        .toList();
   }
 
   String _capitalize(String value) {
