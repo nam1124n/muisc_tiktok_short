@@ -68,4 +68,20 @@ defmodule Backend.Music.Store do
       end
     end)
   end
+
+  @doc """
+  Deletes one song by id and returns the deleted record.
+  """
+  @spec delete(String.t()) :: Generation.t() | nil
+  def delete(id) do
+    Agent.get_and_update(__MODULE__, fn state ->
+      Map.pop(state, id)
+    end)
+  end
+
+  @doc false
+  @spec clear() :: :ok
+  def clear do
+    Agent.update(__MODULE__, fn _state -> %{} end)
+  end
 end

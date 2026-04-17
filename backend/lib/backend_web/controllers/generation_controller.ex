@@ -6,6 +6,7 @@ defmodule BackendWeb.GenerationController do
   """
 
   use BackendWeb, :controller
+  require Logger
 
   alias Backend.Music.Generation
   alias Backend.Music.MusicService
@@ -44,12 +45,12 @@ defmodule BackendWeb.GenerationController do
       |> put_status(:bad_request)
       |> json(%{error: "user_id is required"})
     else
-      songs =
+      tasks =
         cleaned_user_id
         |> MusicService.list_user_songs()
         |> Enum.map(&Generation.to_map/1)
 
-      json(conn, %{songs: songs})
+      json(conn, %{tasks: tasks, songs: tasks})
     end
   end
 
@@ -57,5 +58,16 @@ defmodule BackendWeb.GenerationController do
     conn
     |> put_status(:bad_request)
     |> json(%{error: "user_id is required"})
+  end
+
+  def suno_callback(conn, params) do
+    Task.start(fn ->
+      case MusicService.process_suno_callback(params) do
+        :ok -> :ok
+        {:error, message} -> Logger.warning("Suno callback ignored: #{message}")
+      end
+    end)
+
+    json(conn, %{status: "received"})
   end
 end

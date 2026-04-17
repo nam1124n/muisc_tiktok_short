@@ -23,6 +23,88 @@ end
 config :backend, BackendWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+backend_public_base_url = System.get_env("BACKEND_PUBLIC_BASE_URL", "") |> String.trim()
+
+suno_callback_url =
+  case System.get_env("SUNO_CALLBACK_URL") do
+    nil ->
+      case backend_public_base_url do
+        "" -> ""
+        base_url -> "#{String.replace(base_url, ~r{/+$}, "")}/api/suno/callback"
+      end
+
+    callback_url ->
+      String.trim(callback_url)
+  end
+
+default_suno_base_url = "https://api.sunoapi.org"
+default_suno_model = "V5"
+default_suno_instrumental = true
+active_suno_account_alias = "primary"
+
+# Edit the keys directly here when you want to rotate accounts.
+# Keep `alias` stable so old tasks can remember which key created them.
+suno_accounts =
+  if config_env() == :test do
+    []
+  else
+    [
+      %{
+        alias: "primary",
+        provider_account: "primary",
+        api_base_url: default_suno_base_url,
+        api_key: "ba1e76f2eba24d35cfbf0b066e0c3471",
+        callback_url: suno_callback_url,
+        model: default_suno_model,
+        instrumental: default_suno_instrumental
+      },
+      %{
+        alias: "backup_1",
+        provider_account: "backup_1",
+        api_base_url: default_suno_base_url,
+        api_key: "",
+        callback_url: suno_callback_url,
+        model: default_suno_model,
+        instrumental: default_suno_instrumental
+      }
+    ]
+  end
+
+config :backend, :suno,
+  enabled:
+    config_env() != :test and suno_callback_url != "" and
+      Enum.any?(suno_accounts, fn account ->
+        is_binary(account[:api_key]) and String.trim(account[:api_key]) != ""
+      end),
+  active_account_alias: active_suno_account_alias,
+  accounts: suno_accounts,
+  fallback_poll_interval_ms:
+    System.get_env("SUNO_FALLBACK_POLL_INTERVAL_MS", "10000")
+    |> String.to_integer()
+
+cloudinary_cloud_name = System.get_env("CLOUDINARY_CLOUD_NAME", "") |> String.trim()
+cloudinary_upload_preset = System.get_env("CLOUDINARY_UPLOAD_PRESET", "") |> String.trim()
+
+config :backend, :cloudinary,
+  enabled:
+    config_env() != :test and cloudinary_cloud_name != "" and cloudinary_upload_preset != "",
+  cloud_name: cloudinary_cloud_name,
+  upload_preset: cloudinary_upload_preset
+
+firebase_backend_email = System.get_env("FIREBASE_BACKEND_EMAIL", "") |> String.trim()
+firebase_backend_password = System.get_env("FIREBASE_BACKEND_PASSWORD", "") |> String.trim()
+firebase_project_id = System.get_env("FIREBASE_PROJECT_ID", "") |> String.trim()
+firebase_web_api_key = System.get_env("FIREBASE_WEB_API_KEY", "") |> String.trim()
+
+config :backend, :firestore_sync,
+  enabled:
+    config_env() != :test and firebase_backend_email != "" and firebase_backend_password != "" and
+      firebase_project_id != "" and firebase_web_api_key != "",
+  project_id: firebase_project_id,
+  web_api_key: firebase_web_api_key,
+  email: firebase_backend_email,
+  password: firebase_backend_password
+
 if config_env() == :prod do
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you

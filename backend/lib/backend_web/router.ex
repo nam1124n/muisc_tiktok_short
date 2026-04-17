@@ -19,7 +19,12 @@ defmodule BackendWeb.Router do
 
     get "/", PageController, :home
     get "/songs", SongPageController, :index
+    get "/songs/library", SongPageController, :library
     get "/songs/:id", SongPageController, :show
+    get "/songs/:id/edit", SongPageController, :edit
+    patch "/songs/:id", SongPageController, :update
+    put "/songs/:id", SongPageController, :update
+    delete "/songs/:id", SongPageController, :delete
   end
 
   scope "/", BackendWeb do
@@ -35,6 +40,7 @@ defmodule BackendWeb.Router do
     post "/generate", GenerationController, :create
     get "/generations/:id", GenerationController, :show
     get "/my-songs", GenerationController, :my_songs
+    post "/suno/callback", GenerationController, :suno_callback
   end
 
   if Application.compile_env(:backend, :dev_routes) do

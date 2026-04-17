@@ -12,6 +12,7 @@ defmodule Backend.Application do
     children = [
       # Store generated songs in memory for the first project phase.
       Backend.Music.Store,
+      Backend.Firebase.TokenCache,
       BackendWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:backend, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Backend.PubSub},

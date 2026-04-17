@@ -1,0 +1,178 @@
+<div class="page-shell">
+  <a class="back-link" href={~p"/songs"}>&larr; Quay lại dashboard</a>
+
+  <section class="hero hero-tonal">
+    <div class="hero-copy">
+      <h1>AI Generation Library</h1>
+      <p>
+        Màn hình quản lý chi tiết các bài nhạc AI đã generate: lọc theo user, xem trạng thái,
+        nghe thử và đi tiếp sang chỉnh sửa hoặc xóa khi cần.
+      </p>
+    </div>
+  </section>
+
+  <section class="card filter-card">
+    <div class="section-head">
+      <div class="section-copy">
+        <h2>Bộ lọc quản lý</h2>
+        <p class="muted">
+          Lọc theo `user_id` hoặc trạng thái để thu gọn danh sách bài hát bên dưới.
+        </p>
+      </div>
+    </div>
+
+    <form method="get" action={~p"/songs/library"} class="filter-form">
+      <div class="field">
+        <label for="user_id">User ID</label>
+        <input
+          id="user_id"
+          name="user_id"
+          type="text"
+          value={@filters.user_id}
+          placeholder="Ví dụ: uid_001"
+        />
+      </div>
+
+      <div class="field">
+        <label for="status">Trạng thái</label>
+        <select id="status" name="status">
+          <option value="">Tất cả</option>
+          <option
+            :for={status <- @status_options}
+            value={status}
+            selected={@filters.status == status}
+          >
+            {status}
+          </option>
+        </select>
+      </div>
+
+      <div class="button-row">
+        <button class="primary-button" type="submit">Áp dụng</button>
+        <a class="neutral-button" href={~p"/songs/library"}>Xóa lọc</a>
+      </div>
+    </form>
+
+    <p :if={@has_filters} class="filter-note">
+      Đang hiển thị <strong>{@stats.total}</strong>
+      / <strong>{@overall_stats.total}</strong>
+      bài hát
+      và <strong>{@stats.users}</strong>
+      / <strong>{@overall_stats.users}</strong>
+      user.
+    </p>
+  </section>
+
+  <section class="admin-grid">
+    <aside class="card side-panel">
+      <div class="section-head">
+        <div class="section-copy">
+          <h2>User Overview</h2>
+          <p class="muted">Nhấn vào từng user để xem ngay danh sách bài hát của họ.</p>
+        </div>
+      </div>
+
+      <div class="user-list">
+        <a class={["user-pill", @filters.user_id == "" && "active"]} href={~p"/songs/library"}>
+          <span class="user-pill-label">Tất cả user</span>
+          <strong class="user-pill-count">{@overall_stats.users}</strong>
+        </a>
+
+        <%= for user <- @users do %>
+          <a
+            class={["user-pill", @filters.user_id == user.user_id && "active"]}
+            href={~p"/songs/library?user_id=#{user.user_id}"}
+            title={user.user_id}
+          >
+            <span class="user-pill-label">{user.user_id}</span>
+            <strong class="user-pill-count">{user.total}</strong>
+          </a>
+        <% end %>
+      </div>
+    </aside>
+
+    <div class="group-stack">
+      <%= if Enum.empty?(@user_groups) do %>
+        <section class="card">
+          <div class="empty-state">
+            Không có bài hát nào khớp bộ lọc hiện tại.
+          </div>
+        </section>
+      <% else %>
+        <%= for group <- @user_groups do %>
+          <section class="card user-section">
+            <div class="section-head">
+              <div class="section-copy">
+                <h2>{group.user_id}</h2>
+                <p class="muted section-summary">
+                  {group.total} bài • {group.completed} completed • {group.processing} processing
+                </p>
+              </div>
+            </div>
+
+            <div class="song-cluster">
+              <%= for song <- group.songs do %>
+                <article class="song-card">
+                  <div class="song-card-head">
+                    <div class="song-card-copy">
+                      <h3>{song.title || "AI - Untitled"}</h3>
+                      <p class="table-support mono muted">{song.id}</p>
+                    </div>
+
+                    <span class={"status-pill status-#{song.status}"}>
+                      {song.status}
+                    </span>
+                  </div>
+
+                  <div class="song-card-grid">
+                    <div class="song-card-block song-card-block-wide">
+                      <p class="meta-label">Prompt</p>
+                      <p class="song-card-text">{song.prompt}</p>
+                    </div>
+
+                    <div class="song-card-block">
+                      <p class="meta-label">Duration</p>
+                      <p class="song-card-text">{song.duration_sec} sec</p>
+                    </div>
+
+                    <div class="song-card-block">
+                      <p class="meta-label">Updated At</p>
+                      <p class="song-card-text mono">{song.updated_at}</p>
+                    </div>
+                  </div>
+
+                  <div class="song-card-footer">
+                    <div class="song-card-audio">
+                      <p class="meta-label">Audio</p>
+                      <%= if song.audio_url do %>
+                        <a href={song.audio_url} target="_blank" rel="noreferrer">Mở audio</a>
+                      <% else %>
+                        <span class="muted">Chưa có audio</span>
+                      <% end %>
+                    </div>
+
+                    <div class="button-row button-row-tight song-card-actions">
+                      <a class="secondary-button" href={~p"/songs/#{song.id}"}>Xem</a>
+                      <a class="neutral-button" href={~p"/songs/#{song.id}/edit"}>Sửa</a>
+                      <form method="post" action={~p"/songs/#{song.id}"} class="inline-form">
+                        <input type="hidden" name="_csrf_token" value={get_csrf_token()} />
+                        <input type="hidden" name="_method" value="delete" />
+                        <button
+                          class="danger-button"
+                          type="submit"
+                          onclick="return confirm('Xóa bài hát này?');"
+                        >
+                          Xóa
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </article>
+              <% end %>
+            </div>
+          </section>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+</div>

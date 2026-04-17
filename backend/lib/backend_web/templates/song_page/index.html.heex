@@ -1,89 +1,135 @@
 <div class="page-shell">
-  <section class="hero">
-    <h1>AI Music Admin</h1>
-    <p>
-      Trang này chỉ dùng để xem và quản lý danh sách bài nhạc AI đã tạo.
-      Form nhập prompt và nút Generate vẫn nằm ở app Flutter.
-    </p>
+  <section class="hero dashboard-hero">
+    <div class="hero-actions">
+      <div class="hero-copy">
+        <h1>AI Generation Dashboard</h1>
+        <p>
+          Trang tổng quan dành riêng cho chức năng tạo nhạc bằng AI: xem nhanh số lượng
+          bài đã generate, trạng thái xử lý và đi sang màn hình quản lý danh sách đã tạo.
+        </p>
+      </div>
+
+      <div class="button-row">
+        <a class="secondary-button hero-button" href={~p"/songs/library"}>
+          Xem user + bài hát
+        </a>
+      </div>
+    </div>
 
     <div class="toolbar">
-      <span class="chip">Web quản lý: <strong>&nbsp;/songs</strong></span>
-      <span class="chip">API generate: <strong>&nbsp;POST /api/generate</strong></span>
-      <span class="chip">Health check: <strong>&nbsp;/health</strong></span>
+      <span class="chip">Dashboard: <strong>&nbsp;/songs</strong></span>
+      <span class="chip">Quản lý thư viện: <strong>&nbsp;/songs/library</strong></span>
+      <span class="chip">Nguồn dữ liệu hiện tại: <strong>&nbsp;memory store</strong></span>
     </div>
   </section>
 
-  <section class="stat-grid">
-    <article class="card">
+  <section class="stat-grid stat-grid-wide">
+    <article class="card stat-card">
       <div class="stat-label">Total Songs</div>
-      <div class="stat-value">{@stats.total}</div>
+      <div class="stat-value">{@overall_stats.total}</div>
     </article>
 
-    <article class="card">
+    <article class="card stat-card">
+      <div class="stat-label">Total Users</div>
+      <div class="stat-value">{@overall_stats.users}</div>
+    </article>
+
+    <article class="card stat-card">
       <div class="stat-label">Processing</div>
-      <div class="stat-value">{@stats.processing}</div>
+      <div class="stat-value">{@overall_stats.processing}</div>
     </article>
 
-    <article class="card">
+    <article class="card stat-card">
       <div class="stat-label">Completed</div>
-      <div class="stat-value">{@stats.completed}</div>
+      <div class="stat-value">{@overall_stats.completed}</div>
     </article>
   </section>
 
-  <section class="card">
-    <h2>Generated Song List</h2>
-    <p class="muted">
-      Nếu danh sách đang trống, hãy gọi <span class="mono">POST /api/generate</span>
-      từ Flutter hoặc curl
-      để tạo dữ liệu mẫu.
-    </p>
+  <section class="dashboard-grid">
+    <article class="card dashboard-panel">
+      <div class="section-head">
+        <div class="section-copy">
+          <h2>Điều hướng nhanh</h2>
+          <p class="muted">
+            Tách rõ dashboard và màn hình quản lý để bố cục đỡ rối và thao tác nhanh hơn.
+          </p>
+        </div>
+      </div>
 
-    <%= if Enum.empty?(@songs) do %>
+      <div class="quick-grid">
+        <a class="quick-card" href={~p"/songs/library"}>
+          <div class="quick-card-kicker">Library</div>
+          <h3>User + bài hát</h3>
+          <p>
+            Xem danh sách user, các bài đã tạo, lọc theo trạng thái và đi tiếp sang sửa/xóa.
+          </p>
+        </a>
+      </div>
+    </article>
+
+    <article class="card dashboard-panel">
+      <div class="section-head">
+        <div class="section-copy">
+          <h2>User nổi bật</h2>
+          <p class="muted">Các user có nhiều bài hát nhất hiện tại.</p>
+        </div>
+      </div>
+
+      <%= if Enum.empty?(@top_users) do %>
+        <div class="empty-state">
+          Chưa có user nào trong hệ thống.
+        </div>
+      <% else %>
+        <div class="dashboard-list">
+          <%= for user <- @top_users do %>
+            <a class="dashboard-list-item" href={~p"/songs/library?user_id=#{user.user_id}"}>
+              <div class="dashboard-list-main">
+                <div class="dashboard-list-title">{user.user_id}</div>
+                <div class="dashboard-list-subtitle">
+                  {user.total} bài • {user.completed} completed
+                </div>
+              </div>
+
+              <span class="dashboard-badge">{user.total}</span>
+            </a>
+          <% end %>
+        </div>
+      <% end %>
+    </article>
+  </section>
+
+  <section class="card dashboard-panel">
+    <div class="section-head">
+      <div class="section-copy">
+        <h2>Bài hát gần đây</h2>
+        <p class="muted">Từ đây có thể mở nhanh chi tiết từng bài hát.</p>
+      </div>
+
+      <a class="secondary-button" href={~p"/songs/library"}>
+        Mở trang quản lý
+      </a>
+    </div>
+
+    <%= if @songs_empty? do %>
       <div class="empty-state">
-        Chưa có bài nhạc nào trong memory store.
+        Chưa có bài hát nào để hiển thị trên dashboard.
       </div>
     <% else %>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Title</th>
-              <th>Prompt</th>
-              <th>Duration</th>
-              <th>Status</th>
-              <th>Audio</th>
-              <th>Created At</th>
-              <th>Detail</th>
-            </tr>
-          </thead>
-          <tbody>
-            <%= for song <- @songs do %>
-              <tr>
-                <td class="mono">{song.id}</td>
-                <td>{song.title || "Waiting for fake generation..."}</td>
-                <td>{song.prompt}</td>
-                <td>{song.duration_sec} sec</td>
-                <td>
-                  <span class={"status-pill status-#{song.status}"}>
-                    {song.status}
-                  </span>
-                </td>
-                <td>
-                  <%= if song.audio_url do %>
-                    <audio controls preload="none">
-                      <source src={song.audio_url} type="audio/mpeg" />
-                    </audio>
-                  <% else %>
-                    <span class="muted">Audio chưa sẵn sàng</span>
-                  <% end %>
-                </td>
-                <td class="mono">{song.created_at}</td>
-                <td><a href={~p"/songs/#{song.id}"}>View detail</a></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
+      <div class="dashboard-list">
+        <%= for song <- @recent_songs do %>
+          <a class="dashboard-list-item" href={~p"/songs/#{song.id}"}>
+            <div class="dashboard-list-main">
+              <div class="dashboard-list-title">{song.title || "AI - Untitled"}</div>
+              <div class="dashboard-list-subtitle">
+                {song.user_id} • {song.duration_sec} sec • {song.updated_at}
+              </div>
+            </div>
+
+            <span class={"status-pill status-#{song.status}"}>
+              {song.status}
+            </span>
+          </a>
+        <% end %>
       </div>
     <% end %>
   </section>
