@@ -39,7 +39,7 @@ suno_callback_url =
 
 default_suno_base_url = "https://api.sunoapi.org"
 default_suno_model = "V5"
-default_suno_instrumental = true
+default_suno_instrumental = false
 active_suno_account_alias = "primary"
 
 # Edit the keys directly here when you want to rotate accounts.
@@ -62,7 +62,7 @@ suno_accounts =
         alias: "backup_1",
         provider_account: "backup_1",
         api_base_url: default_suno_base_url,
-        api_key: "",
+        api_key: "41f9f3daf09fb6b0f20d1892940fdb18",
         callback_url: suno_callback_url,
         model: default_suno_model,
         instrumental: default_suno_instrumental

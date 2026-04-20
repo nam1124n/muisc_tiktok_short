@@ -9,6 +9,7 @@ defmodule Backend.Firebase.FirestoreClient do
   @identity_toolkit_url "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword"
   @firestore_base_url "https://firestore.googleapis.com/v1"
   @request_timeout_ms 45_000
+  @firestore_page_size 200
 
   @spec enabled?() :: boolean()
   def enabled? do
@@ -49,6 +50,63 @@ defmodule Backend.Firebase.FirestoreClient do
       end
     else
       :not_found
+    end
+  end
+
+  @spec list_generations() :: {:ok, [Generation.t()]} | {:error, String.t()}
+  def list_generations do
+    if enabled?() do
+      with {:ok, id_token} <- fetch_id_token(),
+           {:ok, documents} <-
+             fetch_collection_documents(generation_index_collection_path(), id_token) do
+        {:ok,
+         documents
+         |> Enum.map(&build_generation_from_index_document/1)
+         |> sort_generations()}
+      end
+    else
+      {:ok, []}
+    end
+  end
+
+  @spec list_generations_by_user(String.t()) :: {:ok, [Generation.t()]} | {:error, String.t()}
+  def list_generations_by_user(user_id) when is_binary(user_id) and user_id != "" do
+    if enabled?() do
+      with {:ok, id_token} <- fetch_id_token(),
+           {:ok, task_documents} <-
+             fetch_collection_documents(task_collection_path(user_id), id_token),
+           {:ok, track_documents} <-
+             fetch_collection_documents(track_collection_path(user_id), id_token) do
+        tracks_by_task_id =
+          track_documents
+          |> Enum.map(&decode_document_fields/1)
+          |> Enum.group_by(&Map.get(&1, "taskId"))
+
+        {:ok,
+         task_documents
+         |> Enum.map(fn document ->
+           document
+           |> decode_document_fields()
+           |> build_generation_from_task_document(tracks_by_task_id)
+         end)
+         |> sort_generations()}
+      end
+    else
+      {:ok, []}
+    end
+  end
+
+  def list_generations_by_user(_user_id), do: {:ok, []}
+
+  @spec delete_generation(Generation.t()) :: :ok | {:error, String.t()}
+  def delete_generation(%Generation{} = generation) do
+    if enabled?() do
+      with {:ok, id_token} <- fetch_id_token(),
+           {:ok, _response} <- commit_writes(build_delete_writes(generation), id_token) do
+        :ok
+      end
+    else
+      :ok
     end
   end
 
@@ -185,6 +243,30 @@ defmodule Backend.Firebase.FirestoreClient do
     }
   end
 
+  defp build_delete_writes(%Generation{} = generation) do
+    track_deletes =
+      generation.tracks
+      |> List.wrap()
+      |> Enum.flat_map(fn track ->
+        case read_track(track, :id) do
+          track_id when is_binary(track_id) and track_id != "" ->
+            [build_delete_write(document_name(track_path(generation.user_id, track_id)))]
+
+          _other ->
+            []
+        end
+      end)
+
+    [
+      build_delete_write(document_name(task_path(generation.user_id, generation.id)))
+      | track_deletes
+    ] ++ [build_delete_write(document_name(task_index_path(generation.id)))]
+  end
+
+  defp build_delete_write(document_name) do
+    %{"delete" => document_name}
+  end
+
   defp commit_writes(writes, id_token) when is_list(writes) do
     ensure_http_stack_started()
     body = Jason.encode!(%{"writes" => writes})
@@ -296,12 +378,24 @@ defmodule Backend.Firebase.FirestoreClient do
     "users/#{user_id}/generation_tasks/#{task_id}"
   end
 
+  defp task_collection_path(user_id) do
+    "users/#{user_id}/generation_tasks"
+  end
+
   defp track_path(user_id, track_id) do
     "users/#{user_id}/generated_tracks/#{track_id}"
   end
 
+  defp track_collection_path(user_id) do
+    "users/#{user_id}/generated_tracks"
+  end
+
   defp task_index_path(task_id) do
     "generation_task_index/#{task_id}"
+  end
+
+  defp generation_index_collection_path do
+    "generation_task_index"
   end
 
   defp encode_fields(fields) when is_map(fields) do
@@ -356,6 +450,8 @@ defmodule Backend.Firebase.FirestoreClient do
     Map.get(track, key) || Map.get(track, Atom.to_string(key))
   end
 
+  defp read_track(_track, _key), do: nil
+
   defp fetch_document(document_path, id_token) do
     ensure_http_stack_started()
 
@@ -384,9 +480,100 @@ defmodule Backend.Firebase.FirestoreClient do
     end
   end
 
+  defp fetch_collection_documents(collection_path, id_token) do
+    do_fetch_collection_documents(collection_path, id_token, nil, [])
+  end
+
+  defp do_fetch_collection_documents(collection_path, id_token, page_token, documents) do
+    case fetch_collection(collection_path, id_token, page_token: page_token) do
+      {:ok, %{"documents" => response_documents} = response} when is_list(response_documents) ->
+        next_documents = documents ++ response_documents
+
+        case Map.get(response, "nextPageToken") do
+          next_page_token when is_binary(next_page_token) and next_page_token != "" ->
+            do_fetch_collection_documents(
+              collection_path,
+              id_token,
+              next_page_token,
+              next_documents
+            )
+
+          _other ->
+            {:ok, next_documents}
+        end
+
+      {:ok, %{"nextPageToken" => next_page_token}}
+      when is_binary(next_page_token) and next_page_token != "" ->
+        do_fetch_collection_documents(collection_path, id_token, next_page_token, documents)
+
+      {:ok, _response} ->
+        {:ok, documents}
+
+      {:error, message} ->
+        {:error, message}
+    end
+  end
+
+  defp fetch_collection(collection_path, id_token, opts) do
+    ensure_http_stack_started()
+
+    case :httpc.request(
+           :get,
+           {collection_url(collection_path, opts), request_headers(id_token)},
+           http_options(),
+           request_options()
+         ) do
+      {:ok, {{_http_version, 404, _reason_phrase}, _headers, _body}} ->
+        {:ok, %{}}
+
+      {:ok, {{_http_version, status_code, _reason_phrase}, _headers, response_body}}
+      when status_code in 200..299 ->
+        decode_json(response_body)
+
+      {:ok, {{_http_version, status_code, _reason_phrase}, _headers, response_body}} ->
+        with {:ok, decoded} <- decode_json(response_body) do
+          {:error, decode_error_message(decoded, "Firestore list thất bại (HTTP #{status_code})")}
+        else
+          _error -> {:error, "Firestore list thất bại (HTTP #{status_code})"}
+        end
+
+      {:error, reason} ->
+        {:error, "Không thể đọc danh sách Firestore: #{format_reason(reason)}"}
+    end
+  end
+
   defp document_url(document_path) do
     "#{@firestore_base_url}/projects/#{config()[:project_id]}/databases/(default)/documents/#{document_path}"
     |> String.to_charlist()
+  end
+
+  defp collection_url(collection_path, opts) do
+    query =
+      %{}
+      |> maybe_put("pageSize", Keyword.get(opts, :page_size, @firestore_page_size))
+      |> maybe_put("pageToken", Keyword.get(opts, :page_token))
+      |> URI.encode_query()
+
+    "#{@firestore_base_url}/projects/#{config()[:project_id]}/databases/(default)/documents/#{collection_path}"
+    |> then(fn base_url ->
+      if query == "" do
+        base_url
+      else
+        "#{base_url}?#{query}"
+      end
+    end)
+    |> String.to_charlist()
+  end
+
+  defp decode_document_fields(%{"fields" => fields}) when is_map(fields),
+    do: decode_fields(fields)
+
+  defp decode_document_fields(_document), do: %{}
+
+  defp build_generation_from_index_document(document) do
+    document
+    |> decode_document_fields()
+    |> build_generation_from_index()
   end
 
   defp decode_fields(fields) when is_map(fields) do
@@ -439,9 +626,41 @@ defmodule Backend.Firebase.FirestoreClient do
       tracks:
         index_data
         |> Map.get("tracks", [])
-        |> Enum.map(&build_track_from_index/1),
+        |> Enum.map(&build_track_from_index/1)
+        |> Enum.sort_by(&read_track(&1, :variant_index)),
       created_at: normalize_datetime(index_data["createdAt"]),
       updated_at: normalize_datetime(index_data["updatedAt"])
+    }
+  end
+
+  defp build_generation_from_task_document(task_data, tracks_by_task_id) when is_map(task_data) do
+    task_id = task_data["taskId"] || ""
+
+    tracks =
+      tracks_by_task_id
+      |> Map.get(task_id, [])
+      |> Enum.map(&build_track_from_index/1)
+      |> Enum.sort_by(&read_track(&1, :variant_index))
+
+    first_track = List.first(tracks)
+
+    %Generation{
+      id: task_id,
+      user_id: task_data["userId"] || "guest_user",
+      title: task_data["title"] || read_track(first_track, :title),
+      prompt: task_data["prompt"] || "",
+      duration_sec:
+        normalize_integer(task_data["durationSeconds"] || read_track(first_track, :duration_sec)),
+      requested_duration_sec: normalize_optional_integer(task_data["requestedDurationSeconds"]),
+      status: task_data["status"] || "processing",
+      audio_url: task_data["audioUrl"] || read_track(first_track, :audio_url),
+      image_url: task_data["imageUrl"] || read_track(first_track, :image_url),
+      provider: task_data["provider"],
+      provider_account: task_data["providerAccount"] || task_data["keyAlias"],
+      output_count: normalize_optional_integer(task_data["outputCount"]) || length(tracks),
+      tracks: tracks,
+      created_at: normalize_datetime(task_data["createdAt"]),
+      updated_at: normalize_datetime(task_data["updatedAt"])
     }
   end
 
@@ -488,6 +707,15 @@ defmodule Backend.Firebase.FirestoreClient do
   end
 
   defp normalize_datetime(_value), do: DateTime.utc_now() |> DateTime.truncate(:second)
+
+  defp sort_generations(generations) do
+    Enum.sort(generations, fn left, right ->
+      left_timestamp = left.updated_at || left.created_at
+      right_timestamp = right.updated_at || right.created_at
+
+      DateTime.compare(left_timestamp, right_timestamp) != :lt
+    end)
+  end
 
   defp decode_json(body) when is_binary(body) do
     case Jason.decode(body) do

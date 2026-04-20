@@ -112,7 +112,17 @@ defmodule Backend.Music.MusicService do
   Deletes one song by id.
   """
   @spec delete_song(String.t()) :: Generation.t() | nil
-  def delete_song(id), do: Store.delete(id)
+  def delete_song(id) do
+    case Store.get(id) || restore_generation(id) do
+      nil ->
+        nil
+
+      %Generation{} = generation ->
+        _deleted_generation = Store.delete(id)
+        sync_deleted_generation(generation)
+        generation
+    end
+  end
 
   @doc """
   Returns one generation by id.
@@ -132,16 +142,42 @@ defmodule Backend.Music.MusicService do
   end
 
   @doc """
-  Returns all songs in memory.
+  Returns all songs available for the admin UI.
   """
   @spec list_all_songs() :: [Generation.t()]
-  def list_all_songs, do: Store.list_all()
+  def list_all_songs do
+    case FirestoreClient.list_generations() do
+      {:ok, generations} when generations != [] ->
+        cache_generations(generations)
+        generations
+
+      {:ok, []} ->
+        Store.list_all()
+
+      {:error, message} ->
+        Logger.warning("Falling back to in-memory song list: #{message}")
+        Store.list_all()
+    end
+  end
 
   @doc """
   Returns all songs created by one user.
   """
   @spec list_user_songs(String.t()) :: [Generation.t()]
-  def list_user_songs(user_id), do: Store.list_by_user(user_id)
+  def list_user_songs(user_id) do
+    case FirestoreClient.list_generations_by_user(user_id) do
+      {:ok, generations} when generations != [] ->
+        cache_generations(generations)
+        generations
+
+      {:ok, []} ->
+        Store.list_by_user(user_id)
+
+      {:error, message} ->
+        Logger.warning("Falling back to in-memory user song list for #{user_id}: #{message}")
+        Store.list_by_user(user_id)
+    end
+  end
 
   @doc """
   Returns the statuses supported by the admin UI.
@@ -924,5 +960,20 @@ defmodule Backend.Music.MusicService do
         Logger.warning("Firestore sync skipped for #{generation.id}: #{message}")
         :ok
     end
+  end
+
+  defp sync_deleted_generation(%Generation{} = generation) do
+    case FirestoreClient.delete_generation(generation) do
+      :ok ->
+        :ok
+
+      {:error, message} ->
+        Logger.warning("Firestore delete skipped for #{generation.id}: #{message}")
+        :ok
+    end
+  end
+
+  defp cache_generations(generations) when is_list(generations) do
+    Enum.each(generations, &Store.save/1)
   end
 end
