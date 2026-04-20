@@ -17,15 +17,16 @@ class AudioGenerationRemoteDataSource {
     required String userId,
     required String prompt,
   }) async {
-    final response = await http
-        .post(
-          Uri.parse(
-            '${_normalizeBaseUrl(baseUrl)}${AudioGenerationConfig.generatePath}',
-          ),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'user_id': userId, 'prompt': prompt}),
-        )
-        .timeout(Duration(seconds: AudioGenerationConfig.timeoutSeconds));
+    final response = await _runRequest(
+      () => http.post(
+        Uri.parse(
+          '${_normalizeBaseUrl(baseUrl)}${AudioGenerationConfig.generatePath}',
+        ),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'user_id': userId, 'prompt': prompt}),
+      ),
+      baseUrl: baseUrl,
+    );
 
     _throwIfRequestFailed(
       response,
@@ -47,13 +48,14 @@ class AudioGenerationRemoteDataSource {
     required String baseUrl,
     required String generationId,
   }) async {
-    final response = await http
-        .get(
-          Uri.parse(
-            '${_normalizeBaseUrl(baseUrl)}${AudioGenerationConfig.generationsPath}/$generationId',
-          ),
-        )
-        .timeout(Duration(seconds: AudioGenerationConfig.timeoutSeconds));
+    final response = await _runRequest(
+      () => http.get(
+        Uri.parse(
+          '${_normalizeBaseUrl(baseUrl)}${AudioGenerationConfig.generationsPath}/$generationId',
+        ),
+      ),
+      baseUrl: baseUrl,
+    );
 
     _throwIfRequestFailed(
       response,
@@ -71,9 +73,7 @@ class AudioGenerationRemoteDataSource {
       '${_normalizeBaseUrl(baseUrl)}${AudioGenerationConfig.mySongsPath}',
     ).replace(queryParameters: {'user_id': userId});
 
-    final response = await http
-        .get(uri)
-        .timeout(Duration(seconds: AudioGenerationConfig.timeoutSeconds));
+    final response = await _runRequest(() => http.get(uri), baseUrl: baseUrl);
 
     _throwIfRequestFailed(
       response,
@@ -183,6 +183,26 @@ class AudioGenerationRemoteDataSource {
 
   String _normalizeBaseUrl(String baseUrl) {
     return baseUrl.replaceFirst(RegExp(r'/+$'), '');
+  }
+
+  Future<http.Response> _runRequest(
+    Future<http.Response> Function() request, {
+    required String baseUrl,
+  }) async {
+    try {
+      return await request().timeout(
+        Duration(seconds: AudioGenerationConfig.timeoutSeconds),
+      );
+    } on TimeoutException {
+      throw Exception(AudioGenerationConfig.buildTimeoutMessage(baseUrl));
+    } on http.ClientException catch (error) {
+      throw Exception(
+        AudioGenerationConfig.buildConnectionErrorMessage(
+          baseUrl,
+          details: error.message,
+        ),
+      );
+    }
   }
 
   Map<String, dynamic> _decodeBodyAsMap(String body) {

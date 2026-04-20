@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:login_flutter/domain/entities/search_plan_entity.dart';
-import 'package:login_flutter/l10n/app_localizations.dart';
 
 class SearchInfoCard extends StatelessWidget {
   final SearchPlanEntity plan;
@@ -9,13 +8,17 @@ class SearchInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final chips = [
+    final chips = {
       ...plan.keywords,
       ...plan.artistHints,
       ...plan.titleHints,
       ...plan.tagHints,
-    ];
+    }.where((chip) => chip.trim().isNotEmpty).toList();
+    final hasReason = plan.reason.trim().isNotEmpty;
+
+    if (!hasReason && chips.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -27,9 +30,7 @@ class SearchInfoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.searchSourceLabel(plan.provider.toUpperCase())),
-          const SizedBox(height: 6),
-          Text(plan.reason),
+          if (hasReason) Text(plan.reason),
           if (chips.isNotEmpty) const SizedBox(height: 10),
           if (chips.isNotEmpty)
             Wrap(

@@ -79,7 +79,10 @@ class SongRemoteDataSource {
 
   // ── Firestore: cập nhật bài hát ──
   Future<void> updateSong(String id, Map<String, dynamic> data) async {
-    await _db.collection(_songsCollection).doc(id).update(data);
+    await _db.collection(_songsCollection).doc(id).update({
+      ...data,
+      ..._legacySearchMetadataCleanup(),
+    });
   }
 
   // ── Firestore: xoá bài hát ──
@@ -129,6 +132,7 @@ class SongRemoteDataSource {
 
       transaction.set(statsRef, {
         ...songData,
+        ..._legacySearchMetadataCleanup(),
         'songId': songId,
         'weekKey': weekKey,
         'totalPlayCount': currentTotal + 1,
@@ -155,5 +159,13 @@ class SongRemoteDataSource {
     final day = startOfWeek.day.toString().padLeft(2, '0');
 
     return '$year-$month-$day';
+  }
+
+  Map<String, Object> _legacySearchMetadataCleanup() {
+    return {
+      'semanticTags': FieldValue.delete(),
+      'searchAliases': FieldValue.delete(),
+      'energyLevel': FieldValue.delete(),
+    };
   }
 }

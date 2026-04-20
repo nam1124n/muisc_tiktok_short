@@ -8,9 +8,6 @@ class SongModel extends SongEntity {
     required super.audioUrl,
     required super.imageUrl,
     super.savedAt,
-    super.semanticTags = const [],
-    super.searchAliases = const [],
-    super.energyLevel = 3,
     super.trackInWeeklyStats = true,
   });
 
@@ -24,9 +21,6 @@ class SongModel extends SongEntity {
     'audioUrl': audioUrl,
     'imageUrl': imageUrl,
     if (savedAt != null) 'savedAt': savedAt!.toIso8601String(),
-    'semanticTags': semanticTags,
-    'searchAliases': searchAliases,
-    'energyLevel': energyLevel,
     'trackInWeeklyStats': trackInWeeklyStats,
   };
 
@@ -37,9 +31,6 @@ class SongModel extends SongEntity {
     audioUrl: entity.audioUrl,
     imageUrl: entity.imageUrl,
     savedAt: entity.savedAt,
-    semanticTags: entity.semanticTags,
-    searchAliases: entity.searchAliases,
-    energyLevel: entity.energyLevel,
     trackInWeeklyStats: entity.trackInWeeklyStats,
   );
 }

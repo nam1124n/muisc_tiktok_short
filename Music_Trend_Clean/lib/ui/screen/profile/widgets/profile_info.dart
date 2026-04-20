@@ -2,21 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:login_flutter/domain/entities/profile_entity.dart';
-import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/profile/providers/profile_provider.dart';
 
 class ProfileInfo extends ConsumerWidget {
   final ProfileEntity profile;
   final Color primaryColor;
   final Color textPrimary;
-  final Color textMuted;
 
   const ProfileInfo({
     super.key,
     required this.profile,
     required this.primaryColor,
     required this.textPrimary,
-    required this.textMuted,
   });
 
   Future<void> _pickImage(BuildContext context, WidgetRef ref) async {
@@ -31,8 +28,6 @@ class ProfileInfo extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-
     return Column(
       children: [
         GestureDetector(
@@ -41,8 +36,8 @@ class ProfileInfo extends ConsumerWidget {
             clipBehavior: Clip.none,
             children: [
               Container(
-                width: 96,
-                height: 96,
+                width: 108,
+                height: 108,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: const LinearGradient(
@@ -63,6 +58,7 @@ class ProfileInfo extends ConsumerWidget {
                       offset: const Offset(0, 12),
                     ),
                   ],
+                  border: Border.all(color: Colors.white, width: 4),
                 ),
                 child: profile.avatarUrl.isEmpty
                     ? Center(
@@ -112,39 +108,34 @@ class ProfileInfo extends ConsumerWidget {
                     : null,
               ),
               Positioned(
-                right: -4,
-                bottom: 6,
+                right: 0,
+                bottom: 4,
                 child: Container(
-                  width: 26,
-                  height: 26,
+                  width: 30,
+                  height: 30,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: primaryColor,
                     border: Border.all(color: Colors.white, width: 2),
                   ),
-                  child: const Icon(Icons.add, size: 16, color: Colors.white),
+                  child: const Icon(
+                    Icons.add_rounded,
+                    size: 18,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 18),
         Text(
           profile.username,
           style: TextStyle(
             color: textPrimary,
-            fontSize: 20,
+            fontSize: 24,
             fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          l10n.profileIdLabel(profile.id),
-          style: TextStyle(
-            color: textMuted.withValues(alpha: 0.9),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.9,
+            letterSpacing: -0.4,
           ),
         ),
       ],

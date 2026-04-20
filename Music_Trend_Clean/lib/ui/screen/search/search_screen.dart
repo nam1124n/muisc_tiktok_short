@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
@@ -22,11 +20,9 @@ class SearchScreen extends ConsumerStatefulWidget {
 
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _controller = TextEditingController();
-  Timer? _debounce;
 
   @override
   void dispose() {
-    _debounce?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -34,17 +30,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   void _onQueryChanged(String value, List<SongEntity> songs) {
     ref
         .read(searchNotifierProvider.notifier)
-        .preview(query: value, songs: songs);
-    _debounce?.cancel();
-    if (value.trim().isEmpty) {
-      return;
-    }
-
-    _debounce = Timer(const Duration(milliseconds: 350), () {
-      ref
-          .read(searchNotifierProvider.notifier)
-          .search(query: value, songs: songs);
-    });
+        .search(query: value, songs: songs);
   }
 
   @override
@@ -55,19 +41,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.white,
-        title: Text(
-          l10n.searchLabel,
-          style: const TextStyle(
-            color: Color(0xFF111827),
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
+      appBar: AppBar(title: Text(l10n.searchLabel)),
       body: SafeArea(
         top: false,
         bottom: false,
@@ -108,24 +82,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     if (songState is SongError) {
       return Center(child: Text(songState.message));
-    }
-
-    if (searchState is SearchLoading) {
-      if (searchState.previewResults.isEmpty) {
-        return const Center(child: CircularProgressIndicator());
-      }
-
-      return Column(
-        children: [
-          const LinearProgressIndicator(minHeight: 2),
-          const SizedBox(height: 12),
-          Expanded(child: _buildResultsList(searchState.previewResults)),
-        ],
-      );
-    }
-
-    if (searchState is SearchError) {
-      return Center(child: Text(searchState.message));
     }
 
     if (searchState is SearchLoaded) {

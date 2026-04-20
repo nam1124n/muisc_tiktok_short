@@ -24,14 +24,11 @@ class _AdminSongFormScreenState extends ConsumerState<AdminSongFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _artistController = TextEditingController();
-  final _tagsController = TextEditingController();
-  final _aliasesController = TextEditingController();
 
   XFile? _pickedImage;
   Uint8List? _pickedImageBytes;
   XFile? _pickedAudio;
   final _picker = ImagePicker();
-  int _energyLevel = 3;
 
   bool get _isEditing => widget.initialSong != null;
   bool get _hasExistingImage => (widget.initialSong?.imageUrl ?? '').isNotEmpty;
@@ -48,17 +45,12 @@ class _AdminSongFormScreenState extends ConsumerState<AdminSongFormScreen> {
 
     _titleController.text = initialSong.title;
     _artistController.text = initialSong.artist;
-    _tagsController.text = initialSong.semanticTags.join(', ');
-    _aliasesController.text = initialSong.searchAliases.join(', ');
-    _energyLevel = initialSong.energyLevel;
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _artistController.dispose();
-    _tagsController.dispose();
-    _aliasesController.dispose();
     super.dispose();
   }
 
@@ -111,9 +103,6 @@ class _AdminSongFormScreenState extends ConsumerState<AdminSongFormScreen> {
       artist: _artistController.text.trim(),
       audioUrl: widget.initialSong?.audioUrl ?? '',
       imageUrl: widget.initialSong?.imageUrl ?? '',
-      semanticTags: _parseMultiValueField(_tagsController.text),
-      searchAliases: _parseMultiValueField(_aliasesController.text),
-      energyLevel: _energyLevel,
     );
 
     if (_isEditing) {
@@ -300,76 +289,6 @@ class _AdminSongFormScreenState extends ConsumerState<AdminSongFormScreen> {
                     ? l10n.artistNameRequiredMessage
                     : null,
               ),
-              const SizedBox(height: 20),
-              LabelText(l10n.songTagsLabel),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _tagsController,
-                enabled: !isLoading,
-                maxLines: 3,
-                decoration: _inputDeco(l10n.songTagsHint),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.songTagsHelperText,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 20),
-              LabelText(l10n.searchAliasesLabel),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _aliasesController,
-                enabled: !isLoading,
-                maxLines: 3,
-                decoration: _inputDeco(l10n.searchAliasesHint),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.searchAliasesHelperText,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 20),
-              LabelText(l10n.energyLevelLabel),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: List.generate(5, (index) {
-                  final level = index + 1;
-                  final isSelected = _energyLevel == level;
-                  return ChoiceChip(
-                    label: Text('$level'),
-                    selected: isSelected,
-                    selectedColor: const Color(0xFFE9DDFF),
-                    labelStyle: TextStyle(
-                      color: isSelected
-                          ? const Color(0xFF6D28D9)
-                          : const Color(0xFF374151),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    onSelected: isLoading
-                        ? null
-                        : (_) => setState(() => _energyLevel = level),
-                  );
-                }),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.energyLevelHelperText,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  height: 1.4,
-                ),
-              ),
               const SizedBox(height: 36),
               SizedBox(
                 height: 56,
@@ -480,17 +399,5 @@ class _AdminSongFormScreenState extends ConsumerState<AdminSongFormScreen> {
         : url;
 
     return Uri.decodeComponent(lastSegment);
-  }
-
-  List<String> _parseMultiValueField(String raw) {
-    final values = raw
-        .split(RegExp(r'[,;\n]'))
-        .map((item) => item.trim().toLowerCase())
-        .where((item) => item.isNotEmpty)
-        .toSet()
-        .toList();
-
-    values.sort();
-    return values;
   }
 }

@@ -13,6 +13,7 @@ import 'package:login_flutter/ui/screen/discover/providers/recents_provider.dart
 import 'package:login_flutter/ui/screen/search/providers/search_provider.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_provider.dart';
 import 'package:login_flutter/ui/screen/profile/providers/profile_provider.dart';
+import 'package:login_flutter/ui/screen/profile/providers/playlist_provider.dart';
 import 'package:login_flutter/ui/screen/my_audios/providers/my_audios_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -67,6 +68,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ref.invalidate(searchNotifierProvider);
       ref.invalidate(songNotifierProvider);
       ref.invalidate(profileNotifierProvider);
+      ref.invalidate(playlistNotifierProvider);
       ref.invalidate(myAudiosProvider);
 
       Navigator.pushReplacement(

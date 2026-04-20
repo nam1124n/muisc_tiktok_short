@@ -9,21 +9,9 @@ class SearchInitial extends SearchState {
   const SearchInitial();
 }
 
-class SearchLoading extends SearchState {
-  final List<SongEntity> previewResults;
-
-  const SearchLoading({this.previewResults = const []});
-}
-
 class SearchLoaded extends SearchState {
   final List<SongEntity> results;
   final SearchPlanEntity plan;
 
   const SearchLoaded({required this.results, required this.plan});
-}
-
-class SearchError extends SearchState {
-  final String message;
-
-  const SearchError(this.message);
 }

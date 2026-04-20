@@ -482,33 +482,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yearRequiredMessage => 'Please select a year';
 
   @override
-  String get songTagsLabel => 'Recommendation Tags';
-
-  @override
-  String get songTagsHint => 'Example: sad, chill, heartbreak, ballad';
-
-  @override
-  String get songTagsHelperText =>
-      'Enter short tags separated by commas. Focus on mood, vibe, genre, or listening context.';
-
-  @override
-  String get searchAliasesLabel => 'Search Aliases';
-
-  @override
-  String get searchAliasesHint => 'Example: sad TikTok song, viral chorus clip';
-
-  @override
-  String get searchAliasesHelperText =>
-      'Use this for how users remember the song through trends, hook lines, or informal names.';
-
-  @override
-  String get energyLevelLabel => 'Energy Level';
-
-  @override
-  String get energyLevelHelperText =>
-      '1 is very soft/chill, 5 is intense/high-energy. Old records default to level 3.';
-
-  @override
   String get uploadingSong => 'Uploading to Cloudinary...';
 
   @override

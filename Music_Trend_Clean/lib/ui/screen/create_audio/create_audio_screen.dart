@@ -28,6 +28,9 @@ class _CreateAudioScreenState extends ConsumerState<CreateAudioScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final androidDeviceSetupHint = AudioGenerationConfig.androidDeviceSetupHint;
 
     ref.listen<CreateAudioState>(createAudioNotifierProvider, (previous, next) {
       if (previous?.status == next.status) {
@@ -162,6 +165,25 @@ class _CreateAudioScreenState extends ConsumerState<CreateAudioScreen> {
                         ),
                       ),
                     ),
+                    if (androidDeviceSetupHint != null) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: colorScheme.errorContainer.withValues(
+                            alpha: 0.75,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          androidDeviceSetupHint,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onErrorContainer,
+                            height: 1.45,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 24),
                     SizedBox(
                       height: 54,

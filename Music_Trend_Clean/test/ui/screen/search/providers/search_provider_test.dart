@@ -1,10 +1,5 @@
-import 'dart:async';
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:login_flutter/domain/entities/search_plan_entity.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
-import 'package:login_flutter/domain/repositories/ai_search_repository.dart';
-import 'package:login_flutter/domain/usecases/analyze_search_query_usecase.dart';
 import 'package:login_flutter/ui/screen/search/providers/search_provider.dart';
 import 'package:login_flutter/ui/screen/search/providers/search_state.dart';
 
@@ -17,8 +12,6 @@ void main() {
         artist: 'Son Tung M-TP',
         audioUrl: 'audio-1',
         imageUrl: 'image-1',
-        searchAliases: ['son tung chay ngay di'],
-        semanticTags: ['pop', 'tiktok'],
       ),
       SongEntity(
         id: '2',
@@ -26,125 +19,72 @@ void main() {
         artist: 'Da LAB',
         audioUrl: 'audio-2',
         imageUrl: 'image-2',
-        searchAliases: ['chill da lab'],
-        semanticTags: ['chill', 'study'],
+      ),
+      SongEntity(
+        id: '3',
+        title: 'Thu Cuoi',
+        artist: 'Yanbi',
+        audioUrl: 'audio-3',
+        imageUrl: 'image-3',
       ),
     ];
 
-    test('shows keyword preview results immediately', () {
-      final notifier = SearchNotifier(
-        analyzeSearchQueryUseCase: AnalyzeSearchQueryUseCase(
-          _FakeAiSearchRepository(
-            onAnalyzeQuery: (_) async => throw UnimplementedError(),
-          ),
-        ),
-      );
+    test('returns initial state when query is empty', () async {
+      final notifier = SearchNotifier();
 
-      notifier.preview(query: 'son tung', songs: songs);
+      await notifier.search(query: '   ', songs: songs);
 
-      final state = notifier.state;
-      expect(state, isA<SearchLoading>());
-      expect((state as SearchLoading).previewResults.map((song) => song.id), [
-        '1',
-      ]);
+      expect(notifier.state, isA<SearchInitial>());
     });
 
-    test('reuses cached AI plan for repeated normalized queries', () async {
-      var callCount = 0;
-      final notifier = SearchNotifier(
-        analyzeSearchQueryUseCase: AnalyzeSearchQueryUseCase(
-          _FakeAiSearchRepository(
-            onAnalyzeQuery: (query) async {
-              callCount++;
-              return const SearchPlanEntity(
-                originalQuery: 'Son Tung',
-                keywords: ['son tung'],
-                artistHints: ['son tung m tp'],
-                titleHints: [],
-                tagHints: [],
-                provider: 'local',
-                reason: 'Matched artist',
-              );
-            },
-          ),
-        ),
-      );
+    test('matches artist names after normalizing accents and spaces', () async {
+      final notifier = SearchNotifier();
 
-      notifier.preview(query: 'Son Tung', songs: songs);
-      await notifier.search(query: 'Son Tung', songs: songs);
-      notifier.preview(query: '  sơn tùng  ', songs: songs);
       await notifier.search(query: '  sơn tùng  ', songs: songs);
 
-      expect(callCount, 1);
-      expect(notifier.state, isA<SearchLoaded>());
+      final state = notifier.state as SearchLoaded;
+      expect(state.results.first.id, '1');
+      expect(state.plan.keywords, ['son', 'tung']);
     });
 
-    test('ignores stale AI results from older queries', () async {
-      final firstQueryCompleter = Completer<SearchPlanEntity>();
-      final notifier = SearchNotifier(
-        analyzeSearchQueryUseCase: AnalyzeSearchQueryUseCase(
-          _FakeAiSearchRepository(
-            onAnalyzeQuery: (query) {
-              if (query == 'son tung') {
-                return firstQueryCompleter.future;
-              }
+    test('matches artist name with local search', () async {
+      final notifier = SearchNotifier();
 
-              return Future.value(
-                const SearchPlanEntity(
-                  originalQuery: 'chill',
-                  keywords: ['chill'],
-                  artistHints: [],
-                  titleHints: [],
-                  tagHints: ['study'],
-                  provider: 'local',
-                  reason: 'Matched chill vibe',
-                ),
-              );
-            },
-          ),
-        ),
-      );
+      await notifier.search(query: 'da lab', songs: songs);
 
-      notifier.preview(query: 'son tung', songs: songs);
-      final firstSearch = notifier.search(query: 'son tung', songs: songs);
-
-      notifier.preview(query: 'chill', songs: songs);
-      await notifier.search(query: 'chill', songs: songs);
-
-      expect(notifier.state, isA<SearchLoaded>());
-      final loadedState = notifier.state as SearchLoaded;
-      expect(loadedState.plan.originalQuery, 'chill');
-      expect(loadedState.results.map((song) => song.id), ['2']);
-
-      firstQueryCompleter.complete(
-        const SearchPlanEntity(
-          originalQuery: 'son tung',
-          keywords: ['son tung'],
-          artistHints: ['son tung m tp'],
-          titleHints: [],
-          tagHints: [],
-          provider: 'local',
-          reason: 'Matched artist',
-        ),
-      );
-
-      await firstSearch;
-
-      expect(notifier.state, isA<SearchLoaded>());
-      final finalState = notifier.state as SearchLoaded;
-      expect(finalState.plan.originalQuery, 'chill');
-      expect(finalState.results.map((song) => song.id), ['2']);
+      final state = notifier.state as SearchLoaded;
+      expect(state.results.first.id, '2');
+      expect(state.plan.provider, 'normal');
     });
+
+    test('keeps exact title matches first', () async {
+      final notifier = SearchNotifier();
+
+      await notifier.search(query: 'thu cuoi', songs: songs);
+
+      final state = notifier.state as SearchLoaded;
+      expect(state.results.first.id, '3');
+    });
+
+    test('does not match removed tag or alias metadata anymore', () async {
+      final notifier = SearchNotifier();
+
+      await notifier.search(query: 'tiktok', songs: songs);
+
+      final state = notifier.state as SearchLoaded;
+      expect(state.results, isEmpty);
+    });
+
+    test(
+      'returns loaded state with empty results when nothing matches',
+      () async {
+        final notifier = SearchNotifier();
+
+        await notifier.search(query: 'bolero khong ton tai', songs: songs);
+
+        final state = notifier.state as SearchLoaded;
+        expect(state.results, isEmpty);
+      },
+    );
   });
-}
-
-class _FakeAiSearchRepository implements AiSearchRepository {
-  final Future<SearchPlanEntity> Function(String query) onAnalyzeQuery;
-
-  _FakeAiSearchRepository({required this.onAnalyzeQuery});
-
-  @override
-  Future<SearchPlanEntity> analyzeQuery(String query) {
-    return onAnalyzeQuery(query);
-  }
 }

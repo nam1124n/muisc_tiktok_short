@@ -480,34 +480,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get yearRequiredMessage => 'Vui lòng chọn năm';
 
   @override
-  String get songTagsLabel => 'Tag gợi ý';
-
-  @override
-  String get songTagsHint => 'Ví dụ: buồn, chill, thất tình, ballad';
-
-  @override
-  String get songTagsHelperText =>
-      'Nhập các tag ngắn, cách nhau bằng dấu phẩy. Ưu tiên mood, vibe, genre hoặc ngữ cảnh nghe nhạc.';
-
-  @override
-  String get searchAliasesLabel => 'Tên gọi dễ tìm';
-
-  @override
-  String get searchAliasesHint =>
-      'Ví dụ: nhạc tiktok buồn, đoạn điệp khúc viral';
-
-  @override
-  String get searchAliasesHelperText =>
-      'Dùng cho cách người dùng hay nhớ bài theo trend, câu hook hoặc tên gọi không chính thức.';
-
-  @override
-  String get energyLevelLabel => 'Mức năng lượng';
-
-  @override
-  String get energyLevelHelperText =>
-      '1 là rất nhẹ/chill, 5 là mạnh/sôi động. Dữ liệu cũ sẽ mặc định ở mức 3.';
-
-  @override
   String get uploadingSong => 'Đang upload lên Cloudinary...';
 
   @override
