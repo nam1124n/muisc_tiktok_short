@@ -1,6 +1,6 @@
 # Music Trend Clean
 
-Ứng dụng Flutter khám phá và quản lý nhạc theo hướng Clean Architecture, kết hợp `Firebase Auth`, `Cloud Firestore`, `Cloudinary`, `just_audio` và `Ollama` để tạo trải nghiệm nghe nhạc có tìm kiếm hỗ trợ AI.
+Ứng dụng Flutter khám phá và quản lý nhạc theo hướng Clean Architecture, kết hợp `Firebase Auth`, `Cloud Firestore`, `Cloudinary`, `just_audio` và Phoenix backend để tạo trải nghiệm nghe nhạc và sinh audio.
 
 Tên thư mục dự án là `Music_Trend_Clean`, nhưng package trong `pubspec.yaml` hiện vẫn là `login_flutter`.
 
@@ -11,7 +11,7 @@ Dự án này gồm 2 luồng chính:
 - Người dùng đăng ký, đăng nhập, khám phá bài hát, nghe nhạc, xem top thịnh hành tuần, đánh dấu yêu thích, xem lịch sử nghe gần đây và chỉnh sửa hồ sơ cá nhân.
 - Admin quản lý danh sách bài hát bằng cách upload ảnh bìa và file audio, sau đó dữ liệu được lưu trên Firestore và media được upload lên Cloudinary.
 
-Điểm nổi bật của dự án là phần tìm kiếm: thay vì chỉ lọc text thuần túy, app dùng AI để phân tích truy vấn tìm kiếm thành các từ khóa, gợi ý tên bài hát, gợi ý nghệ sĩ, rồi mới xếp hạng danh sách bài hát phù hợp.
+Điểm nổi bật của dự án là kết hợp dữ liệu nhạc trên Firestore với luồng tạo audio riêng qua backend Phoenix cho tab `Your Audio`.
 
 ## Công nghệ sử dụng
 
@@ -25,7 +25,6 @@ Dự án này gồm 2 luồng chính:
 - just_audio
 - image_picker
 - share_plus
-- Ollama API
 
 ## Tính năng hiện có
 
@@ -60,25 +59,7 @@ Dự án này gồm 2 luồng chính:
   - `uniqueUserCount` giảm dần
   - sau đó đến `totalPlayCount` giảm dần
 
-### 5. Tìm kiếm có hỗ trợ AI
-
-- Người dùng nhập truy vấn như tên bài hát, ca sĩ, mood, chủ đề.
-- App gửi truy vấn sang Ollama để phân tích.
-- Kết quả AI trả về 5 nhóm dữ liệu:
-  - `keywords`
-  - `artistHints`
-  - `titleHints`
-  - `tagHints`
-  - `reason`
-- Sau đó app tự chấm điểm từng bài hát trong danh sách hiện có để đưa ra kết quả.
-
-Cơ chế fallback hiện tại:
-
-1. Gọi local Ollama trước.
-2. Nếu local lỗi và có cấu hình cloud endpoint, app gọi cloud.
-3. Nếu cả hai đều lỗi, app rơi về rule-based search bằng cách tách từ khóa từ query gốc.
-
-### 6. Quản trị bài hát
+### 5. Quản trị bài hát
 
 - Chỉ tài khoản có email `admin@gmail.com` mới thấy nút vào admin dashboard.
 - Admin có thể:
@@ -89,7 +70,12 @@ Cơ chế fallback hiện tại:
   - ảnh bìa được upload lên Cloudinary
   - file audio được upload lên Cloudinary
   - metadata bài hát được lưu vào Firestore
-  - admin có thể bổ sung `semanticTags`, `searchAliases`, `energyLevel` để AI search gợi ý đúng hơn
+
+### 6. Tạo audio qua backend
+
+- App gọi Phoenix backend qua các endpoint `/api/generate`, `/api/generations/:id` và `/api/my-songs`.
+- `AUDIO_GENERATION_BASE_URL` là cấu hình quan trọng khi chạy app trên emulator hoặc điện thoại thật.
+- Tab `Your Audio` dùng backend này để đọc danh sách audio đã tạo của user.
 
 ### 7. Hồ sơ người dùng
 
@@ -105,10 +91,10 @@ README này mô tả đúng trạng thái hiện tại của code. Một số ph
 - Tab bottom navigation `Đã thích` ở `HomeScreen` vẫn là màn hình placeholder, chưa nối vào dữ liệu favorites thật.
 - Nút `+` ở giữa bottom navigation hiện chưa có action.
 - Nút `Forgot password?` chưa xử lý.
-- Ô search ở `DiscoverAppBar` hiện chỉ là UI, chưa nối với logic tìm kiếm.
+- Ô search ở `DiscoverAppBar` hiện chỉ là UI.
 - Tab `Your Audio` mới là giao diện tĩnh.
 - `Favorites` và `Recents` hiện lưu trong memory qua Riverpod, chưa persist xuống Firestore hay local storage.
-- Test widget hiện tại mới là placeholder; test đáng chú ý nhất đang nằm ở phần AI search repository.
+- Test widget hiện tại mới là placeholder.
 
 ## Kiến trúc dự án
 
@@ -120,13 +106,13 @@ Chứa tầng nghiệp vụ:
 
 - `entities`: các model lõi như `SongEntity`, `ProfileEntity`, `TrendingSongEntity`, `SearchPlanEntity`
 - `repositories`: abstract contract cho data layer
-- `usecases`: các ca sử dụng như đăng nhập, đăng ký, lấy bài hát, thống kê bài hát thịnh hành, tìm kiếm AI, cập nhật profile
+- `usecases`: các ca sử dụng như đăng nhập, đăng ký, lấy bài hát, thống kê bài hát thịnh hành, tạo audio, cập nhật profile
 
 ### `lib/data`
 
 Chứa tầng làm việc với dữ liệu:
 
-- `datasource/remote`: Firebase, Ollama, Cloudinary
+- `datasource/remote`: Firebase, Phoenix backend, Cloudinary
 - `datasource/local`: mock/local datasource cho profile
 - `dto`: model map qua lại giữa Firestore và entity
 - `repositories`: implement repository cho domain layer
@@ -137,7 +123,7 @@ Chứa tầng giao diện:
 
 - `screen/auth`: đăng nhập, đăng ký, auth state bằng Riverpod
 - `screen/discover`: màn hình khám phá, tab suggestion/favorite/recent/your audio
-- `screen/search`: tìm kiếm AI
+- `screen/search`: tìm kiếm bài hát
 - `screen/audio`: audio state bằng Riverpod
 - `screen/admin`: dashboard quản trị bài hát
 - `screen/profile`: xem và sửa profile
@@ -147,7 +133,7 @@ Chứa tầng giao diện:
 
 Chứa config và utility:
 
-- `config/ai_config.dart`: cấu hình endpoint/model cho Ollama qua `--dart-define`
+- `config/audio_generation_config.dart`: cấu hình endpoint backend tạo audio qua `--dart-define`
 - `utils/audio_file_picker*.dart`: chọn file audio theo từng nền tảng
 
 ## Cấu trúc thư mục chính
@@ -292,30 +278,20 @@ App dùng:
 - resource type `image` cho ảnh bìa
 - resource type `video` cho audio upload
 
-### 4. Ollama
+### 4. Backend tạo audio
 
-Phần AI search đọc cấu hình từ `lib/app/config/ai_config.dart`.
+Phần tạo audio đọc cấu hình từ `lib/app/config/audio_generation_config.dart`.
 
-Các `dart-define` hiện được hỗ trợ:
+`dart-define` hiện được hỗ trợ:
 
-- `OLLAMA_LOCAL_BASE_URL`
-- `OLLAMA_CLOUD_BASE_URL`
-- `OLLAMA_LOCAL_MODEL`
-- `OLLAMA_CLOUD_MODEL`
-- `OLLAMA_TIMEOUT_SECONDS`
+- `AUDIO_GENERATION_BASE_URL`
 
-Giá trị mặc định hiện tại:
+Giá trị mặc định theo nền tảng:
 
-- local model: `llama3:latest`
-- cloud model: `gpt-oss:20b-cloud`
-- timeout: `30`
+- Android emulator: `http://10.0.2.2:4000`
+- Nền tảng khác: `http://127.0.0.1:4000`
 
-Mặc định local base URL theo nền tảng:
-
-- Android emulator: `http://10.0.2.2:11434/api`
-- Nền tảng khác: `http://127.0.0.1:11434/api`
-
-Nếu chạy trên điện thoại thật, bạn sẽ cần trỏ về IP nội bộ của máy đang chạy Ollama thay vì `127.0.0.1`.
+Nếu chạy trên điện thoại thật, bạn cần trỏ `AUDIO_GENERATION_BASE_URL` về IP nội bộ của máy đang chạy backend Phoenix, ví dụ `http://192.168.1.10:4000`.
 
 ## Hướng dẫn cài đặt
 
@@ -346,37 +322,20 @@ Sửa `cloudName` và `uploadPreset` trong:
 
 - `lib/data/datasource/remote/song_remote_data_source.dart`
 
-### 5. Cấu hình Ollama local
+### 5. Chạy backend Phoenix
 
-Ví dụ:
+Mở terminal riêng cho backend:
 
 ```bash
-ollama serve
-ollama pull llama3:latest
+cd ../backend
+mix setup
+mix phx.server
 ```
 
-Sau đó chạy app:
+Kiểm tra nhanh:
 
 ```bash
-flutter run
-```
-
-Hoặc truyền rõ cấu hình:
-
-```bash
-flutter run \
-  --dart-define=OLLAMA_LOCAL_BASE_URL=http://127.0.0.1:11434/api \
-  --dart-define=OLLAMA_LOCAL_MODEL=llama3:latest
-```
-
-Ví dụ dùng cloud fallback:
-
-```bash
-flutter run \
-  --dart-define=OLLAMA_LOCAL_BASE_URL=http://127.0.0.1:11434/api \
-  --dart-define=OLLAMA_LOCAL_MODEL=llama3:latest \
-  --dart-define=OLLAMA_CLOUD_BASE_URL=https://your-ollama-gateway.example/api \
-  --dart-define=OLLAMA_CLOUD_MODEL=gpt-oss:20b-cloud
+curl http://localhost:4000/api/health
 ```
 
 ## Cách chạy dự án
@@ -385,6 +344,18 @@ flutter run \
 
 ```bash
 flutter run
+```
+
+Nếu chạy Android emulator:
+
+```bash
+flutter run --dart-define=AUDIO_GENERATION_BASE_URL=http://10.0.2.2:4000
+```
+
+Nếu chạy điện thoại Android thật:
+
+```bash
+flutter run --dart-define=AUDIO_GENERATION_BASE_URL=http://<IP_LAN_MAY_TINH>:4000
 ```
 
 ### Chạy web
@@ -428,15 +399,7 @@ Chạy test:
 flutter test
 ```
 
-Hiện tại test đáng chú ý nhất là:
-
-- `test/data/repositories/ai_search_repository_impl_test.dart`
-
-File này đang kiểm tra:
-
-- local Ollama thành công
-- fallback sang cloud khi local lỗi
-- fallback sang rule-based search khi tất cả provider đều lỗi
+Hiện tại test chủ yếu nằm ở các provider và luồng nghiệp vụ cơ bản; widget test mặc định vẫn còn ở mức placeholder.
 
 ## Một số lưu ý khi phát triển tiếp
 
@@ -444,7 +407,7 @@ File này đang kiểm tra:
 - Nên chuyển cấu hình Cloudinary ra `--dart-define` hoặc file secret riêng, tránh hard-code trong source.
 - Nên persist favorites/recents xuống Firestore hoặc local database.
 - Nên hoàn thiện `Your Audio`, `Forgot password`, nút `+` ở bottom nav và ô search tại `Discover`.
-- Nên bổ sung test cho các notifier/provider của `song`, `audio player`, `search` và các use case quan trọng.
+- Nên bổ sung test cho các notifier/provider của `song`, `audio player` và các use case quan trọng.
 
 ## Lệnh hữu ích
 
@@ -462,7 +425,7 @@ Nếu bạn cần hiểu thật nhanh dự án này đang làm gì, thì có th�
 - Flutter app nghe nhạc có Firebase Auth + Firestore
 - Admin upload bài hát lên Cloudinary và quản lý dữ liệu trên Firestore
 - User nghe nhạc, tạo top thịnh hành tuần từ lượt nghe thật
-- Search dùng Ollama để phân tích query rồi xếp hạng bài hát
+- App có thêm luồng tạo audio qua Phoenix backend
 - Codebase được chia theo `domain`, `data`, `ui`, `app`
 # Music26
 
