@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:login_flutter/domain/entities/profile_entity.dart';
+import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/profile/providers/profile_provider.dart';
 
 class ProfileInfo extends ConsumerWidget {
@@ -28,6 +29,8 @@ class ProfileInfo extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       children: [
         GestureDetector(
@@ -138,7 +141,37 @@ class ProfileInfo extends ConsumerWidget {
             letterSpacing: -0.4,
           ),
         ),
+        if (profile.ageGroup != ProfileAgeGroups.preferNotToSay) ...[
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: primaryColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              _ageGroupLabel(l10n, profile.ageGroup),
+              style: TextStyle(
+                color: primaryColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ],
     );
+  }
+
+  String _ageGroupLabel(AppLocalizations l10n, String ageGroup) {
+    switch (ageGroup) {
+      case ProfileAgeGroups.under13:
+        return l10n.ageGroupUnder13;
+      case ProfileAgeGroups.teens:
+        return l10n.ageGroupTeens;
+      case ProfileAgeGroups.adults:
+        return l10n.ageGroupAdults;
+      default:
+        return l10n.ageGroupPreferNotToSay;
+    }
   }
 }

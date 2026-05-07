@@ -127,7 +127,7 @@ List<_YearFolder> _discoverYearFolders(Directory rootDirectory) {
     ];
   }
 
-  return rootDirectory
+  final yearFolders = rootDirectory
       .listSync(followLinks: false)
       .whereType<Directory>()
       .map((directory) {
@@ -144,6 +144,26 @@ List<_YearFolder> _discoverYearFolders(Directory rootDirectory) {
       .whereType<_YearFolder>()
       .toList()
     ..sort((left, right) => right.year.compareTo(left.year));
+
+  if (yearFolders.isNotEmpty) {
+    return yearFolders;
+  }
+
+  final hasAudioFiles = rootDirectory
+      .listSync(followLinks: false)
+      .whereType<File>()
+      .any((file) => _audioExtensions.contains(_extension(file.path)));
+
+  if (hasAudioFiles) {
+    return [
+      _YearFolder(
+        directory: rootDirectory,
+        year: DateTime.now().year,
+      ),
+    ];
+  }
+
+  return [];
 }
 
 Future<_ImportSummary> _runImport({
@@ -926,6 +946,11 @@ class _ImportConfig {
       'Usage:\n'
       '  dart run tool/import_yearly_songs.dart --root /path/to/downloads --email admin@gmail.com --password your_password [--apply]\n'
       '\n'
+      'Credential fallback:\n'
+      '  - CLI flags win over environment variables\n'
+      '  - Supported envs: FIREBASE_TOOL_EMAIL / FIREBASE_TOOL_PASSWORD\n'
+      '  - Backend envs FIREBASE_BACKEND_EMAIL / FIREBASE_BACKEND_PASSWORD also work\n'
+      '\n'
       'What the script scans:\n'
       '  - Every folder matching music_YYYY under --root\n'
       '  - Example: /home/you/Downloads/music_2026\n'
@@ -1022,10 +1047,37 @@ class _ImportConfig {
 
     return _ImportConfig(
       rootPath: options['root'] ?? '',
-      email: options['email'] ?? '',
-      password: options['password'] ?? '',
-      apiKey: options['api-key'] ?? 'AIzaSyCaunJrZfmVkcX6XQidUh5fi6F7VntnZ8w',
-      projectId: options['project-id'] ?? 'appmusi-4ff75',
+      email:
+          _readOptionOrEnv(
+            options: options,
+            optionKey: 'email',
+            envKeys: const ['FIREBASE_TOOL_EMAIL', 'FIREBASE_BACKEND_EMAIL'],
+          ) ??
+          'admin@gmail.com',
+      password:
+          _readOptionOrEnv(
+            options: options,
+            optionKey: 'password',
+            envKeys: const [
+              'FIREBASE_TOOL_PASSWORD',
+              'FIREBASE_BACKEND_PASSWORD',
+            ],
+          ) ??
+          '',
+      apiKey:
+          _readOptionOrEnv(
+            options: options,
+            optionKey: 'api-key',
+            envKeys: const ['FIREBASE_TOOL_API_KEY', 'FIREBASE_WEB_API_KEY'],
+          ) ??
+          'AIzaSyCaunJrZfmVkcX6XQidUh5fi6F7VntnZ8w',
+      projectId:
+          _readOptionOrEnv(
+            options: options,
+            optionKey: 'project-id',
+            envKeys: const ['FIREBASE_TOOL_PROJECT_ID', 'FIREBASE_PROJECT_ID'],
+          ) ??
+          'appmusi-4ff75',
       collection: options['collection'] ?? 'yearly_songs',
       cloudName: options['cloud-name'] ?? 'ddy9wgrbj',
       uploadPreset: options['upload-preset'] ?? 'musicapp',
@@ -1049,12 +1101,34 @@ class _ImportConfig {
       return 'Missing required argument: --root';
     }
     if (email.trim().isEmpty) {
-      return 'Missing required argument: --email';
+      return 'Missing required argument: --email '
+          '(or set FIREBASE_TOOL_EMAIL / FIREBASE_BACKEND_EMAIL)';
     }
     if (password.trim().isEmpty) {
-      return 'Missing required argument: --password';
+      return 'Missing required argument: --password '
+          '(or set FIREBASE_TOOL_PASSWORD / FIREBASE_BACKEND_PASSWORD)';
     }
 
     return 'Invalid configuration';
+  }
+
+  static String? _readOptionOrEnv({
+    required Map<String, String> options,
+    required String optionKey,
+    required List<String> envKeys,
+  }) {
+    final optionValue = options[optionKey];
+    if (optionValue != null && optionValue.trim().isNotEmpty) {
+      return optionValue;
+    }
+
+    for (final envKey in envKeys) {
+      final envValue = Platform.environment[envKey];
+      if (envValue != null && envValue.trim().isNotEmpty) {
+        return envValue;
+      }
+    }
+
+    return null;
   }
 }

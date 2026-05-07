@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:login_flutter/domain/entities/user_entity.dart';
 
 class SongRemoteDataSource {
   static const String _songsCollection = 'songs';
@@ -10,6 +11,22 @@ class SongRemoteDataSource {
 
   final _db = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
+
+  Future<void> ensureAdminAccess() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('Vui lòng đăng nhập để thực hiện thao tác quản trị.');
+    }
+
+    final doc = await _db.collection('users').doc(user.uid).get();
+    final role = UserRoles.normalize(doc.data()?['role']?.toString());
+    final isAdminEmail =
+        (user.email ?? '').trim().toLowerCase() == 'admin@gmail.com';
+
+    if (role != UserRoles.admin && !isAdminEmail) {
+      throw Exception('Bạn không có quyền thực hiện thao tác quản trị.');
+    }
+  }
 
   // ── Cloudinary: upload ảnh, trả về URL ──
   Future<String> uploadImage(XFile imageFile) async {

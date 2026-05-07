@@ -10,7 +10,8 @@ class SignUpUseCase {
     String fullName,
     String email,
     String password,
+    String ageGroup,
   ) async {
-    return await repository.signUp(fullName, email, password);
+    return await repository.signUp(fullName, email, password, ageGroup);
   }
 }

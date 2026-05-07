@@ -5,7 +5,13 @@ class UpdateProfileUseCase {
 
   UpdateProfileUseCase(this.repository);
 
-  Future<void> call(String username) async {
-    return await repository.updateProfile(username);
+  Future<void> call({
+    required String username,
+    required String ageGroup,
+  }) async {
+    return await repository.updateProfile(
+      username: username,
+      ageGroup: ageGroup,
+    );
   }
 }

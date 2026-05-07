@@ -60,8 +60,7 @@ class AdminYearSongDashboardScreen extends ConsumerWidget {
   ) {
     final l10n = AppLocalizations.of(context)!;
 
-    if (authState is! AuthSuccess ||
-        authState.user.email != 'admin@gmail.com') {
+    if (authState is! AuthSuccess || !authState.user.isAdmin) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

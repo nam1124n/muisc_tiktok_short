@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function currentUserIsAdmin() {
+      return isSignedIn() &&
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    match /users/{userId} {
+      allow read, create, update: if isOwner(userId);
+      allow delete: if false;
+
+      match /favorites/{favoriteId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /recents/{recentId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /playlists/{playlistId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /generation_tasks/{taskId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /generated_tracks/{trackId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    match /songs/{songId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if currentUserIsAdmin();
+    }
+
+    match /yearly_songs/{songId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if currentUserIsAdmin();
+    }
+
+    match /song_weekly_stats/{weekKey} {
+      allow read: if isSignedIn();
+      allow write: if false;
+
+      match /songs/{songId} {
+        allow read: if isSignedIn();
+        allow create, update: if isSignedIn();
+        allow delete: if currentUserIsAdmin();
+
+        match /listeners/{userId} {
+          allow read: if isSignedIn();
+          allow write: if isOwner(userId);
+        }
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

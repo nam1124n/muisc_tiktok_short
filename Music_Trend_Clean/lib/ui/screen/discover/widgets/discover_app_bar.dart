@@ -13,8 +13,7 @@ class DiscoverAppBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authNotifierProvider);
-    final isAdmin =
-        authState is AuthSuccess && authState.user.email == 'admin@gmail.com';
+    final isAdmin = authState is AuthSuccess && authState.user.isAdmin;
 
     return Column(
       mainAxisSize: MainAxisSize.min,

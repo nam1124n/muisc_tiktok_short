@@ -128,12 +128,24 @@
   "sendResetEmail": "Send reset email",
   "emailRequiredMessage": "Please enter your email.",
   "invalidEmailFormatMessage": "Invalid email format.",
+  "passwordRequiredMessage": "Please enter your password.",
+  "passwordTooShortMessage": "Password must be at least 8 characters long.",
+  "passwordWeakMessage": "Password must include uppercase, lowercase, number, and special character.",
   "resetPasswordSentMessage": "The password reset email has been sent.",
   "createAccountTitle": "Create Account",
   "createAccountSubtitle": "Join us to get started with your journey.",
   "fullNameLabel": "Full Name",
+  "fullNameRequiredMessage": "Please enter your full name.",
   "confirmPasswordLabel": "Confirm Password",
   "passwordsDoNotMatch": "Passwords do not match",
+  "passwordRequirementHint": "Use at least 8 characters including uppercase, lowercase, number, and special character.",
+  "ageGroupLabel": "Age Group",
+  "ageGroupRequiredMessage": "Please select your age group.",
+  "selectAgeGroupHint": "Select your age group",
+  "ageGroupUnder13": "Under 13",
+  "ageGroupTeens": "13 to 17",
+  "ageGroupAdults": "18 and above",
+  "ageGroupPreferNotToSay": "Prefer not to say",
   "signUpSuccessMessage": "Account created for {fullName}!",
   "@signUpSuccessMessage": {
     "placeholders": {
@@ -142,6 +154,20 @@
       }
     }
   },
+  "verificationEmailSentMessage": "Verification email sent. Please check your inbox.",
+  "emailVerificationRequiredMessage": "Your account is not verified yet.",
+  "emailVerificationTitle": "Verify Your Email",
+  "emailVerificationSubtitle": "We sent a verification email to {email}. Confirm it, then return to the app.",
+  "@emailVerificationSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "resendVerificationEmail": "Resend verification email",
+  "checkVerificationStatus": "I have verified it",
+  "genericVerificationErrorMessage": "Unable to send a verification email right now.",
   "alreadyHaveAccount": "Already have an account?",
   "backToLogin": "Back to Login",
   "createAudioSuccessMessage": "Generation started. Your versions will appear in My Audios shortly.",

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/domain/entities/profile_entity.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/auth/providers/auth_provider.dart';
 import 'package:login_flutter/ui/screen/auth/providers/auth_state.dart';
@@ -17,6 +18,7 @@ class _SignUpWidgetState extends ConsumerState<SignupScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+  String? _selectedAgeGroup;
 
   @override
   void dispose() {
@@ -29,15 +31,28 @@ class _SignUpWidgetState extends ConsumerState<SignupScreen> {
 
   Future<void> _signUp() async {
     final l10n = AppLocalizations.of(context)!;
+    final notifier = ref.read(authNotifierProvider.notifier);
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
+    final validationMessage = notifier.validateSignUpInput(
+      fullName: _nameController.text,
+      email: _emailController.text,
+      password: password,
+      confirmPassword: confirmPassword,
+      ageGroup: _selectedAgeGroup,
+      fullNameRequiredMessage: l10n.fullNameRequiredMessage,
+      emailRequiredMessage: l10n.emailRequiredMessage,
+      invalidEmailFormatMessage: l10n.invalidEmailFormatMessage,
+      passwordRequiredMessage: l10n.passwordRequiredMessage,
+      passwordTooShortMessage: l10n.passwordTooShortMessage,
+      passwordWeakMessage: l10n.passwordWeakMessage,
+      passwordsDoNotMatchMessage: l10n.passwordsDoNotMatch,
+      ageGroupRequiredMessage: l10n.ageGroupRequiredMessage,
+    );
 
-    if (password != confirmPassword) {
+    if (validationMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.passwordsDoNotMatch),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(validationMessage), backgroundColor: Colors.red),
       );
       return;
     }
@@ -45,9 +60,10 @@ class _SignUpWidgetState extends ConsumerState<SignupScreen> {
     await ref
         .read(authNotifierProvider.notifier)
         .signUp(
-          fullName: _nameController.text,
-          email: _emailController.text,
+          fullName: _nameController.text.trim(),
+          email: _emailController.text.trim(),
           password: password,
+          ageGroup: _selectedAgeGroup!,
         );
 
     if (!mounted) {
@@ -62,7 +78,7 @@ class _SignUpWidgetState extends ConsumerState<SignupScreen> {
     } else if (authState is AuthSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.signUpSuccessMessage(authState.user.fullName)),
+          content: Text(l10n.verificationEmailSentMessage),
           backgroundColor: Colors.green,
         ),
       );
@@ -139,6 +155,14 @@ class _SignUpWidgetState extends ConsumerState<SignupScreen> {
                       _buildLabel(l10n.password.toUpperCase()),
                       const SizedBox(height: 8),
                       _buildTextField('••••••••', true, _passwordController),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.passwordRequirementHint,
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                          fontSize: 12,
+                        ),
+                      ),
                       const SizedBox(height: 20),
                       _buildLabel(l10n.confirmPasswordLabel.toUpperCase()),
                       const SizedBox(height: 8),
@@ -146,6 +170,28 @@ class _SignUpWidgetState extends ConsumerState<SignupScreen> {
                         '••••••••',
                         true,
                         _confirmPasswordController,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel(l10n.ageGroupLabel.toUpperCase()),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        initialValue: _selectedAgeGroup,
+                        decoration: _inputDecoration(l10n.selectAgeGroupHint),
+                        items: ProfileAgeGroups.values
+                            .map(
+                              (ageGroup) => DropdownMenuItem(
+                                value: ageGroup,
+                                child: Text(_ageGroupLabel(l10n, ageGroup)),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: state is AuthLoading
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  _selectedAgeGroup = value;
+                                });
+                              },
                       ),
                       const SizedBox(height: 32),
                       ElevatedButton(
@@ -231,29 +277,46 @@ class _SignUpWidgetState extends ConsumerState<SignupScreen> {
     return TextFormField(
       controller: controller,
       obscureText: isPassword,
-      decoration: InputDecoration(
-        hintText: hint,
+      decoration: _inputDecoration(
+        hint,
         hintStyle: TextStyle(
           color: Colors.grey[400],
           letterSpacing: isPassword ? 4 : null,
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey[200]!),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey[200]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF9038FF), width: 1.5),
-        ),
       ),
     );
+  }
+
+  InputDecoration _inputDecoration(String hintText, {TextStyle? hintStyle}) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: hintStyle ?? TextStyle(color: Colors.grey[400]),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.grey[200]!),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.grey[200]!),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Color(0xFF9038FF), width: 1.5),
+      ),
+    );
+  }
+
+  String _ageGroupLabel(AppLocalizations l10n, String ageGroup) {
+    switch (ageGroup) {
+      case ProfileAgeGroups.under13:
+        return l10n.ageGroupUnder13;
+      case ProfileAgeGroups.teens:
+        return l10n.ageGroupTeens;
+      case ProfileAgeGroups.adults:
+        return l10n.ageGroupAdults;
+      default:
+        return l10n.ageGroupPreferNotToSay;
+    }
   }
 }

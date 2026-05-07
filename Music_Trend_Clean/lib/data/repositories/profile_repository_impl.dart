@@ -23,7 +23,13 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<void> updateProfile(String username) async {
-    await remoteDataSource.updateProfile(username);
+  Future<void> updateProfile({
+    required String username,
+    required String ageGroup,
+  }) async {
+    await remoteDataSource.updateProfile(
+      username: username,
+      ageGroup: ageGroup,
+    );
   }
 }

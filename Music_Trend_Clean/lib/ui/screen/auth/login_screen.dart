@@ -5,7 +5,7 @@ import 'package:login_flutter/ui/screen/auth/providers/auth_provider.dart';
 import 'package:login_flutter/ui/screen/auth/providers/auth_state.dart';
 import 'package:login_flutter/ui/screen/auth/forgot_password/forgot_password_screen.dart';
 import 'package:login_flutter/ui/screen/auth/signup_screen.dart';
-import 'package:login_flutter/ui/screen/home/home_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:login_flutter/ui/screen/audio/providers/audio_player_provider.dart';
 import 'package:login_flutter/ui/screen/discover/providers/favorites_provider.dart';
@@ -35,10 +35,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _login() async {
+    final l10n = AppLocalizations.of(context)!;
+    final notifier = ref.read(authNotifierProvider.notifier);
+    final validationMessage = notifier.validateLoginInput(
+      email: _emailController.text,
+      password: _passwordController.text,
+      emailRequiredMessage: l10n.emailRequiredMessage,
+      invalidEmailFormatMessage: l10n.invalidEmailFormatMessage,
+      passwordRequiredMessage: l10n.passwordRequiredMessage,
+    );
+
+    if (validationMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(validationMessage), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
     await ref
         .read(authNotifierProvider.notifier)
         .login(
-          email: _emailController.text,
+          email: _emailController.text.trim(),
           password: _passwordController.text,
         );
 
@@ -52,13 +69,67 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         SnackBar(content: Text(authState.message), backgroundColor: Colors.red),
       );
     } else if (authState is AuthSuccess) {
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.loginSuccessMessage(authState.user.fullName)),
-          backgroundColor: Colors.green,
-        ),
-      );
+      final isSystemAdmin = authState.user.isAdmin || 
+          authState.user.email.trim().toLowerCase() == 'admin@gmail.com';
+      if (!authState.user.isEmailVerified && !isSystemAdmin) {
+        // Force sign out immediately if not verified
+        await FirebaseAuth.instance.signOut();
+        ref.read(authNotifierProvider.notifier).reset();
+
+        if (!mounted) return;
+
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: const Text(
+                'Yêu cầu xác thực',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              content: const Text(
+                'Tài khoản của bạn chưa được xác thực. Vui lòng kiểm tra email (kể cả hộp thư rác) để xác thực.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: const Text('Đóng', style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF9038FF),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () async {
+                    Navigator.of(dialogContext).pop();
+                    await ref.read(authNotifierProvider.notifier).resendEmailVerification(
+                      _emailController.text.trim(),
+                      _passwordController.text,
+                    );
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Đã gửi lại email xác thực. Vui lòng kiểm tra hộp thư.'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  },
+                  child: const Text('Gửi lại email'),
+                ),
+              ],
+            );
+          },
+        );
+        return;
+      }
 
       // Invalidate session providers to ensure fresh data load for the new user session
       // This defends against stale state from the previous user or transitions.
@@ -70,11 +141,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ref.invalidate(profileNotifierProvider);
       ref.invalidate(playlistNotifierProvider);
       ref.invalidate(myAudiosProvider);
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
     }
   }
 

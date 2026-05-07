@@ -1,5 +1,25 @@
 import 'package:equatable/equatable.dart';
 
+class ProfileAgeGroups {
+  static const String under13 = 'under_13';
+  static const String teens = '13_to_17';
+  static const String adults = '18_plus';
+  static const String preferNotToSay = 'prefer_not_to_say';
+
+  static const List<String> values = [under13, teens, adults, preferNotToSay];
+
+  static String normalize(String? value) {
+    final normalized = value?.trim().toLowerCase() ?? '';
+    for (final ageGroup in values) {
+      if (ageGroup == normalized) {
+        return ageGroup;
+      }
+    }
+
+    return preferNotToSay;
+  }
+}
+
 class ProfileEntity extends Equatable {
   final String username;
   final String id;
@@ -7,6 +27,7 @@ class ProfileEntity extends Equatable {
   final int followers;
   final int following;
   final int likes;
+  final String ageGroup;
 
   const ProfileEntity({
     required this.username,
@@ -15,6 +36,7 @@ class ProfileEntity extends Equatable {
     required this.followers,
     required this.following,
     required this.likes,
+    required this.ageGroup,
   });
 
   ProfileEntity copyWith({
@@ -24,6 +46,7 @@ class ProfileEntity extends Equatable {
     int? followers,
     int? following,
     int? likes,
+    String? ageGroup,
   }) {
     return ProfileEntity(
       username: username ?? this.username,
@@ -32,6 +55,7 @@ class ProfileEntity extends Equatable {
       followers: followers ?? this.followers,
       following: following ?? this.following,
       likes: likes ?? this.likes,
+      ageGroup: ageGroup ?? this.ageGroup,
     );
   }
 
@@ -43,5 +67,6 @@ class ProfileEntity extends Equatable {
     followers,
     following,
     likes,
+    ageGroup,
   ];
 }

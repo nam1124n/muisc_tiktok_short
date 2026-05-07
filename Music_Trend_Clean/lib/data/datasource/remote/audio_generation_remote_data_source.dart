@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:login_flutter/app/config/audio_generation_config.dart';
 import 'package:login_flutter/data/dto/audio_generation/generated_audio_model.dart';
@@ -17,12 +18,13 @@ class AudioGenerationRemoteDataSource {
     required String userId,
     required String prompt,
   }) async {
+    final headers = await _authorizationHeaders();
     final response = await _runRequest(
       () => http.post(
         Uri.parse(
           '${_normalizeBaseUrl(baseUrl)}${AudioGenerationConfig.generatePath}',
         ),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
         body: jsonEncode({'user_id': userId, 'prompt': prompt}),
       ),
       baseUrl: baseUrl,
@@ -48,11 +50,13 @@ class AudioGenerationRemoteDataSource {
     required String baseUrl,
     required String generationId,
   }) async {
+    final headers = await _authorizationHeaders(includeJsonContentType: false);
     final response = await _runRequest(
       () => http.get(
         Uri.parse(
           '${_normalizeBaseUrl(baseUrl)}${AudioGenerationConfig.generationsPath}/$generationId',
         ),
+        headers: headers,
       ),
       baseUrl: baseUrl,
     );
@@ -69,11 +73,15 @@ class AudioGenerationRemoteDataSource {
     required String baseUrl,
     required String userId,
   }) async {
+    final headers = await _authorizationHeaders(includeJsonContentType: false);
     final uri = Uri.parse(
       '${_normalizeBaseUrl(baseUrl)}${AudioGenerationConfig.mySongsPath}',
     ).replace(queryParameters: {'user_id': userId});
 
-    final response = await _runRequest(() => http.get(uri), baseUrl: baseUrl);
+    final response = await _runRequest(
+      () => http.get(uri, headers: headers),
+      baseUrl: baseUrl,
+    );
 
     _throwIfRequestFailed(
       response,
@@ -183,6 +191,22 @@ class AudioGenerationRemoteDataSource {
 
   String _normalizeBaseUrl(String baseUrl) {
     return baseUrl.replaceFirst(RegExp(r'/+$'), '');
+  }
+
+  Future<Map<String, String>> _authorizationHeaders({
+    bool includeJsonContentType = true,
+  }) async {
+    final headers = <String, String>{};
+    if (includeJsonContentType) {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
+    if (idToken != null && idToken.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $idToken';
+    }
+
+    return headers;
   }
 
   Future<http.Response> _runRequest(

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_flutter/app/config/audio_generation_config.dart';
 import 'package:login_flutter/app/providers/audio_generation_provider.dart';
@@ -18,7 +19,7 @@ final myAudiosProvider =
       final authState = ref.watch(authNotifierProvider);
       final userId = authState is AuthSuccess
           ? authState.user.id
-          : 'guest_user';
+          : FirebaseAuth.instance.currentUser?.uid ?? 'guest_user';
 
       return MyAudiosNotifier(
         userId,
@@ -49,6 +50,8 @@ class MyAudiosNotifier extends StateNotifier<List<GeneratedAudioTaskEntity>> {
 
   Future<void> _loadTasks() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    
     final jsonList = prefs.getStringList(_key);
 
     if (jsonList != null && jsonList.isNotEmpty) {
@@ -64,13 +67,16 @@ class MyAudiosNotifier extends StateNotifier<List<GeneratedAudioTaskEntity>> {
 
       try {
         final remoteTasks = await libraryRemoteDataSource.getTasks(userId);
+        if (!mounted) return;
         state = _mergeTasks(state, remoteTasks);
         await _saveTasks(state);
+        if (!mounted) return;
       } catch (_) {}
     }
 
     try {
       final backendTasks = await getMySongsUseCase(userId: userId);
+      if (!mounted) return;
 
       if (backendTasks.isEmpty) {
         _syncPendingRefresh();
@@ -80,6 +86,7 @@ class MyAudiosNotifier extends StateNotifier<List<GeneratedAudioTaskEntity>> {
       final previousState = state;
       state = _mergeTasks(state, backendTasks);
       await _saveTasks(state);
+      if (!mounted) return;
 
       if (userId != 'guest_user') {
         for (final task in backendTasks) {
@@ -88,7 +95,9 @@ class MyAudiosNotifier extends StateNotifier<List<GeneratedAudioTaskEntity>> {
       }
     } catch (_) {}
 
-    _syncPendingRefresh();
+    if (mounted) {
+      _syncPendingRefresh();
+    }
   }
 
   Future<void> _saveTasks(List<GeneratedAudioTaskEntity> tasks) async {
@@ -181,8 +190,10 @@ class MyAudiosNotifier extends StateNotifier<List<GeneratedAudioTaskEntity>> {
     _librarySubscription = libraryRemoteDataSource.watchTasks(userId).listen((
       tasks,
     ) async {
+      if (!mounted) return;
       state = _mergeTasks(state, tasks);
       await _saveTasks(state);
+      if (!mounted) return;
       _syncPendingRefresh();
     }, onError: (_) {});
   }
@@ -210,6 +221,7 @@ class MyAudiosNotifier extends StateNotifier<List<GeneratedAudioTaskEntity>> {
     _isRefreshingPending = true;
     try {
       final backendTasks = await getMySongsUseCase(userId: userId);
+      if (!mounted) return;
 
       if (backendTasks.isEmpty) {
         return;
@@ -218,6 +230,7 @@ class MyAudiosNotifier extends StateNotifier<List<GeneratedAudioTaskEntity>> {
       final previousState = state;
       state = _mergeTasks(state, backendTasks);
       await _saveTasks(state);
+      if (!mounted) return;
 
       if (userId != 'guest_user') {
         for (final task in backendTasks) {
@@ -226,8 +239,10 @@ class MyAudiosNotifier extends StateNotifier<List<GeneratedAudioTaskEntity>> {
       }
     } catch (_) {
     } finally {
-      _isRefreshingPending = false;
-      _syncPendingRefresh();
+      if (mounted) {
+        _isRefreshingPending = false;
+        _syncPendingRefresh();
+      }
     }
   }
 
@@ -254,6 +269,7 @@ class MyAudiosNotifier extends StateNotifier<List<GeneratedAudioTaskEntity>> {
   Future<void> saveTask(GeneratedAudioTaskEntity task) async {
     state = _mergeTasks(state, [task]);
     await _saveTasks(state);
+    if (!mounted) return;
     _syncPendingRefresh();
 
     if (userId == 'guest_user') {
@@ -266,6 +282,7 @@ class MyAudiosNotifier extends StateNotifier<List<GeneratedAudioTaskEntity>> {
   Future<void> removeTask(String taskId) async {
     state = state.where((task) => task.id != taskId).toList();
     await _saveTasks(state);
+    if (!mounted) return;
     _syncPendingRefresh();
 
     if (userId == 'guest_user') {

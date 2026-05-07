@@ -25,14 +25,25 @@ class AuthRepositoryImpl implements AuthRepository {
     String fullName,
     String email,
     String password,
+    String ageGroup,
   ) async {
     try {
       final userModel = await remoteDataSource.signUp(
         fullName,
         email,
         password,
+        ageGroup,
       );
       return userModel;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<UserEntity?> getCurrentUser() async {
+    try {
+      return await remoteDataSource.getCurrentUser();
     } catch (e) {
       rethrow;
     }
@@ -42,6 +53,15 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> resetPassword(String email) async {
     try {
       await remoteDataSource.resetPassword(email);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> resendEmailVerification(String email, String password) async {
+    try {
+      await remoteDataSource.resendEmailVerification(email, password);
     } catch (e) {
       rethrow;
     }

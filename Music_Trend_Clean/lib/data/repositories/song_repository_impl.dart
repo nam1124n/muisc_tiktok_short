@@ -54,6 +54,7 @@ class SongRepositoryImpl implements SongRepository {
     XFile imageFile,
     XFile audioFile,
   ) async {
+    await remoteDataSource.ensureAdminAccess();
     final results = await Future.wait([
       remoteDataSource.uploadImage(imageFile),
       remoteDataSource.uploadAudio(audioFile),
@@ -75,6 +76,7 @@ class SongRepositoryImpl implements SongRepository {
     XFile? imageFile,
     XFile? audioFile,
   }) async {
+    await remoteDataSource.ensureAdminAccess();
     var imageUrl = song.imageUrl;
     var audioUrl = song.audioUrl;
 
@@ -96,6 +98,7 @@ class SongRepositoryImpl implements SongRepository {
 
   @override
   Future<void> deleteSong(String id) async {
+    await remoteDataSource.ensureAdminAccess();
     await remoteDataSource.deleteSong(id);
   }
 

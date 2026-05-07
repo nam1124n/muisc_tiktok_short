@@ -7,7 +7,6 @@ import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_provider.dart';
 import 'package:login_flutter/ui/screen/audio/providers/audio_player_provider.dart';
 import 'package:login_flutter/ui/screen/auth/providers/auth_provider.dart';
-import 'package:login_flutter/ui/screen/auth/login_screen.dart';
 import 'package:login_flutter/ui/screen/discover/providers/favorites_provider.dart';
 import 'package:login_flutter/ui/screen/discover/providers/recents_provider.dart';
 import 'package:login_flutter/ui/screen/profile/providers/profile_provider.dart';
@@ -110,11 +109,7 @@ class ProfileHeader extends ConsumerWidget {
                 ref.invalidate(songNotifierProvider);
                 ref.invalidate(profileNotifierProvider);
                 ref.invalidate(playlistNotifierProvider);
-                ref.invalidate(authNotifierProvider);
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  (route) => false,
-                );
+                ref.read(authNotifierProvider.notifier).reset();
               }
             }
           },

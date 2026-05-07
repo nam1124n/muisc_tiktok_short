@@ -1,10 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:login_flutter/data/dto/profile/profile_model.dart';
+import 'package:login_flutter/domain/entities/profile_entity.dart';
 
 abstract class ProfileRemoteDataSource {
   Future<void> updateAvatarUrl(String url);
-  Future<void> updateProfile(String username);
+  Future<void> updateProfile({
+    required String username,
+    required String ageGroup,
+  });
   Future<ProfileModel> getProfile();
 }
 
@@ -18,6 +22,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     if (user != null) {
       await _db.collection('users').doc(user.uid).set({
         'avatarUrl': url,
+        'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } else {
       throw Exception('Vui lòng đăng nhập trước khi thực hiện.');
@@ -25,12 +30,18 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }
 
   @override
-  Future<void> updateProfile(String username) async {
+  Future<void> updateProfile({
+    required String username,
+    required String ageGroup,
+  }) async {
     final user = _auth.currentUser;
     if (user != null) {
       await user.updateDisplayName(username);
       await _db.collection('users').doc(user.uid).set({
         'username': username,
+        'ageGroup': ProfileAgeGroups.normalize(ageGroup),
+        'emailVerified': user.emailVerified,
+        'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } else {
       throw Exception('Vui lòng đăng nhập trước khi cập nhật.');
@@ -54,6 +65,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         followers: data['followers'] ?? 1200,
         following: data['following'] ?? 450,
         likes: data['likes'] ?? 15000,
+        ageGroup: ProfileAgeGroups.normalize(data['ageGroup']?.toString()),
       );
     } else {
       throw Exception(

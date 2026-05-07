@@ -23,6 +23,7 @@ class ProfileLocalDataSourceImpl implements ProfileLocalDataSource {
       followers: 1200,
       following: 450,
       likes: 15000,
+      ageGroup: '18_plus',
     );
   }
 }

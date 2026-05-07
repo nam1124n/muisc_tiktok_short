@@ -62,8 +62,7 @@ import 'app_localizations_vi.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -71,8 +70,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -84,18 +82,17 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('vi'),
+    Locale('vi')
   ];
 
   /// No description provided for @profileTitle.
@@ -554,6 +551,24 @@ abstract class AppLocalizations {
   /// **'Invalid email format.'**
   String get invalidEmailFormatMessage;
 
+  /// No description provided for @passwordRequiredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your password.'**
+  String get passwordRequiredMessage;
+
+  /// No description provided for @passwordTooShortMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters long.'**
+  String get passwordTooShortMessage;
+
+  /// No description provided for @passwordWeakMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must include uppercase, lowercase, number, and special character.'**
+  String get passwordWeakMessage;
+
   /// No description provided for @resetPasswordSentMessage.
   ///
   /// In en, this message translates to:
@@ -578,6 +593,12 @@ abstract class AppLocalizations {
   /// **'Full Name'**
   String get fullNameLabel;
 
+  /// No description provided for @fullNameRequiredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your full name.'**
+  String get fullNameRequiredMessage;
+
   /// No description provided for @confirmPasswordLabel.
   ///
   /// In en, this message translates to:
@@ -590,11 +611,101 @@ abstract class AppLocalizations {
   /// **'Passwords do not match'**
   String get passwordsDoNotMatch;
 
+  /// No description provided for @passwordRequirementHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 8 characters including uppercase, lowercase, number, and special character.'**
+  String get passwordRequirementHint;
+
+  /// No description provided for @ageGroupLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Age Group'**
+  String get ageGroupLabel;
+
+  /// No description provided for @ageGroupRequiredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select your age group.'**
+  String get ageGroupRequiredMessage;
+
+  /// No description provided for @selectAgeGroupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select your age group'**
+  String get selectAgeGroupHint;
+
+  /// No description provided for @ageGroupUnder13.
+  ///
+  /// In en, this message translates to:
+  /// **'Under 13'**
+  String get ageGroupUnder13;
+
+  /// No description provided for @ageGroupTeens.
+  ///
+  /// In en, this message translates to:
+  /// **'13 to 17'**
+  String get ageGroupTeens;
+
+  /// No description provided for @ageGroupAdults.
+  ///
+  /// In en, this message translates to:
+  /// **'18 and above'**
+  String get ageGroupAdults;
+
+  /// No description provided for @ageGroupPreferNotToSay.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefer not to say'**
+  String get ageGroupPreferNotToSay;
+
   /// No description provided for @signUpSuccessMessage.
   ///
   /// In en, this message translates to:
   /// **'Account created for {fullName}!'**
   String signUpSuccessMessage(String fullName);
+
+  /// No description provided for @verificationEmailSentMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification email sent. Please check your inbox.'**
+  String get verificationEmailSentMessage;
+
+  /// No description provided for @emailVerificationRequiredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is not verified yet.'**
+  String get emailVerificationRequiredMessage;
+
+  /// No description provided for @emailVerificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify Your Email'**
+  String get emailVerificationTitle;
+
+  /// No description provided for @emailVerificationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a verification email to {email}. Confirm it, then return to the app.'**
+  String emailVerificationSubtitle(String email);
+
+  /// No description provided for @resendVerificationEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend verification email'**
+  String get resendVerificationEmail;
+
+  /// No description provided for @checkVerificationStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'I have verified it'**
+  String get checkVerificationStatus;
+
+  /// No description provided for @genericVerificationErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to send a verification email right now.'**
+  String get genericVerificationErrorMessage;
 
   /// No description provided for @alreadyHaveAccount.
   ///
@@ -1005,8 +1116,7 @@ abstract class AppLocalizations {
   String get audioFileRequiredMessage;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -1015,26 +1125,25 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en', 'vi'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en', 'vi'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'en':
-      return AppLocalizationsEn();
-    case 'vi':
-      return AppLocalizationsVi();
+    case 'en': return AppLocalizationsEn();
+    case 'vi': return AppLocalizationsVi();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
+    'that was used.'
   );
 }

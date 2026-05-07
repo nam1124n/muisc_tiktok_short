@@ -8,6 +8,7 @@ class ProfileModel extends ProfileEntity {
     required super.followers,
     required super.following,
     required super.likes,
+    required super.ageGroup,
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
@@ -18,6 +19,7 @@ class ProfileModel extends ProfileEntity {
       followers: json['followers'] ?? 0,
       following: json['following'] ?? 0,
       likes: json['likes'] ?? 0,
+      ageGroup: ProfileAgeGroups.normalize(json['ageGroup']?.toString()),
     );
   }
 
@@ -29,6 +31,7 @@ class ProfileModel extends ProfileEntity {
       'followers': followers,
       'following': following,
       'likes': likes,
+      'ageGroup': ageGroup,
     };
   }
 }

@@ -15,6 +15,7 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _usernameController;
+  late String _selectedAgeGroup;
 
   @override
   void initState() {
@@ -22,6 +23,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _usernameController = TextEditingController(
       text: widget.currentProfile.username,
     );
+    _selectedAgeGroup = widget.currentProfile.ageGroup;
   }
 
   @override
@@ -30,7 +32,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.dispose();
   }
 
-  void _saveProfile() {
+  Future<void> _saveProfile() async {
     final l10n = AppLocalizations.of(context)!;
     final newUsername = _usernameController.text.trim();
 
@@ -41,10 +43,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       return;
     }
 
-    if (newUsername != widget.currentProfile.username) {
-      ref
+    if (newUsername != widget.currentProfile.username ||
+        _selectedAgeGroup != widget.currentProfile.ageGroup) {
+      await ref
           .read(profileNotifierProvider.notifier)
-          .updateProfileInfo(username: newUsername);
+          .updateProfileInfo(
+            username: newUsername,
+            ageGroup: _selectedAgeGroup,
+          );
+    }
+    if (!mounted) {
+      return;
     }
     Navigator.pop(context);
   }
@@ -104,6 +113,54 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 24),
+              Text(
+                l10n.ageGroupLabel,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF20202B).withValues(alpha: 0.8),
+                ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: _selectedAgeGroup,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFA066FF),
+                      width: 1.5,
+                    ),
+                  ),
+                ),
+                items: ProfileAgeGroups.values
+                    .map(
+                      (ageGroup) => DropdownMenuItem(
+                        value: ageGroup,
+                        child: Text(_ageGroupLabel(l10n, ageGroup)),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value == null) {
+                    return;
+                  }
+                  setState(() {
+                    _selectedAgeGroup = value;
+                  });
+                },
+              ),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _saveProfile,
@@ -130,5 +187,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         ),
       ),
     );
+  }
+
+  String _ageGroupLabel(AppLocalizations l10n, String ageGroup) {
+    switch (ageGroup) {
+      case ProfileAgeGroups.under13:
+        return l10n.ageGroupUnder13;
+      case ProfileAgeGroups.teens:
+        return l10n.ageGroupTeens;
+      case ProfileAgeGroups.adults:
+        return l10n.ageGroupAdults;
+      default:
+        return l10n.ageGroupPreferNotToSay;
+    }
   }
 }

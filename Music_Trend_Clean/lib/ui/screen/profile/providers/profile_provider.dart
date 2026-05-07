@@ -93,7 +93,10 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     }
   }
 
-  Future<void> updateProfileInfo({required String username}) async {
+  Future<void> updateProfileInfo({
+    required String username,
+    required String ageGroup,
+  }) async {
     if (state is! ProfileLoaded) {
       return;
     }
@@ -102,8 +105,11 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     state = ProfileLoading();
 
     try {
-      await updateProfileUseCase(username);
-      final updatedProfile = currentState.profile.copyWith(username: username);
+      await updateProfileUseCase(username: username, ageGroup: ageGroup);
+      final updatedProfile = currentState.profile.copyWith(
+        username: username,
+        ageGroup: ageGroup,
+      );
       state = ProfileLoaded(profile: updatedProfile);
     } catch (e) {
       state = ProfileError(message: e.toString());

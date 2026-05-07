@@ -429,11 +429,32 @@ Nếu bạn cần hiểu thật nhanh dự án này đang làm gì, thì có th�
 - Codebase được chia theo `domain`, `data`, `ui`, `app`
 # Music26
 
-# tool update bài hát
+# Hướng dẫn thêm bài hát hàng loạt bằng Tool CLI
 
+Dự án cung cấp một script để thêm hàng loạt bài hát (kèm ảnh bìa và file audio) từ một thư mục trên máy tính lên hệ thống.
+
+### 1. Thêm nhạc vào màn hình Khám phá (Discover)
+Sử dụng cờ `--collection songs`. Tool sẽ quét các file mp3 và ảnh trong thư mục chỉ định, sau đó upload và lưu vào màn hình chính của ứng dụng.
+
+```bash
 dart run tool/import_yearly_songs.dart \
-  --root /home/namper/Downloads/music_2021 \
-  --email admin@gmail.com \
-  --password 123456 \
+  --root "/đường/dẫn/đến/thư/mục/nhạc" \
+  --email "admin@gmail.com" \
+  --password "123456" \
+  --collection songs \
   --apply
+```
 
+### 2. Thêm nhạc vào màn hình Nghe nhạc theo năm
+Sử dụng cờ `--collection yearly_songs`. Tool cũng tự động ưu tiên quét các thư mục con có định dạng `music_YYYY` (ví dụ `music_2023`) để gán năm tương ứng, nếu không có sẽ tự động lấy năm hiện tại.
+
+```bash
+dart run tool/import_yearly_songs.dart \
+  --root "/đường/dẫn/đến/thư/mục/nhạc" \
+  --email "admin@gmail.com" \
+  --password "123456" \
+  --collection yearly_songs \
+  --apply
+```
+
+**Lưu ý:** Nếu bỏ cờ `--apply`, script sẽ chỉ chạy thử (dry-run) để bạn kiểm tra file nào sẽ được xử lý mà không thực sự upload lên Cloudinary hay Firestore.

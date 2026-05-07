@@ -128,12 +128,24 @@
   "sendResetEmail": "Gửi email đặt lại mật khẩu",
   "emailRequiredMessage": "Vui lòng nhập email.",
   "invalidEmailFormatMessage": "Email không đúng định dạng.",
+  "passwordRequiredMessage": "Vui lòng nhập mật khẩu.",
+  "passwordTooShortMessage": "Mật khẩu phải có ít nhất 8 ký tự.",
+  "passwordWeakMessage": "Mật khẩu cần có chữ hoa, chữ thường, số và ký tự đặc biệt.",
   "resetPasswordSentMessage": "Email đặt lại mật khẩu đã được gửi.",
   "createAccountTitle": "Tạo tài khoản",
   "createAccountSubtitle": "Tham gia để bắt đầu hành trình của bạn.",
   "fullNameLabel": "Họ và tên",
+  "fullNameRequiredMessage": "Vui lòng nhập họ và tên.",
   "confirmPasswordLabel": "Xác nhận mật khẩu",
   "passwordsDoNotMatch": "Mật khẩu không khớp",
+  "passwordRequirementHint": "Mật khẩu nên có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.",
+  "ageGroupLabel": "Nhóm tuổi",
+  "ageGroupRequiredMessage": "Vui lòng chọn nhóm tuổi.",
+  "selectAgeGroupHint": "Chọn nhóm tuổi của bạn",
+  "ageGroupUnder13": "Dưới 13 tuổi",
+  "ageGroupTeens": "Từ 13 đến 17 tuổi",
+  "ageGroupAdults": "Từ 18 tuổi trở lên",
+  "ageGroupPreferNotToSay": "Không muốn chia sẻ",
   "signUpSuccessMessage": "Đã tạo tài khoản cho {fullName}!",
   "@signUpSuccessMessage": {
     "placeholders": {
@@ -142,6 +154,20 @@
       }
     }
   },
+  "verificationEmailSentMessage": "Đã gửi email xác thực. Vui lòng kiểm tra hộp thư của bạn.",
+  "emailVerificationRequiredMessage": "Tài khoản của bạn chưa xác thực email.",
+  "emailVerificationTitle": "Xác thực email của bạn",
+  "emailVerificationSubtitle": "Chúng tôi đã gửi email xác thực đến {email}. Hãy xác nhận email rồi quay lại ứng dụng.",
+  "@emailVerificationSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "resendVerificationEmail": "Gửi lại email xác thực",
+  "checkVerificationStatus": "Tôi đã xác thực xong",
+  "genericVerificationErrorMessage": "Không thể gửi email xác thực lúc này.",
   "alreadyHaveAccount": "Đã có tài khoản?",
   "backToLogin": "Quay lại đăng nhập",
   "createAudioSuccessMessage": "Đã gửi yêu cầu tạo audio AI. Các phiên bản sẽ sớm xuất hiện trong My Audios.",

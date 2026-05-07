@@ -68,8 +68,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get likedTabTitle => 'Đã thích';
 
   @override
-  String get likedTabDescription =>
-      'Danh sách bài hát yêu thích sẽ hiển thị tại đây.';
+  String get likedTabDescription => 'Danh sách bài hát yêu thích sẽ hiển thị tại đây.';
 
   @override
   String get editProfileTitle => 'Chỉnh sửa hồ sơ';
@@ -105,8 +104,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get genreScreenTitle => 'Nhạc ngắn theo năm';
 
   @override
-  String get genreScreenSubtitle =>
-      'Những đoạn nhạc ngắn được gom theo từng năm để bạn nghe lại đúng vibe của từng giai đoạn.';
+  String get genreScreenSubtitle => 'Những đoạn nhạc ngắn được gom theo từng năm để bạn nghe lại đúng vibe của từng giai đoạn.';
 
   @override
   String get playlistsLabel => 'Danh sách phát';
@@ -163,15 +161,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get importAudioFromVideo => 'Nhập âm thanh từ video';
 
   @override
-  String get importAudioFromVideoSubtitle =>
-      'Tự động trích xuất âm thanh từ clip của bạn';
+  String get importAudioFromVideoSubtitle => 'Tự động trích xuất âm thanh từ clip của bạn';
 
   @override
   String get importAudioFromDevice => 'Nhập âm thanh từ thiết bị';
 
   @override
-  String get importAudioFromDeviceSubtitle =>
-      'Chọn âm thanh chất lượng cao từ máy của bạn';
+  String get importAudioFromDeviceSubtitle => 'Chọn âm thanh chất lượng cao từ máy của bạn';
 
   @override
   String get importButtonLabel => '+ Nhập';
@@ -183,8 +179,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get yourAudioEmptyTitle => 'Chưa có âm thanh nào';
 
   @override
-  String get yourAudioEmptySubtitle =>
-      'Mỗi lần tạo nhạc AI sẽ sinh ra 2 phiên bản. Các phiên bản đó sẽ xuất hiện tại đây theo từng lượt tạo.';
+  String get yourAudioEmptySubtitle => 'Mỗi lần tạo nhạc AI sẽ sinh ra 2 phiên bản. Các phiên bản đó sẽ xuất hiện tại đây theo từng lượt tạo.';
 
   @override
   String get getStartedNow => 'Bắt đầu ngay';
@@ -208,8 +203,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get trendingEmptyTitle => 'Chưa có đủ lượt nghe để xếp hạng tuần này';
 
   @override
-  String get trendingEmptySubtitle =>
-      'Top 4 sẽ tự cập nhật khi người dùng nghe đủ thời lượng.';
+  String get trendingEmptySubtitle => 'Top 4 sẽ tự cập nhật khi người dùng nghe đủ thời lượng.';
 
   @override
   String listenersCount(String count) {
@@ -228,8 +222,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get noSongDataTitle => 'Chưa có dữ liệu bài hát';
 
   @override
-  String get noSongDataSubtitle =>
-      'Thêm bài hát trong Firestore hoặc từ trang admin để giao diện này hiển thị dữ liệu thật.';
+  String get noSongDataSubtitle => 'Thêm bài hát trong Firestore hoặc từ trang admin để giao diện này hiển thị dữ liệu thật.';
 
   @override
   String get searchHint => 'Tìm bài hát, ca sĩ, mood, trend...';
@@ -258,6 +251,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get invalidEmailFormatMessage => 'Email không đúng định dạng.';
 
   @override
+  String get passwordRequiredMessage => 'Vui lòng nhập mật khẩu.';
+
+  @override
+  String get passwordTooShortMessage => 'Mật khẩu phải có ít nhất 8 ký tự.';
+
+  @override
+  String get passwordWeakMessage => 'Mật khẩu cần có chữ hoa, chữ thường, số và ký tự đặc biệt.';
+
+  @override
   String get resetPasswordSentMessage => 'Email đặt lại mật khẩu đã được gửi.';
 
   @override
@@ -270,15 +272,65 @@ class AppLocalizationsVi extends AppLocalizations {
   String get fullNameLabel => 'Họ và tên';
 
   @override
+  String get fullNameRequiredMessage => 'Vui lòng nhập họ và tên.';
+
+  @override
   String get confirmPasswordLabel => 'Xác nhận mật khẩu';
 
   @override
   String get passwordsDoNotMatch => 'Mật khẩu không khớp';
 
   @override
+  String get passwordRequirementHint => 'Mật khẩu nên có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.';
+
+  @override
+  String get ageGroupLabel => 'Nhóm tuổi';
+
+  @override
+  String get ageGroupRequiredMessage => 'Vui lòng chọn nhóm tuổi.';
+
+  @override
+  String get selectAgeGroupHint => 'Chọn nhóm tuổi của bạn';
+
+  @override
+  String get ageGroupUnder13 => 'Dưới 13 tuổi';
+
+  @override
+  String get ageGroupTeens => 'Từ 13 đến 17 tuổi';
+
+  @override
+  String get ageGroupAdults => 'Từ 18 tuổi trở lên';
+
+  @override
+  String get ageGroupPreferNotToSay => 'Không muốn chia sẻ';
+
+  @override
   String signUpSuccessMessage(String fullName) {
     return 'Đã tạo tài khoản cho $fullName!';
   }
+
+  @override
+  String get verificationEmailSentMessage => 'Đã gửi email xác thực. Vui lòng kiểm tra hộp thư của bạn.';
+
+  @override
+  String get emailVerificationRequiredMessage => 'Tài khoản của bạn chưa xác thực email.';
+
+  @override
+  String get emailVerificationTitle => 'Xác thực email của bạn';
+
+  @override
+  String emailVerificationSubtitle(String email) {
+    return 'Chúng tôi đã gửi email xác thực đến $email. Hãy xác nhận email rồi quay lại ứng dụng.';
+  }
+
+  @override
+  String get resendVerificationEmail => 'Gửi lại email xác thực';
+
+  @override
+  String get checkVerificationStatus => 'Tôi đã xác thực xong';
+
+  @override
+  String get genericVerificationErrorMessage => 'Không thể gửi email xác thực lúc này.';
 
   @override
   String get alreadyHaveAccount => 'Đã có tài khoản?';
@@ -287,8 +339,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get backToLogin => 'Quay lại đăng nhập';
 
   @override
-  String get createAudioSuccessMessage =>
-      'Đã gửi yêu cầu tạo audio AI. Các phiên bản sẽ sớm xuất hiện trong My Audios.';
+  String get createAudioSuccessMessage => 'Đã gửi yêu cầu tạo audio AI. Các phiên bản sẽ sớm xuất hiện trong My Audios.';
 
   @override
   String get createAudioTitle => 'Tạo Audio AI';
@@ -297,12 +348,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get promptLabel => 'Prompt mô tả';
 
   @override
-  String get promptHint =>
-      'Ví dụ: Tạo một đoạn nhạc chill lofi, piano nhẹ, mưa đêm thành phố, cảm giác thư giãn.';
+  String get promptHint => 'Ví dụ: Tạo một đoạn nhạc chill lofi, piano nhẹ, mưa đêm thành phố, cảm giác thư giãn.';
 
   @override
-  String get promptHelpText =>
-      'Prompt càng rõ về mood, nhạc cụ và vibe thì 2 phiên bản trả về càng dễ dùng. API Suno-style sẽ tự quyết định thời lượng thực tế.';
+  String get promptHelpText => 'Prompt càng rõ về mood, nhạc cụ và vibe thì 2 phiên bản trả về càng dễ dùng. API Suno-style sẽ tự quyết định thời lượng thực tế.';
 
   @override
   String get durationLabel => 'Thời lượng';
@@ -350,8 +399,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get generationQueuedHint =>
-      'Task đang được xử lý. Mở My Audios để theo dõi cập nhật.';
+  String get generationQueuedHint => 'Task đang được xử lý. Mở My Audios để theo dõi cập nhật.';
 
   @override
   String generatedVersionLabel(String label) {
@@ -368,12 +416,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get promptRequiredMessage => 'Vui lòng nhập prompt để tạo audio.';
 
   @override
-  String get promptTooShortMessage =>
-      'Prompt nên có ít nhất 10 ký tự để AI hiểu tốt hơn.';
+  String get promptTooShortMessage => 'Prompt nên có ít nhất 10 ký tự để AI hiểu tốt hơn.';
 
   @override
-  String get audioDurationRangeMessage =>
-      'Thời lượng audio phải từ 5 đến 60 giây.';
+  String get audioDurationRangeMessage => 'Thời lượng audio phải từ 5 đến 60 giây.';
 
   @override
   String get deleteGeneratedTaskTitle => 'Xóa lượt tạo nhạc';
@@ -393,8 +439,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get accessDeniedTitle => 'Truy cập bị từ chối';
 
   @override
-  String get accessDeniedMessage =>
-      'Bạn không có quyền truy cập vào trang này.';
+  String get accessDeniedMessage => 'Bạn không có quyền truy cập vào trang này.';
 
   @override
   String get goBack => 'Quay lại';
@@ -495,8 +540,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get yearSongEmptyTitle => 'Chưa có bài nào theo năm';
 
   @override
-  String get yearSongEmptySubtitle =>
-      'Nhấn nút thêm để đưa bài hát vào kho nhạc theo năm từ 2018 đến 2026.';
+  String get yearSongEmptySubtitle => 'Nhấn nút thêm để đưa bài hát vào kho nhạc theo năm từ 2018 đến 2026.';
 
   @override
   String deleteYearSongConfirmMessage(String title) {
