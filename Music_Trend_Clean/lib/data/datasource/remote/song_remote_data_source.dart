@@ -3,7 +3,21 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:login_flutter/data/dto/admin/song_model.dart';
+import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/domain/entities/user_entity.dart';
+
+class SongPageResult {
+  final List<SongEntity> songs;
+  final QueryDocumentSnapshot<Map<String, dynamic>>? lastDocument;
+  final bool hasMore;
+
+  const SongPageResult({
+    required this.songs,
+    required this.lastDocument,
+    required this.hasMore,
+  });
+}
 
 class SongRemoteDataSource {
   static const String _songsCollection = 'songs';
@@ -110,6 +124,31 @@ class SongRemoteDataSource {
   // ── Firestore: lắng nghe danh sách realtime ──
   Stream<QuerySnapshot> getSongsStream() {
     return _db.collection(_songsCollection).orderBy('title').snapshots();
+  }
+
+  Future<SongPageResult> fetchSongsPage({
+    int limit = 20,
+    QueryDocumentSnapshot<Map<String, dynamic>>? startAfterDocument,
+  }) async {
+    Query<Map<String, dynamic>> query = _db
+        .collection(_songsCollection)
+        .orderBy('title')
+        .limit(limit);
+
+    if (startAfterDocument != null) {
+      query = query.startAfterDocument(startAfterDocument);
+    }
+
+    final snapshot = await query.get();
+    final songs = snapshot.docs
+        .map((doc) => SongModel.fromFirestore(doc.data(), doc.id))
+        .toList();
+
+    return SongPageResult(
+      songs: songs,
+      lastDocument: snapshot.docs.isEmpty ? null : snapshot.docs.last,
+      hasMore: snapshot.docs.length == limit,
+    );
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> getWeeklyTrendingSongsStream() {
