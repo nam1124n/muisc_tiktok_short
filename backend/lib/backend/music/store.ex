@@ -99,29 +99,15 @@ defmodule Backend.Music.Store do
   end
 
   defp load_state do
-    case File.read(store_path()) do
-      {:ok, body} ->
-        case Jason.decode(body) do
-          {:ok, decoded} when is_map(decoded) ->
-            decoded
-            |> Enum.map(fn {id, generation_map} ->
-              {id, deserialize_generation(generation_map)}
-            end)
-            |> Map.new()
+    case read_store_file(store_path()) do
+      {:ok, state} ->
+        state
 
-          {:ok, _decoded} ->
-            %{}
-
-          {:error, reason} ->
-            Logger.warning("Could not decode persisted generation store: #{inspect(reason)}")
-            %{}
-        end
-
-      {:error, :enoent} ->
-        %{}
+      :not_found ->
+        migrate_legacy_store()
 
       {:error, reason} ->
-        Logger.warning("Could not read persisted generation store: #{inspect(reason)}")
+        Logger.warning("Could not load persisted generation store: #{inspect(reason)}")
         %{}
     end
   end
@@ -134,7 +120,10 @@ defmodule Backend.Music.Store do
 
     case Jason.encode(serialized_state) do
       {:ok, body} ->
-        case File.write(store_path(), body) do
+        path = store_path()
+        _ = File.mkdir_p(Path.dirname(path))
+
+        case File.write(path, body) do
           :ok ->
             :ok
 
@@ -144,6 +133,52 @@ defmodule Backend.Music.Store do
 
       {:error, reason} ->
         Logger.warning("Could not encode generation store: #{inspect(reason)}")
+    end
+  end
+
+  defp read_store_file(path) when is_binary(path) do
+    case File.read(path) do
+      {:ok, body} ->
+        case Jason.decode(body) do
+          {:ok, decoded} when is_map(decoded) ->
+            {:ok,
+             decoded
+             |> Enum.map(fn {id, generation_map} ->
+               {id, deserialize_generation(generation_map)}
+             end)
+             |> Map.new()}
+
+          {:ok, _decoded} ->
+            {:ok, %{}}
+
+          {:error, reason} ->
+            {:error, {:decode_failed, reason}}
+        end
+
+      {:error, :enoent} ->
+        :not_found
+
+      {:error, reason} ->
+        {:error, {:read_failed, reason}}
+    end
+  end
+
+  defp migrate_legacy_store do
+    case read_store_file(legacy_store_path()) do
+      {:ok, state} ->
+        if map_size(state) > 0 do
+          Logger.info("Migrating generation store from legacy tmp path to #{store_path()}")
+          persist_state(state)
+        end
+
+        state
+
+      :not_found ->
+        %{}
+
+      {:error, reason} ->
+        Logger.warning("Could not load legacy generation store: #{inspect(reason)}")
+        %{}
     end
   end
 
@@ -270,7 +305,25 @@ defmodule Backend.Music.Store do
     Application.get_env(
       :backend,
       :music_store_path,
-      Path.join(System.tmp_dir!(), "backend_generation_store.json")
+      default_store_path()
     )
+  end
+
+  defp default_store_path do
+    Path.join([state_root_path(), "backend", "backend_generation_store.json"])
+  end
+
+  defp legacy_store_path do
+    Path.join(System.tmp_dir!(), "backend_generation_store.json")
+  end
+
+  defp state_root_path do
+    case System.get_env("XDG_STATE_HOME") do
+      value when is_binary(value) and value != "" ->
+        value
+
+      _other ->
+        Path.join([System.user_home!(), ".local", "state"])
+    end
   end
 end

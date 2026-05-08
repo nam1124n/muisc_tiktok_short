@@ -19,6 +19,7 @@ defmodule BackendWeb.SongPageController do
 
     render(conn, :index,
       page_title: "Song Dashboard",
+      data_source_label: data_source_label(),
       overall_stats: overall_stats,
       top_users: Enum.take(user_summaries, @dashboard_user_limit),
       recent_songs: Enum.take(all_songs, @dashboard_song_limit),
@@ -194,6 +195,16 @@ defmodule BackendWeb.SongPageController do
         completed: group.completed
       }
     end)
+  end
+
+  defp data_source_label do
+    firestore_config = Application.get_env(:backend, :firestore_sync, [])
+
+    if firestore_config[:enabled] == true do
+      "Firestore sync + local cache"
+    else
+      "Local persisted store"
+    end
   end
 
   defp has_filters?(filters), do: filters.user_id != "" or filters.status != ""

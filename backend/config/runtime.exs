@@ -95,6 +95,7 @@ firebase_backend_email = System.get_env("FIREBASE_BACKEND_EMAIL", "") |> String.
 firebase_backend_password = System.get_env("FIREBASE_BACKEND_PASSWORD", "") |> String.trim()
 firebase_project_id = System.get_env("FIREBASE_PROJECT_ID", "") |> String.trim()
 firebase_web_api_key = System.get_env("FIREBASE_WEB_API_KEY", "") |> String.trim()
+music_store_path = System.get_env("MUSIC_STORE_PATH", "") |> String.trim()
 
 config :backend, :firestore_sync,
   enabled:
@@ -104,6 +105,10 @@ config :backend, :firestore_sync,
   web_api_key: firebase_web_api_key,
   email: firebase_backend_email,
   password: firebase_backend_password
+
+if music_store_path != "" do
+  config :backend, :music_store_path, music_store_path
+end
 
 if config_env() == :prod do
   # The secret key base is used to sign/encrypt cookies and other secrets.
