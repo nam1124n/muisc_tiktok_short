@@ -69,7 +69,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         SnackBar(content: Text(authState.message), backgroundColor: Colors.red),
       );
     } else if (authState is AuthSuccess) {
-      final isSystemAdmin = authState.user.isAdmin || 
+      final isSystemAdmin =
+          authState.user.isAdmin ||
           authState.user.email.trim().toLowerCase() == 'admin@gmail.com';
       if (!authState.user.isEmailVerified && !isSystemAdmin) {
         // Force sign out immediately if not verified
@@ -98,7 +99,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   onPressed: () {
                     Navigator.of(dialogContext).pop();
                   },
-                  child: const Text('Đóng', style: TextStyle(color: Colors.grey)),
+                  child: const Text(
+                    'Đóng',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -110,14 +114,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   onPressed: () async {
                     Navigator.of(dialogContext).pop();
-                    await ref.read(authNotifierProvider.notifier).resendEmailVerification(
-                      _emailController.text.trim(),
-                      _passwordController.text,
-                    );
+                    await ref
+                        .read(authNotifierProvider.notifier)
+                        .resendEmailVerification(
+                          _emailController.text.trim(),
+                          _passwordController.text,
+                        );
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Đã gửi lại email xác thực. Vui lòng kiểm tra hộp thư.'),
+                        content: Text(
+                          'Đã gửi lại email xác thực. Vui lòng kiểm tra hộp thư.',
+                        ),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -141,6 +149,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ref.invalidate(profileNotifierProvider);
       ref.invalidate(playlistNotifierProvider);
       ref.invalidate(myAudiosProvider);
+
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
     }
   }
 

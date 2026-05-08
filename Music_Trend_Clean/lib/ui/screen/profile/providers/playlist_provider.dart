@@ -123,8 +123,10 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
 
     try {
       final playlists = await getUserPlaylistsUseCase(userId);
+      if (!mounted) return;
       state = state.copyWith(playlists: playlists, isLoading: false);
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
@@ -151,6 +153,7 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
         userId: userId,
         name: trimmedName,
       );
+      if (!mounted) return false;
 
       state = state.copyWith(
         playlists: [playlist, ...state.playlists],
@@ -158,6 +161,7 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
       );
       return true;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(isCreating: false, errorMessage: e.toString());
       return false;
     }
@@ -197,6 +201,7 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
         playlistId: playlistId,
         songIds: songIds,
       );
+      if (!mounted) return false;
 
       final updatedPlaylist = currentPlaylist.copyWith(
         songIds: songIds,
@@ -210,6 +215,7 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
       );
       return true;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(errorMessage: e.toString());
       return false;
     }
@@ -225,6 +231,7 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
 
     try {
       await deletePlaylistUseCase(userId: userId, playlistId: playlistId);
+      if (!mounted) return false;
       state = state.copyWith(
         playlists: [
           for (final playlist in state.playlists)
@@ -233,6 +240,7 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
       );
       return true;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(errorMessage: e.toString());
       return false;
     }

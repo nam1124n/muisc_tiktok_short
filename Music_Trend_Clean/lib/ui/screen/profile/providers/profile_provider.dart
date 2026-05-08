@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:login_flutter/data/datasource/remote/profile_remote_data_source.dart';
@@ -7,6 +8,8 @@ import 'package:login_flutter/domain/repositories/profile_repository.dart';
 import 'package:login_flutter/domain/usecases/get_profile_usecase.dart';
 import 'package:login_flutter/domain/usecases/update_avatar_usecase.dart';
 import 'package:login_flutter/domain/usecases/update_profile_usecase.dart';
+import 'package:login_flutter/ui/screen/auth/providers/auth_provider.dart';
+import 'package:login_flutter/ui/screen/auth/providers/auth_state.dart';
 import 'package:login_flutter/ui/screen/profile/providers/profile_state.dart';
 
 final profileRemoteDataSourceProvider = Provider<ProfileRemoteDataSource>((
@@ -39,16 +42,24 @@ final updateProfileUseCaseProvider = Provider<UpdateProfileUseCase>((ref) {
 });
 
 final profileNotifierProvider =
-    StateNotifierProvider<ProfileNotifier, ProfileState>((ref) {
+    StateNotifierProvider.autoDispose<ProfileNotifier, ProfileState>((ref) {
+      final authState = ref.watch(authNotifierProvider);
+      final hasAuthenticatedSession =
+          authState is AuthSuccess || FirebaseAuth.instance.currentUser != null;
+
       return ProfileNotifier(
         getProfileUseCase: ref.read(getProfileUseCaseProvider),
         updateAvatarUseCase: ref.read(updateAvatarUseCaseProvider),
         updateProfileUseCase: ref.read(updateProfileUseCaseProvider),
         remoteDataSource: ref.read(profileImageUploadRemoteDataSourceProvider),
+        hasAuthenticatedSession: hasAuthenticatedSession,
       );
     });
 
 class ProfileNotifier extends StateNotifier<ProfileState> {
+  static const String unauthenticatedMessage =
+      'Không tìm thấy tài khoản để lấy profile. Yêu cầu đăng nhập.';
+
   final GetProfileUseCase getProfileUseCase;
   final UpdateAvatarUseCase updateAvatarUseCase;
   final UpdateProfileUseCase updateProfileUseCase;
@@ -59,8 +70,13 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     required this.updateAvatarUseCase,
     required this.updateProfileUseCase,
     required this.remoteDataSource,
+    required bool hasAuthenticatedSession,
   }) : super(ProfileInitial()) {
-    fetchProfile();
+    if (hasAuthenticatedSession) {
+      fetchProfile();
+    } else {
+      state = const ProfileError(message: unauthenticatedMessage);
+    }
   }
 
   Future<void> fetchProfile() async {
@@ -68,8 +84,10 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
     try {
       final profile = await getProfileUseCase();
+      if (!mounted) return;
       state = ProfileLoaded(profile: profile);
     } catch (e) {
+      if (!mounted) return;
       state = ProfileError(message: e.toString());
     }
   }
@@ -85,9 +103,11 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     try {
       final imageUrl = await remoteDataSource.uploadImage(XFile(imagePath));
       await updateAvatarUseCase(imageUrl);
+      if (!mounted) return;
       final updatedProfile = currentState.profile.copyWith(avatarUrl: imageUrl);
       state = ProfileLoaded(profile: updatedProfile);
     } catch (e) {
+      if (!mounted) return;
       state = ProfileError(message: e.toString());
       state = ProfileLoaded(profile: currentState.profile);
     }
@@ -106,12 +126,14 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
     try {
       await updateProfileUseCase(username: username, ageGroup: ageGroup);
+      if (!mounted) return;
       final updatedProfile = currentState.profile.copyWith(
         username: username,
         ageGroup: ageGroup,
       );
       state = ProfileLoaded(profile: updatedProfile);
     } catch (e) {
+      if (!mounted) return;
       state = ProfileError(message: e.toString());
       state = ProfileLoaded(profile: currentState.profile);
     }

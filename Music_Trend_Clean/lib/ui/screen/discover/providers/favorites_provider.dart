@@ -41,6 +41,7 @@ class FavoriteNotifier extends StateNotifier<List<SongEntity>> {
   Future<void> _loadFavorites() async {
     try {
       final loaded = await repository.getFavorites(userId);
+      if (!mounted) return;
       state = loaded;
     } catch (_) {
       // Ignored
@@ -64,6 +65,7 @@ class FavoriteNotifier extends StateNotifier<List<SongEntity>> {
       await repository.toggleFavorite(userId, song, !isFavorite);
     } catch (_) {
       // Revert if API fails
+      if (!mounted) return;
       if (isFavorite) {
         currentList.insert(0, song);
       } else {

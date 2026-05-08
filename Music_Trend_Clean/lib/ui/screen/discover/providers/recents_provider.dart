@@ -28,6 +28,7 @@ class RecentNotifier extends StateNotifier<List<SongEntity>> {
   Future<void> _loadRecents() async {
     try {
       final loaded = await repository.getRecents(userId);
+      if (!mounted) return;
       state = loaded;
     } catch (_) {
       // Ignored
