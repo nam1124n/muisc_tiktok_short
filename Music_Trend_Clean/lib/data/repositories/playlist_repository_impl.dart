@@ -21,6 +21,19 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
   }
 
   @override
+  Future<void> updatePlaylistName({
+    required String userId,
+    required String playlistId,
+    required String name,
+  }) async {
+    await remoteDataSource.updatePlaylistName(
+      userId: userId,
+      playlistId: playlistId,
+      name: name,
+    );
+  }
+
+  @override
   Future<void> updatePlaylistSongs({
     required String userId,
     required String playlistId,

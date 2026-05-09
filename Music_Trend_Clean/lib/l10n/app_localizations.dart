@@ -347,6 +347,24 @@ abstract class AppLocalizations {
   /// **'ID: {id}'**
   String profileIdLabel(String id);
 
+  /// No description provided for @profileSignInRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in'**
+  String get profileSignInRequiredTitle;
+
+  /// No description provided for @profileSignInRequiredSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in to view and customize your profile.'**
+  String get profileSignInRequiredSubtitle;
+
+  /// No description provided for @profileSignInRequiredAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in now'**
+  String get profileSignInRequiredAction;
+
   /// No description provided for @errorLabel.
   ///
   /// In en, this message translates to:
@@ -358,6 +376,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create New Playlist'**
   String get createNewPlaylist;
+
+  /// No description provided for @playlistNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist name'**
+  String get playlistNameLabel;
+
+  /// No description provided for @playlistLoadingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading playlists'**
+  String get playlistLoadingTitle;
+
+  /// No description provided for @playlistLoadingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your personal library is being synchronized.'**
+  String get playlistLoadingSubtitle;
+
+  /// No description provided for @playlistLoadErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load playlists'**
+  String get playlistLoadErrorTitle;
+
+  /// No description provided for @playlistEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No playlists yet'**
+  String get playlistEmptyTitle;
+
+  /// No description provided for @playlistEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first playlist to start building your personal library.'**
+  String get playlistEmptySubtitle;
+
+  /// No description provided for @playlistErrorEmptyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a playlist name.'**
+  String get playlistErrorEmptyName;
+
+  /// No description provided for @playlistErrorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist not found.'**
+  String get playlistErrorNotFound;
+
+  /// No description provided for @playlistErrorAuthenticationRequiredForCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in before creating a playlist.'**
+  String get playlistErrorAuthenticationRequiredForCreate;
+
+  /// No description provided for @playlistErrorAuthenticationRequiredForUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in before updating a playlist.'**
+  String get playlistErrorAuthenticationRequiredForUpdate;
+
+  /// No description provided for @playlistErrorAuthenticationRequiredForDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in before deleting a playlist.'**
+  String get playlistErrorAuthenticationRequiredForDelete;
+
+  /// No description provided for @addSongsToPlaylistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add songs'**
+  String get addSongsToPlaylistTitle;
+
+  /// No description provided for @playlistUpdatedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist updated.'**
+  String get playlistUpdatedMessage;
+
+  /// No description provided for @deletePlaylistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete playlist'**
+  String get deletePlaylistTitle;
+
+  /// No description provided for @deletePlaylistConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete the playlist \"{name}\"?'**
+  String deletePlaylistConfirmation(String name);
+
+  /// No description provided for @playlistDeletedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist deleted.'**
+  String get playlistDeletedMessage;
+
+  /// No description provided for @renamePlaylistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename playlist'**
+  String get renamePlaylistTitle;
+
+  /// No description provided for @playlistRenamedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist renamed.'**
+  String get playlistRenamedMessage;
+
+  /// No description provided for @removeSongFromPlaylistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove song'**
+  String get removeSongFromPlaylistTitle;
+
+  /// No description provided for @removeSongFromPlaylistConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{songTitle}\" from playlist \"{playlistName}\"?'**
+  String removeSongFromPlaylistConfirmation(String songTitle, String playlistName);
+
+  /// No description provided for @songRemovedFromPlaylistMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed \"{songTitle}\" from the playlist.'**
+  String songRemovedFromPlaylistMessage(String songTitle);
+
+  /// No description provided for @songListNotReadyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The song list is not ready yet. Please try again later.'**
+  String get songListNotReadyMessage;
+
+  /// No description provided for @playPlaylistAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Play playlist'**
+  String get playPlaylistAction;
+
+  /// No description provided for @playlistSongsLoadingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading songs'**
+  String get playlistSongsLoadingTitle;
+
+  /// No description provided for @playlistSongsLoadingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The songs in this playlist are being prepared.'**
+  String get playlistSongsLoadingSubtitle;
+
+  /// No description provided for @playlistSongsLoadErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load songs'**
+  String get playlistSongsLoadErrorTitle;
+
+  /// No description provided for @playlistSongsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This playlist has no songs yet'**
+  String get playlistSongsEmptyTitle;
+
+  /// No description provided for @playlistSongsEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add songs to start playing and managing this playlist.'**
+  String get playlistSongsEmptySubtitle;
+
+  /// No description provided for @removeFromPlaylistTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from playlist'**
+  String get removeFromPlaylistTooltip;
 
   /// No description provided for @trackCount.
   ///
@@ -518,7 +710,7 @@ abstract class AppLocalizations {
   /// No description provided for @enterSearchPrompt.
   ///
   /// In en, this message translates to:
-  /// **'Enter a query for AI to analyze'**
+  /// **'Enter a query for better search results'**
   String get enterSearchPrompt;
 
   /// No description provided for @searchSourceLabel.

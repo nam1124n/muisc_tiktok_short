@@ -15,6 +15,26 @@ import 'package:login_flutter/ui/screen/auth/login_screen.dart';
 import 'package:login_flutter/ui/screen/discover/providers/favorites_provider.dart';
 import 'package:login_flutter/ui/screen/discover/providers/recents_provider.dart';
 
+String? _playlistErrorText(BuildContext context, PlaylistState state) {
+  final l10n = AppLocalizations.of(context)!;
+
+  if (state.errorMessage != null) {
+    return state.errorMessage;
+  }
+
+  return switch (state.errorType) {
+    PlaylistErrorType.emptyName => l10n.playlistErrorEmptyName,
+    PlaylistErrorType.playlistNotFound => l10n.playlistErrorNotFound,
+    PlaylistErrorType.authenticationRequiredForCreate =>
+      l10n.playlistErrorAuthenticationRequiredForCreate,
+    PlaylistErrorType.authenticationRequiredForUpdate =>
+      l10n.playlistErrorAuthenticationRequiredForUpdate,
+    PlaylistErrorType.authenticationRequiredForDelete =>
+      l10n.playlistErrorAuthenticationRequiredForDelete,
+    null => null,
+  };
+}
+
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -64,12 +84,7 @@ class ProfileContent extends ConsumerWidget {
     }
 
     if (state is ProfileError) {
-      final isAuthError =
-          state.message.toLowerCase().contains('đăng nhập') ||
-          state.message.toLowerCase().contains('login') ||
-          state.message.toLowerCase().contains('auth');
-
-      if (isAuthError) {
+      if (state.requiresAuthentication) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
           child: Column(
@@ -88,19 +103,19 @@ class ProfileContent extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Chưa đăng nhập',
-                style: TextStyle(
+              Text(
+                l10n.profileSignInRequiredTitle,
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
                   color: ProfileScreen._textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Vui lòng đăng nhập để xem và tùy chỉnh hồ sơ cá nhân của bạn.',
+              Text(
+                l10n.profileSignInRequiredSubtitle,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   color: ProfileScreen._textMuted,
                   height: 1.5,
@@ -128,9 +143,12 @@ class ProfileContent extends ConsumerWidget {
                   ),
                   elevation: 0,
                 ),
-                child: const Text(
-                  'Đăng nhập ngay',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                child: Text(
+                  l10n.profileSignInRequiredAction,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -348,7 +366,7 @@ class _PlaylistLibraryContent extends ConsumerWidget {
     }
 
     final playlistState = ref.read(playlistNotifierProvider);
-    final errorMessage = playlistState.errorMessage;
+    final errorMessage = _playlistErrorText(context, playlistState);
     if (!success && errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
@@ -370,22 +388,46 @@ class _PlaylistLibraryContent extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final playlistState = ref.watch(playlistNotifierProvider);
     final playlists = playlistState.playlists;
+    final playlistErrorText = _playlistErrorText(context, playlistState);
 
     if (playlistState.isLoading && playlists.isEmpty) {
-      return const _PlaylistStatusCard(
-        key: ValueKey('playlists-loading'),
-        child: CircularProgressIndicator(color: ProfileScreen._primary),
+      return _PlaylistStatusCard(
+        key: const ValueKey('playlists-loading'),
+        child: _PlaylistStatusContent(
+          icon: Icons.library_music_rounded,
+          title: l10n.playlistLoadingTitle,
+          subtitle: l10n.playlistLoadingSubtitle,
+          trailing: const CircularProgressIndicator(
+            color: ProfileScreen._primary,
+          ),
+        ),
       );
     }
 
-    if (playlistState.errorMessage != null && playlists.isEmpty) {
+    if (playlistErrorText != null && playlists.isEmpty) {
       return _PlaylistStatusCard(
         key: const ValueKey('playlists-error'),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.redAccent,
+              size: 32,
+            ),
+            const SizedBox(height: 14),
             Text(
-              playlistState.errorMessage!,
+              l10n.playlistLoadErrorTitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: ProfileScreen._textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              playlistErrorText,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: ProfileScreen._textMuted,
@@ -415,16 +457,11 @@ class _PlaylistLibraryContent extends ConsumerWidget {
             onPressed: () => _showCreatePlaylistDialog(context, ref),
           ),
           const SizedBox(height: 16),
-          const _PlaylistStatusCard(
-            child: Text(
-              'Chưa có playlist nào. Tạo playlist đầu tiên để bắt đầu.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: ProfileScreen._textMuted,
-                fontSize: 14,
-                height: 1.4,
-                fontWeight: FontWeight.w500,
-              ),
+          _PlaylistStatusCard(
+            child: _PlaylistStatusContent(
+              icon: Icons.queue_music_rounded,
+              title: l10n.playlistEmptyTitle,
+              subtitle: l10n.playlistEmptySubtitle,
             ),
           ),
         ],
@@ -438,6 +475,10 @@ class _PlaylistLibraryContent extends ConsumerWidget {
       key: const ValueKey('playlist-content'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (playlistState.isLoading) ...[
+          const LinearProgressIndicator(minHeight: 2),
+          const SizedBox(height: 12),
+        ],
         _FeaturedPlaylistCard(
           playlist: featuredPlaylist,
           onTap: () => _openPlaylistDetail(context, featuredPlaylist),
@@ -492,7 +533,7 @@ class _CreatePlaylistDialogState extends State<_CreatePlaylistDialog> {
         textInputAction: TextInputAction.done,
         onSubmitted: (value) => Navigator.of(context).pop(value),
         decoration: InputDecoration(
-          labelText: 'Tên playlist',
+          labelText: l10n.playlistNameLabel,
           hintText: 'Midnight Echoes',
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
         ),
@@ -748,6 +789,60 @@ class _PlaylistStatusCard extends StatelessWidget {
         ],
       ),
       child: Center(child: child),
+    );
+  }
+}
+
+class _PlaylistStatusContent extends StatelessWidget {
+  const _PlaylistStatusContent({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: ProfileScreen._primary.withValues(alpha: 0.12),
+          ),
+          child: Icon(icon, color: ProfileScreen._primary, size: 24),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: ProfileScreen._textPrimary,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: ProfileScreen._textMuted,
+            fontSize: 14,
+            height: 1.4,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        if (trailing != null) ...[const SizedBox(height: 18), trailing!],
+      ],
     );
   }
 }

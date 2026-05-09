@@ -66,8 +66,64 @@
       }
     }
   },
+  "profileSignInRequiredTitle": "Chưa đăng nhập",
+  "profileSignInRequiredSubtitle": "Vui lòng đăng nhập để xem và tùy chỉnh hồ sơ cá nhân của bạn.",
+  "profileSignInRequiredAction": "Đăng nhập ngay",
   "errorLabel": "Lỗi",
   "createNewPlaylist": "Tạo playlist mới",
+  "playlistNameLabel": "Tên playlist",
+  "playlistLoadingTitle": "Đang tải playlist",
+  "playlistLoadingSubtitle": "Thư viện cá nhân của bạn đang được đồng bộ.",
+  "playlistLoadErrorTitle": "Không thể tải playlist",
+  "playlistEmptyTitle": "Chưa có playlist nào",
+  "playlistEmptySubtitle": "Tạo playlist đầu tiên để bắt đầu lưu thư viện cá nhân.",
+  "playlistErrorEmptyName": "Vui lòng nhập tên playlist.",
+  "playlistErrorNotFound": "Không tìm thấy playlist.",
+  "playlistErrorAuthenticationRequiredForCreate": "Vui lòng đăng nhập trước khi tạo playlist.",
+  "playlistErrorAuthenticationRequiredForUpdate": "Vui lòng đăng nhập trước khi cập nhật playlist.",
+  "playlistErrorAuthenticationRequiredForDelete": "Vui lòng đăng nhập trước khi xóa playlist.",
+  "addSongsToPlaylistTitle": "Thêm bài hát",
+  "playlistUpdatedMessage": "Đã cập nhật playlist.",
+  "deletePlaylistTitle": "Xóa playlist",
+  "deletePlaylistConfirmation": "Bạn có chắc muốn xóa playlist \"{name}\" không?",
+  "@deletePlaylistConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistDeletedMessage": "Đã xóa playlist.",
+  "renamePlaylistTitle": "Đổi tên playlist",
+  "playlistRenamedMessage": "Đã đổi tên playlist.",
+  "removeSongFromPlaylistTitle": "Xóa bài hát",
+  "removeSongFromPlaylistConfirmation": "Xóa \"{songTitle}\" khỏi playlist \"{playlistName}\"?",
+  "@removeSongFromPlaylistConfirmation": {
+    "placeholders": {
+      "songTitle": {
+        "type": "String"
+      },
+      "playlistName": {
+        "type": "String"
+      }
+    }
+  },
+  "songRemovedFromPlaylistMessage": "Đã xóa \"{songTitle}\" khỏi playlist.",
+  "@songRemovedFromPlaylistMessage": {
+    "placeholders": {
+      "songTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "songListNotReadyMessage": "Danh sách bài hát chưa sẵn sàng. Vui lòng thử lại sau.",
+  "playPlaylistAction": "Phát playlist",
+  "playlistSongsLoadingTitle": "Đang tải bài hát",
+  "playlistSongsLoadingSubtitle": "Danh sách bài hát trong playlist đang được chuẩn bị.",
+  "playlistSongsLoadErrorTitle": "Không thể tải bài hát",
+  "playlistSongsEmptyTitle": "Playlist này chưa có bài hát nào",
+  "playlistSongsEmptySubtitle": "Thêm bài hát để bắt đầu phát và quản lý danh sách này.",
+  "removeFromPlaylistTooltip": "Xóa khỏi playlist",
   "trackCount": "{count} bài",
   "@trackCount": {
     "placeholders": {

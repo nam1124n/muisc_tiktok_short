@@ -6,6 +6,11 @@ abstract class PlaylistRepository {
     required String userId,
     required String name,
   });
+  Future<void> updatePlaylistName({
+    required String userId,
+    required String playlistId,
+    required String name,
+  });
   Future<void> updatePlaylistSongs({
     required String userId,
     required String playlistId,

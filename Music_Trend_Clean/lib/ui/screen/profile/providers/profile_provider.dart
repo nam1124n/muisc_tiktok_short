@@ -56,9 +56,6 @@ final profileNotifierProvider =
     });
 
 class ProfileNotifier extends StateNotifier<ProfileState> {
-  static const String unauthenticatedMessage =
-      'Không tìm thấy tài khoản để lấy profile. Yêu cầu đăng nhập.';
-
   final GetProfileUseCase getProfileUseCase;
   final UpdateAvatarUseCase updateAvatarUseCase;
   final UpdateProfileUseCase updateProfileUseCase;
@@ -74,7 +71,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     if (hasAuthenticatedSession) {
       fetchProfile();
     } else {
-      state = const ProfileError(message: unauthenticatedMessage);
+      state = const ProfileError(message: '', requiresAuthentication: true);
     }
   }
 

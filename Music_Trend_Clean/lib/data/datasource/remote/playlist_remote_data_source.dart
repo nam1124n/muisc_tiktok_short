@@ -7,6 +7,11 @@ abstract class PlaylistRemoteDataSource {
     required String userId,
     required String name,
   });
+  Future<void> updatePlaylistName({
+    required String userId,
+    required String playlistId,
+    required String name,
+  });
   Future<void> updatePlaylistSongs({
     required String userId,
     required String playlistId,
@@ -63,6 +68,23 @@ class PlaylistRemoteDataSourceImpl implements PlaylistRemoteDataSource {
     });
 
     return playlist;
+  }
+
+  @override
+  Future<void> updatePlaylistName({
+    required String userId,
+    required String playlistId,
+    required String name,
+  }) async {
+    await _db
+        .collection('users')
+        .doc(userId)
+        .collection('playlists')
+        .doc(playlistId)
+        .set({
+          'name': name,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
   }
 
   @override

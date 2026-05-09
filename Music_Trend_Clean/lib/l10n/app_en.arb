@@ -66,8 +66,64 @@
       }
     }
   },
+  "profileSignInRequiredTitle": "Not signed in",
+  "profileSignInRequiredSubtitle": "Please sign in to view and customize your profile.",
+  "profileSignInRequiredAction": "Sign in now",
   "errorLabel": "Error",
   "createNewPlaylist": "Create New Playlist",
+  "playlistNameLabel": "Playlist name",
+  "playlistLoadingTitle": "Loading playlists",
+  "playlistLoadingSubtitle": "Your personal library is being synchronized.",
+  "playlistLoadErrorTitle": "Unable to load playlists",
+  "playlistEmptyTitle": "No playlists yet",
+  "playlistEmptySubtitle": "Create your first playlist to start building your personal library.",
+  "playlistErrorEmptyName": "Please enter a playlist name.",
+  "playlistErrorNotFound": "Playlist not found.",
+  "playlistErrorAuthenticationRequiredForCreate": "Please sign in before creating a playlist.",
+  "playlistErrorAuthenticationRequiredForUpdate": "Please sign in before updating a playlist.",
+  "playlistErrorAuthenticationRequiredForDelete": "Please sign in before deleting a playlist.",
+  "addSongsToPlaylistTitle": "Add songs",
+  "playlistUpdatedMessage": "Playlist updated.",
+  "deletePlaylistTitle": "Delete playlist",
+  "deletePlaylistConfirmation": "Are you sure you want to delete the playlist \"{name}\"?",
+  "@deletePlaylistConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistDeletedMessage": "Playlist deleted.",
+  "renamePlaylistTitle": "Rename playlist",
+  "playlistRenamedMessage": "Playlist renamed.",
+  "removeSongFromPlaylistTitle": "Remove song",
+  "removeSongFromPlaylistConfirmation": "Remove \"{songTitle}\" from playlist \"{playlistName}\"?",
+  "@removeSongFromPlaylistConfirmation": {
+    "placeholders": {
+      "songTitle": {
+        "type": "String"
+      },
+      "playlistName": {
+        "type": "String"
+      }
+    }
+  },
+  "songRemovedFromPlaylistMessage": "Removed \"{songTitle}\" from the playlist.",
+  "@songRemovedFromPlaylistMessage": {
+    "placeholders": {
+      "songTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "songListNotReadyMessage": "The song list is not ready yet. Please try again later.",
+  "playPlaylistAction": "Play playlist",
+  "playlistSongsLoadingTitle": "Loading songs",
+  "playlistSongsLoadingSubtitle": "The songs in this playlist are being prepared.",
+  "playlistSongsLoadErrorTitle": "Unable to load songs",
+  "playlistSongsEmptyTitle": "This playlist has no songs yet",
+  "playlistSongsEmptySubtitle": "Add songs to start playing and managing this playlist.",
+  "removeFromPlaylistTooltip": "Remove from playlist",
   "trackCount": "{count} Tracks",
   "@trackCount": {
     "placeholders": {

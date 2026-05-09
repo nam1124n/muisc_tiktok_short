@@ -10,6 +10,26 @@ import 'package:login_flutter/ui/screen/discover/providers/favorites_provider.da
 import 'package:login_flutter/ui/screen/discover/providers/recents_provider.dart';
 import 'package:login_flutter/ui/screen/profile/providers/playlist_provider.dart';
 
+String? _playlistErrorText(BuildContext context, PlaylistState state) {
+  final l10n = AppLocalizations.of(context)!;
+
+  if (state.errorMessage != null) {
+    return state.errorMessage;
+  }
+
+  return switch (state.errorType) {
+    PlaylistErrorType.emptyName => l10n.playlistErrorEmptyName,
+    PlaylistErrorType.playlistNotFound => l10n.playlistErrorNotFound,
+    PlaylistErrorType.authenticationRequiredForCreate =>
+      l10n.playlistErrorAuthenticationRequiredForCreate,
+    PlaylistErrorType.authenticationRequiredForUpdate =>
+      l10n.playlistErrorAuthenticationRequiredForUpdate,
+    PlaylistErrorType.authenticationRequiredForDelete =>
+      l10n.playlistErrorAuthenticationRequiredForDelete,
+    null => null,
+  };
+}
+
 class PlaylistDetailScreen extends ConsumerWidget {
   const PlaylistDetailScreen({super.key, required this.playlist});
 
@@ -93,10 +113,10 @@ class PlaylistDetailScreen extends ConsumerWidget {
                         padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
                         child: Row(
                           children: [
-                            const Expanded(
+                            Expanded(
                               child: Text(
-                                'Thêm bài hát',
-                                style: TextStyle(
+                                l10n.addSongsToPlaylistTitle,
+                                style: const TextStyle(
                                   color: _textPrimary,
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
@@ -273,12 +293,10 @@ class PlaylistDetailScreen extends ConsumerWidget {
     }
 
     final playlistState = ref.read(playlistNotifierProvider);
-    if (!success && playlistState.errorMessage != null) {
+    final errorMessage = _playlistErrorText(context, playlistState);
+    if (!success && errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(playlistState.errorMessage!),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
       );
       ref.read(playlistNotifierProvider.notifier).clearError();
       return;
@@ -286,7 +304,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Đã cập nhật playlist.')));
+    ).showSnackBar(SnackBar(content: Text(l10n.playlistUpdatedMessage)));
   }
 
   Future<void> _deletePlaylist(
@@ -294,6 +312,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
     WidgetRef ref,
     PlaylistEntity currentPlaylist,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -301,21 +320,19 @@ class PlaylistDetailScreen extends ConsumerWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
-          title: const Text(
-            'Xóa playlist',
-            style: TextStyle(fontWeight: FontWeight.w700),
+          title: Text(
+            l10n.deletePlaylistTitle,
+            style: const TextStyle(fontWeight: FontWeight.w700),
           ),
-          content: Text(
-            'Bạn có chắc muốn xóa playlist "${currentPlaylist.name}" không?',
-          ),
+          content: Text(l10n.deletePlaylistConfirmation(currentPlaylist.name)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Hủy'),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Xóa'),
+              child: Text(l10n.deleteLabel),
             ),
           ],
         );
@@ -335,12 +352,10 @@ class PlaylistDetailScreen extends ConsumerWidget {
     }
 
     final playlistState = ref.read(playlistNotifierProvider);
-    if (!success && playlistState.errorMessage != null) {
+    final errorMessage = _playlistErrorText(context, playlistState);
+    if (!success && errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(playlistState.errorMessage!),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
       );
       ref.read(playlistNotifierProvider.notifier).clearError();
       return;
@@ -349,7 +364,150 @@ class PlaylistDetailScreen extends ConsumerWidget {
     Navigator.of(context).pop();
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Đã xóa playlist.')));
+    ).showSnackBar(SnackBar(content: Text(l10n.playlistDeletedMessage)));
+  }
+
+  Future<void> _renamePlaylist(
+    BuildContext context,
+    WidgetRef ref,
+    PlaylistEntity currentPlaylist,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = TextEditingController(text: currentPlaylist.name);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: Text(
+            l10n.renamePlaylistTitle,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (value) => Navigator.of(dialogContext).pop(value),
+            decoration: InputDecoration(
+              labelText: l10n.playlistNameLabel,
+              hintText: 'Midnight Echoes',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(controller.text),
+              child: Text(l10n.saveChanges),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+
+    if (result == null) {
+      return;
+    }
+
+    final success = await ref
+        .read(playlistNotifierProvider.notifier)
+        .renamePlaylist(playlistId: currentPlaylist.id, name: result);
+
+    if (!context.mounted) {
+      return;
+    }
+
+    final playlistState = ref.read(playlistNotifierProvider);
+    final errorMessage = _playlistErrorText(context, playlistState);
+    if (!success && errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+      );
+      ref.read(playlistNotifierProvider.notifier).clearError();
+      return;
+    }
+
+    if (result.trim().isNotEmpty && result.trim() != currentPlaylist.name) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.playlistRenamedMessage)));
+    }
+  }
+
+  Future<void> _removeSongFromPlaylist(
+    BuildContext context,
+    WidgetRef ref, {
+    required PlaylistEntity currentPlaylist,
+    required SongEntity song,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: Text(
+            l10n.removeSongFromPlaylistTitle,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          content: Text(
+            l10n.removeSongFromPlaylistConfirmation(
+              song.title,
+              currentPlaylist.name,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l10n.deleteLabel),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    final success = await ref
+        .read(playlistNotifierProvider.notifier)
+        .removeSongFromPlaylist(
+          playlistId: currentPlaylist.id,
+          songId: song.id,
+        );
+
+    if (!context.mounted) {
+      return;
+    }
+
+    final playlistState = ref.read(playlistNotifierProvider);
+    final errorMessage = _playlistErrorText(context, playlistState);
+    if (!success && errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+      );
+      ref.read(playlistNotifierProvider.notifier).clearError();
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.songRemovedFromPlaylistMessage(song.title))),
+    );
   }
 
   @override
@@ -386,7 +544,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
                     ),
                     Expanded(
                       child: Text(
-                        playlist.name,
+                        currentPlaylist.name,
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -402,10 +560,8 @@ class PlaylistDetailScreen extends ConsumerWidget {
                       onPressed: songState is! SongLoaded
                           ? () {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Danh sách bài hát chưa sẵn sàng. Vui lòng thử lại sau.',
-                                  ),
+                                SnackBar(
+                                  content: Text(l10n.songListNotReadyMessage),
                                 ),
                               );
                             }
@@ -423,11 +579,30 @@ class PlaylistDetailScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       onSelected: (value) {
-                        if (value == 'delete') {
+                        if (value == 'rename') {
+                          _renamePlaylist(context, ref, currentPlaylist);
+                        } else if (value == 'delete') {
                           _deletePlaylist(context, ref, currentPlaylist);
                         }
                       },
-                      itemBuilder: (context) => const [
+                      itemBuilder: (context) => [
+                        PopupMenuItem<String>(
+                          value: 'rename',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.edit_outlined,
+                                color: _textPrimary,
+                                size: 20,
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                l10n.renamePlaylistTitle,
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
                         PopupMenuItem<String>(
                           value: 'delete',
                           child: Row(
@@ -439,7 +614,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
                               ),
                               SizedBox(width: 10),
                               Text(
-                                'Xóa playlist',
+                                l10n.deletePlaylistTitle,
                                 style: TextStyle(
                                   color: Colors.redAccent,
                                   fontWeight: FontWeight.w600,
@@ -456,6 +631,8 @@ class PlaylistDetailScreen extends ConsumerWidget {
                   ],
                 ),
               ),
+              if (playlistState.isSaving)
+                const LinearProgressIndicator(minHeight: 2),
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(18, 20, 18, 28),
@@ -464,7 +641,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
                     const SizedBox(height: 18),
                     _PlaylistMetaRow(
                       label: l10n.trackCount(playlistSongs.length),
-                      actionLabel: 'Phát playlist',
+                      actionLabel: l10n.playPlaylistAction,
                       actionEnabled: playlistSongs.isNotEmpty,
                       onActionPressed: playlistSongs.isEmpty
                           ? null
@@ -482,14 +659,35 @@ class PlaylistDetailScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 18),
                     if (songState is SongLoading || songState is SongInitial)
-                      const _StatusCard(
-                        child: CircularProgressIndicator(color: _primary),
+                      _StatusCard(
+                        child: _DetailStatusContent(
+                          icon: Icons.graphic_eq_rounded,
+                          title: l10n.playlistSongsLoadingTitle,
+                          subtitle: l10n.playlistSongsLoadingSubtitle,
+                          trailing: CircularProgressIndicator(color: _primary),
+                        ),
                       )
                     else if (songState is SongError)
                       _StatusCard(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            const Icon(
+                              Icons.error_outline_rounded,
+                              color: Colors.redAccent,
+                              size: 32,
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              l10n.playlistSongsLoadErrorTitle,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: _textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
                             Text(
                               songState.message,
                               textAlign: TextAlign.center,
@@ -512,26 +710,11 @@ class PlaylistDetailScreen extends ConsumerWidget {
                         ),
                       )
                     else if (playlistSongs.isEmpty)
-                      const _StatusCard(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.library_music_rounded,
-                              color: _primary,
-                              size: 32,
-                            ),
-                            SizedBox(height: 14),
-                            Text(
-                              'Playlist này chưa có bài hát nào.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: _textPrimary,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
+                      _StatusCard(
+                        child: _DetailStatusContent(
+                          icon: Icons.library_music_rounded,
+                          title: l10n.playlistSongsEmptyTitle,
+                          subtitle: l10n.playlistSongsEmptySubtitle,
                         ),
                       )
                     else ...[
@@ -543,6 +726,12 @@ class PlaylistDetailScreen extends ConsumerWidget {
                         _PlaylistSongTile(
                           song: playlistSongs[index],
                           playlistSongs: playlistSongs,
+                          onRemove: () => _removeSongFromPlaylist(
+                            context,
+                            ref,
+                            currentPlaylist: currentPlaylist,
+                            song: playlistSongs[index],
+                          ),
                         ),
                         if (index < playlistSongs.length - 1)
                           const SizedBox(height: 12),
@@ -695,10 +884,15 @@ class _PlaylistMetaRow extends StatelessWidget {
 }
 
 class _PlaylistSongTile extends ConsumerWidget {
-  const _PlaylistSongTile({required this.song, required this.playlistSongs});
+  const _PlaylistSongTile({
+    required this.song,
+    required this.playlistSongs,
+    required this.onRemove,
+  });
 
   final SongEntity song;
   final List<SongEntity> playlistSongs;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -775,6 +969,14 @@ class _PlaylistSongTile extends ConsumerWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+          IconButton(
+            tooltip: AppLocalizations.of(context)!.removeFromPlaylistTooltip,
+            onPressed: onRemove,
+            icon: const Icon(
+              Icons.remove_circle_outline_rounded,
+              color: Colors.redAccent,
             ),
           ),
           IconButton(
@@ -882,6 +1084,60 @@ class _StatusCard extends StatelessWidget {
         ],
       ),
       child: Center(child: child),
+    );
+  }
+}
+
+class _DetailStatusContent extends StatelessWidget {
+  const _DetailStatusContent({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: PlaylistDetailScreen._primary.withValues(alpha: 0.12),
+          ),
+          child: Icon(icon, color: PlaylistDetailScreen._primary, size: 24),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: PlaylistDetailScreen._textPrimary,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: PlaylistDetailScreen._textMuted,
+            fontSize: 14,
+            height: 1.4,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        if (trailing != null) ...[const SizedBox(height: 18), trailing!],
+      ],
     );
   }
 }

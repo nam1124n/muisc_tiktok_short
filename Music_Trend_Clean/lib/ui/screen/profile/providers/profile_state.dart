@@ -23,9 +23,13 @@ class ProfileLoaded extends ProfileState {
 
 class ProfileError extends ProfileState {
   final String message;
+  final bool requiresAuthentication;
 
-  const ProfileError({required this.message});
+  const ProfileError({
+    required this.message,
+    this.requiresAuthentication = false,
+  });
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, requiresAuthentication];
 }

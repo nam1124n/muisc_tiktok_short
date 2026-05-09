@@ -9,6 +9,7 @@ import 'package:login_flutter/domain/repositories/playlist_repository.dart';
 import 'package:login_flutter/domain/usecases/create_playlist_usecase.dart';
 import 'package:login_flutter/domain/usecases/delete_playlist_usecase.dart';
 import 'package:login_flutter/domain/usecases/get_user_playlists_usecase.dart';
+import 'package:login_flutter/domain/usecases/update_playlist_name_usecase.dart';
 import 'package:login_flutter/domain/usecases/update_playlist_songs_usecase.dart';
 
 final playlistRemoteDataSourceProvider = Provider<PlaylistRemoteDataSource>((
@@ -33,6 +34,12 @@ final createPlaylistUseCaseProvider = Provider<CreatePlaylistUseCase>((ref) {
   return CreatePlaylistUseCase(ref.read(playlistRepositoryProvider));
 });
 
+final updatePlaylistNameUseCaseProvider = Provider<UpdatePlaylistNameUseCase>((
+  ref,
+) {
+  return UpdatePlaylistNameUseCase(ref.read(playlistRepositoryProvider));
+});
+
 final updatePlaylistSongsUseCaseProvider = Provider<UpdatePlaylistSongsUseCase>(
   (ref) {
     return UpdatePlaylistSongsUseCase(ref.read(playlistRepositoryProvider));
@@ -51,6 +58,7 @@ final playlistNotifierProvider =
         userId: userId,
         getUserPlaylistsUseCase: ref.read(getUserPlaylistsUseCaseProvider),
         createPlaylistUseCase: ref.read(createPlaylistUseCaseProvider),
+        updatePlaylistNameUseCase: ref.read(updatePlaylistNameUseCaseProvider),
         updatePlaylistSongsUseCase: ref.read(
           updatePlaylistSongsUseCaseProvider,
         ),
@@ -58,16 +66,30 @@ final playlistNotifierProvider =
       );
     });
 
+const _playlistStateNoChange = Object();
+
+enum PlaylistErrorType {
+  emptyName,
+  playlistNotFound,
+  authenticationRequiredForCreate,
+  authenticationRequiredForUpdate,
+  authenticationRequiredForDelete,
+}
+
 class PlaylistState extends Equatable {
   final List<PlaylistEntity> playlists;
   final bool isLoading;
   final bool isCreating;
+  final bool isSaving;
+  final PlaylistErrorType? errorType;
   final String? errorMessage;
 
   const PlaylistState({
     this.playlists = const [],
     this.isLoading = false,
     this.isCreating = false,
+    this.isSaving = false,
+    this.errorType,
     this.errorMessage,
   });
 
@@ -75,30 +97,53 @@ class PlaylistState extends Equatable {
     : playlists = const [],
       isLoading = false,
       isCreating = false,
+      isSaving = false,
+      errorType = null,
       errorMessage = null;
 
   PlaylistState copyWith({
     List<PlaylistEntity>? playlists,
     bool? isLoading,
     bool? isCreating,
-    String? errorMessage,
+    bool? isSaving,
+    Object? errorType = _playlistStateNoChange,
+    Object? errorMessage = _playlistStateNoChange,
+    bool clearErrorMessage = false,
   }) {
     return PlaylistState(
       playlists: playlists ?? this.playlists,
       isLoading: isLoading ?? this.isLoading,
       isCreating: isCreating ?? this.isCreating,
-      errorMessage: errorMessage,
+      isSaving: isSaving ?? this.isSaving,
+      errorType: clearErrorMessage
+          ? null
+          : errorType == _playlistStateNoChange
+          ? this.errorType
+          : errorType as PlaylistErrorType?,
+      errorMessage: clearErrorMessage
+          ? null
+          : errorMessage == _playlistStateNoChange
+          ? this.errorMessage
+          : errorMessage as String?,
     );
   }
 
   @override
-  List<Object?> get props => [playlists, isLoading, isCreating, errorMessage];
+  List<Object?> get props => [
+    playlists,
+    isLoading,
+    isCreating,
+    isSaving,
+    errorType,
+    errorMessage,
+  ];
 }
 
 class PlaylistNotifier extends StateNotifier<PlaylistState> {
   final String userId;
   final GetUserPlaylistsUseCase getUserPlaylistsUseCase;
   final CreatePlaylistUseCase createPlaylistUseCase;
+  final UpdatePlaylistNameUseCase updatePlaylistNameUseCase;
   final UpdatePlaylistSongsUseCase updatePlaylistSongsUseCase;
   final DeletePlaylistUseCase deletePlaylistUseCase;
 
@@ -106,6 +151,7 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
     required this.userId,
     required this.getUserPlaylistsUseCase,
     required this.createPlaylistUseCase,
+    required this.updatePlaylistNameUseCase,
     required this.updatePlaylistSongsUseCase,
     required this.deletePlaylistUseCase,
   }) : super(const PlaylistState.initial()) {
@@ -114,16 +160,20 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
 
   Future<void> loadPlaylists() async {
     if (userId == 'guest') {
-      state = const PlaylistState(playlists: []);
+      state = const PlaylistState.initial();
       return;
     }
 
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(isLoading: true, clearErrorMessage: true);
 
     try {
       final playlists = await getUserPlaylistsUseCase(userId);
       if (!mounted) return;
-      state = state.copyWith(playlists: playlists, isLoading: false);
+      state = state.copyWith(
+        playlists: _sortPlaylists(playlists),
+        isLoading: false,
+        clearErrorMessage: true,
+      );
     } catch (e) {
       if (!mounted) return;
       state = state.copyWith(
@@ -137,18 +187,18 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
     final trimmedName = name.trim();
 
     if (trimmedName.isEmpty) {
-      state = state.copyWith(errorMessage: 'Vui lòng nhập tên playlist.');
+      state = state.copyWith(errorType: PlaylistErrorType.emptyName);
       return false;
     }
 
     if (userId == 'guest') {
       state = state.copyWith(
-        errorMessage: 'Vui lòng đăng nhập trước khi tạo playlist.',
+        errorType: PlaylistErrorType.authenticationRequiredForCreate,
       );
       return false;
     }
 
-    state = state.copyWith(isCreating: true);
+    state = state.copyWith(isCreating: true, clearErrorMessage: true);
 
     try {
       final playlist = await createPlaylistUseCase(
@@ -158,14 +208,78 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
       if (!mounted) return false;
 
       state = state.copyWith(
-        playlists: [playlist, ...state.playlists],
+        playlists: _sortPlaylists([playlist, ...state.playlists]),
         isCreating: false,
+        clearErrorMessage: true,
       );
       return true;
     } catch (e) {
       if (!mounted) return false;
       state = state.copyWith(
         isCreating: false,
+        errorType: null,
+        errorMessage: ErrorMessageMapper.map(e),
+      );
+      return false;
+    }
+  }
+
+  Future<bool> renamePlaylist({
+    required String playlistId,
+    required String name,
+  }) async {
+    final currentPlaylist = findById(playlistId);
+    final trimmedName = name.trim();
+
+    if (currentPlaylist == null) {
+      state = state.copyWith(errorType: PlaylistErrorType.playlistNotFound);
+      return false;
+    }
+
+    if (trimmedName.isEmpty) {
+      state = state.copyWith(errorType: PlaylistErrorType.emptyName);
+      return false;
+    }
+
+    if (trimmedName == currentPlaylist.name) {
+      return true;
+    }
+
+    if (userId == 'guest') {
+      state = state.copyWith(
+        errorType: PlaylistErrorType.authenticationRequiredForUpdate,
+      );
+      return false;
+    }
+
+    state = state.copyWith(isSaving: true, clearErrorMessage: true);
+
+    try {
+      await updatePlaylistNameUseCase(
+        userId: userId,
+        playlistId: playlistId,
+        name: trimmedName,
+      );
+      if (!mounted) return false;
+
+      final updatedPlaylist = currentPlaylist.copyWith(
+        name: trimmedName,
+        updatedAt: DateTime.now(),
+      );
+      state = state.copyWith(
+        playlists: _sortPlaylists([
+          for (final playlist in state.playlists)
+            if (playlist.id == playlistId) updatedPlaylist else playlist,
+        ]),
+        isSaving: false,
+        clearErrorMessage: true,
+      );
+      return true;
+    } catch (e) {
+      if (!mounted) return false;
+      state = state.copyWith(
+        isSaving: false,
+        errorType: null,
         errorMessage: ErrorMessageMapper.map(e),
       );
       return false;
@@ -189,16 +303,18 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
     final currentPlaylist = findById(playlistId);
 
     if (currentPlaylist == null) {
-      state = state.copyWith(errorMessage: 'Không tìm thấy playlist.');
+      state = state.copyWith(errorType: PlaylistErrorType.playlistNotFound);
       return false;
     }
 
     if (userId == 'guest') {
       state = state.copyWith(
-        errorMessage: 'Vui lòng đăng nhập trước khi cập nhật playlist.',
+        errorType: PlaylistErrorType.authenticationRequiredForUpdate,
       );
       return false;
     }
+
+    state = state.copyWith(isSaving: true, clearErrorMessage: true);
 
     try {
       await updatePlaylistSongsUseCase(
@@ -217,22 +333,52 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
           for (final playlist in state.playlists)
             if (playlist.id == playlistId) updatedPlaylist else playlist,
         ]),
+        isSaving: false,
+        clearErrorMessage: true,
       );
       return true;
     } catch (e) {
       if (!mounted) return false;
-      state = state.copyWith(errorMessage: ErrorMessageMapper.map(e));
+      state = state.copyWith(
+        isSaving: false,
+        errorType: null,
+        errorMessage: ErrorMessageMapper.map(e),
+      );
       return false;
     }
+  }
+
+  Future<bool> removeSongFromPlaylist({
+    required String playlistId,
+    required String songId,
+  }) async {
+    final currentPlaylist = findById(playlistId);
+    if (currentPlaylist == null) {
+      state = state.copyWith(errorType: PlaylistErrorType.playlistNotFound);
+      return false;
+    }
+
+    if (!currentPlaylist.songIds.contains(songId)) {
+      return true;
+    }
+
+    final updatedSongIds = [
+      for (final id in currentPlaylist.songIds)
+        if (id != songId) id,
+    ];
+
+    return savePlaylistSongs(playlistId: playlistId, songIds: updatedSongIds);
   }
 
   Future<bool> deletePlaylist(String playlistId) async {
     if (userId == 'guest') {
       state = state.copyWith(
-        errorMessage: 'Vui lòng đăng nhập trước khi xóa playlist.',
+        errorType: PlaylistErrorType.authenticationRequiredForDelete,
       );
       return false;
     }
+
+    state = state.copyWith(isSaving: true, clearErrorMessage: true);
 
     try {
       await deletePlaylistUseCase(userId: userId, playlistId: playlistId);
@@ -242,11 +388,17 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
           for (final playlist in state.playlists)
             if (playlist.id != playlistId) playlist,
         ],
+        isSaving: false,
+        clearErrorMessage: true,
       );
       return true;
     } catch (e) {
       if (!mounted) return false;
-      state = state.copyWith(errorMessage: ErrorMessageMapper.map(e));
+      state = state.copyWith(
+        isSaving: false,
+        errorType: null,
+        errorMessage: ErrorMessageMapper.map(e),
+      );
       return false;
     }
   }
@@ -268,10 +420,6 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
   }
 
   void clearError() {
-    state = state.copyWith(
-      playlists: state.playlists,
-      isLoading: state.isLoading,
-      isCreating: state.isCreating,
-    );
+    state = state.copyWith(clearErrorMessage: true);
   }
 }
