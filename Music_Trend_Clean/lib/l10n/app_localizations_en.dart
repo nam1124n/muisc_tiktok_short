@@ -287,7 +287,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get getStartedNow => 'Get started now';
 
   @override
+  String get favoriteSongsLoadingTitle => 'Loading favorite songs';
+
+  @override
+  String get favoriteSongsLoadingSubtitle => 'Your liked songs are being synchronized.';
+
+  @override
+  String get favoriteSongsLoadErrorTitle => 'Unable to load favorite songs';
+
+  @override
   String get favoriteSongsEmpty => 'No favorite songs yet';
+
+  @override
+  String get clearAllFavoritesLabel => 'Clear all';
+
+  @override
+  String get clearAllFavoritesTitle => 'Clear all favorites';
+
+  @override
+  String clearAllFavoritesConfirmation(int count) {
+    return 'Are you sure you want to remove all $count favorite songs?';
+  }
+
+  @override
+  String get allFavoritesClearedMessage => 'All favorite songs have been removed.';
+
+  @override
+  String get removeFromFavoritesTooltip => 'Remove from favorites';
 
   @override
   String get recentSongsEmpty => 'No recently played songs yet';

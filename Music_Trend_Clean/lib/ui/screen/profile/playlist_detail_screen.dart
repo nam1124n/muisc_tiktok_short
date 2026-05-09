@@ -980,17 +980,28 @@ class _PlaylistSongTile extends ConsumerWidget {
             ),
           ),
           IconButton(
-            onPressed: () {
-              ref.read(favoriteNotifierProvider.notifier).toggleFavorite(song);
-            },
-            icon: Icon(
-              ref
-                      .watch(favoriteNotifierProvider)
-                      .any((item) => item.id == song.id)
-                  ? Icons.favorite_rounded
-                  : Icons.favorite_border_rounded,
-              color: PlaylistDetailScreen._primary,
-            ),
+            onPressed: ref.watch(isFavoriteSongBusyProvider(song.id))
+                ? null
+                : () {
+                    ref
+                        .read(favoriteNotifierProvider.notifier)
+                        .toggleFavorite(song);
+                  },
+            icon: ref.watch(isFavoriteSongBusyProvider(song.id))
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: PlaylistDetailScreen._primary,
+                    ),
+                  )
+                : Icon(
+                    ref.watch(isFavoriteSongProvider(song.id))
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
+                    color: PlaylistDetailScreen._primary,
+                  ),
           ),
           IconButton(
             onPressed: () {

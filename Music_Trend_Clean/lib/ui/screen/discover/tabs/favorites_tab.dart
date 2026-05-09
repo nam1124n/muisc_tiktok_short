@@ -11,8 +11,26 @@ class FavoritesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final favoriteSongs = ref.watch(favoriteNotifierProvider);
+    final favoriteState = ref.watch(favoriteNotifierProvider);
+    final favoriteSongs = favoriteState.songs;
     final l10n = AppLocalizations.of(context)!;
+
+    if (favoriteState.isLoading && favoriteSongs.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (favoriteState.errorMessage != null && favoriteSongs.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            favoriteState.errorMessage!,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+          ),
+        ),
+      );
+    }
 
     if (favoriteSongs.isEmpty) {
       return Center(
@@ -123,9 +141,33 @@ class FavoritesTab extends ConsumerWidget {
             onTap: () {
               ref.read(favoriteNotifierProvider.notifier).toggleFavorite(song);
             },
-            child: const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Icon(Icons.favorite, color: Color(0xFF8C52FF), size: 24),
+            child: Consumer(
+              builder: (context, ref, _) {
+                final isFavorite = ref.watch(isFavoriteSongProvider(song.id));
+                final isFavoriteBusy = ref.watch(
+                  isFavoriteSongBusyProvider(song.id),
+                );
+
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: isFavoriteBusy
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFF8C52FF),
+                          ),
+                        )
+                      : Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite
+                              ? const Color(0xFF8C52FF)
+                              : Colors.grey.shade400,
+                          size: 24,
+                        ),
+                );
+              },
             ),
           ),
           Consumer(

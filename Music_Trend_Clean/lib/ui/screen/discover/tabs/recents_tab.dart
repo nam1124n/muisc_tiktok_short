@@ -43,9 +43,9 @@ class RecentsTab extends ConsumerWidget {
 
     return Consumer(
       builder: (context, ref, _) {
-        final favoriteSongs = ref.watch(favoriteNotifierProvider);
+        final isFavorite = ref.watch(isFavoriteSongProvider(song.id));
+        final isFavoriteBusy = ref.watch(isFavoriteSongBusyProvider(song.id));
         final playback = ref.watch(audioPlaybackForSongProvider(song.id));
-        final isFavorite = favoriteSongs.any((s) => s.id == song.id);
         final isCurrentSong = playback.isCurrentSong;
         final isPlayingThisSong = playback.isPlaying;
         final isLoadingThisSong = playback.isLoading;
@@ -132,20 +132,31 @@ class RecentsTab extends ConsumerWidget {
               ),
               const SizedBox(width: 12),
               GestureDetector(
-                onTap: () {
-                  ref
-                      .read(favoriteNotifierProvider.notifier)
-                      .toggleFavorite(song);
-                },
+                onTap: isFavoriteBusy
+                    ? null
+                    : () {
+                        ref
+                            .read(favoriteNotifierProvider.notifier)
+                            .toggleFavorite(song);
+                      },
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: isFavorite
-                        ? const Color(0xFFF43F5E)
-                        : Colors.grey.shade400,
-                    size: 24,
-                  ),
+                  child: isFavoriteBusy
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFFF43F5E),
+                          ),
+                        )
+                      : Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite
+                              ? const Color(0xFFF43F5E)
+                              : Colors.grey.shade400,
+                          size: 24,
+                        ),
                 ),
               ),
               GestureDetector(

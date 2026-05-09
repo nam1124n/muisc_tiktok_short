@@ -555,10 +555,129 @@ class _CreatePlaylistDialogState extends State<_CreatePlaylistDialog> {
 class _FavoritesLibraryContent extends ConsumerWidget {
   const _FavoritesLibraryContent({super.key});
 
+  Future<void> _clearFavorites(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final favoriteState = ref.read(favoriteNotifierProvider);
+    final count = favoriteState.songs.length;
+
+    if (count == 0) {
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: Text(
+            l10n.clearAllFavoritesTitle,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          content: Text(l10n.clearAllFavoritesConfirmation(count)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l10n.clearAllFavoritesLabel),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    await ref.read(favoriteNotifierProvider.notifier).clearFavorites();
+    if (!context.mounted) {
+      return;
+    }
+
+    final updatedState = ref.read(favoriteNotifierProvider);
+    if (updatedState.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(updatedState.errorMessage!),
+          backgroundColor: Colors.red,
+        ),
+      );
+      ref.read(favoriteNotifierProvider.notifier).clearError();
+      return;
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.allFavoritesClearedMessage)));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final favoriteSongs = ref.watch(favoriteNotifierProvider);
+    final favoriteState = ref.watch(favoriteNotifierProvider);
+    final favoriteSongs = favoriteState.songs;
+
+    if (favoriteState.isLoading && favoriteSongs.isEmpty) {
+      return _PlaylistStatusCard(
+        key: const ValueKey('favorites-loading'),
+        child: _PlaylistStatusContent(
+          icon: Icons.favorite_rounded,
+          title: l10n.favoriteSongsLoadingTitle,
+          subtitle: l10n.favoriteSongsLoadingSubtitle,
+          trailing: const CircularProgressIndicator(
+            color: ProfileScreen._primary,
+          ),
+        ),
+      );
+    }
+
+    if (favoriteState.errorMessage != null && favoriteSongs.isEmpty) {
+      return _PlaylistStatusCard(
+        key: const ValueKey('favorites-error'),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.redAccent,
+              size: 32,
+            ),
+            const SizedBox(height: 14),
+            Text(
+              l10n.favoriteSongsLoadErrorTitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: ProfileScreen._textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              favoriteState.errorMessage!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: ProfileScreen._textMuted,
+                fontSize: 14,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () {
+                ref.read(favoriteNotifierProvider.notifier).refresh();
+              },
+              child: Text(l10n.retry),
+            ),
+          ],
+        ),
+      );
+    }
 
     if (favoriteSongs.isEmpty) {
       return Container(
@@ -609,6 +728,64 @@ class _FavoritesLibraryContent extends ConsumerWidget {
       key: const ValueKey('favorites-content'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.78),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.favoritesLabel,
+                          style: const TextStyle(
+                            color: ProfileScreen._textPrimary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.trackCount(favoriteSongs.length),
+                          style: const TextStyle(
+                            color: ProfileScreen._textMuted,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: favoriteState.isClearing
+                        ? null
+                        : () => _clearFavorites(context, ref),
+                    icon: const Icon(Icons.clear_all_rounded),
+                    label: Text(l10n.clearAllFavoritesLabel),
+                  ),
+                ],
+              ),
+              if (favoriteState.isClearing) ...[
+                const SizedBox(height: 10),
+                const LinearProgressIndicator(minHeight: 2),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
         for (var index = 0; index < favoriteSongs.length; index++) ...[
           _FavoriteSongCard(
             song: favoriteSongs[index],
@@ -630,6 +807,8 @@ class _FavoriteSongCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final isFavoriteBusy = ref.watch(isFavoriteSongBusyProvider(song.id));
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -701,13 +880,27 @@ class _FavoriteSongCard extends ConsumerWidget {
             ),
           ),
           IconButton(
-            onPressed: () {
-              ref.read(favoriteNotifierProvider.notifier).toggleFavorite(song);
-            },
-            icon: const Icon(
-              Icons.favorite_rounded,
-              color: ProfileScreen._primary,
-            ),
+            tooltip: l10n.removeFromFavoritesTooltip,
+            onPressed: isFavoriteBusy
+                ? null
+                : () {
+                    ref
+                        .read(favoriteNotifierProvider.notifier)
+                        .toggleFavorite(song);
+                  },
+            icon: isFavoriteBusy
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: ProfileScreen._primary,
+                    ),
+                  )
+                : const Icon(
+                    Icons.delete_outline_rounded,
+                    color: ProfileScreen._primary,
+                  ),
           ),
           _FavoriteSongPlayButton(song: song, playlist: playlist),
         ],

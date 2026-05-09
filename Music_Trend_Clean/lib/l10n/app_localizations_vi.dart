@@ -287,7 +287,33 @@ class AppLocalizationsVi extends AppLocalizations {
   String get getStartedNow => 'Bắt đầu ngay';
 
   @override
+  String get favoriteSongsLoadingTitle => 'Đang tải bài hát yêu thích';
+
+  @override
+  String get favoriteSongsLoadingSubtitle => 'Danh sách bài hát bạn đã thích đang được đồng bộ.';
+
+  @override
+  String get favoriteSongsLoadErrorTitle => 'Không thể tải bài hát yêu thích';
+
+  @override
   String get favoriteSongsEmpty => 'Chưa có bài hát yêu thích nào';
+
+  @override
+  String get clearAllFavoritesLabel => 'Bỏ thích tất cả';
+
+  @override
+  String get clearAllFavoritesTitle => 'Bỏ thích tất cả';
+
+  @override
+  String clearAllFavoritesConfirmation(int count) {
+    return 'Bạn có chắc muốn bỏ thích toàn bộ $count bài hát không?';
+  }
+
+  @override
+  String get allFavoritesClearedMessage => 'Đã bỏ thích toàn bộ bài hát.';
+
+  @override
+  String get removeFromFavoritesTooltip => 'Bỏ khỏi yêu thích';
 
   @override
   String get recentSongsEmpty => 'Chưa có bài hát nghe gần đây';

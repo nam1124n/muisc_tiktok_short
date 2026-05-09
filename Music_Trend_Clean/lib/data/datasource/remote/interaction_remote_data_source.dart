@@ -7,6 +7,7 @@ abstract class InteractionRemoteDataSource {
     Map<String, dynamic> songData,
     bool isFavorite,
   );
+  Future<void> clearFavorites(String userId, List<String> songIds);
   Future<List<Map<String, dynamic>>> getRecents(String userId);
   Future<void> addRecent(String userId, Map<String, dynamic> songData);
 }
@@ -47,6 +48,25 @@ class InteractionRemoteDataSourceImpl implements InteractionRemoteDataSource {
     } else {
       await docRef.delete();
     }
+  }
+
+  @override
+  Future<void> clearFavorites(String userId, List<String> songIds) async {
+    if (songIds.isEmpty) {
+      return;
+    }
+
+    final batch = _db.batch();
+    final collectionRef = _db
+        .collection('users')
+        .doc(userId)
+        .collection('favorites');
+
+    for (final songId in songIds) {
+      batch.delete(collectionRef.doc(songId));
+    }
+
+    await batch.commit();
   }
 
   @override

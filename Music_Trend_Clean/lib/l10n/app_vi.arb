@@ -143,7 +143,22 @@
   "yourAudioEmptyTitle": "Chưa có âm thanh nào",
   "yourAudioEmptySubtitle": "Mỗi lần tạo nhạc AI sẽ sinh ra 2 phiên bản. Các phiên bản đó sẽ xuất hiện tại đây theo từng lượt tạo.",
   "getStartedNow": "Bắt đầu ngay",
+  "favoriteSongsLoadingTitle": "Đang tải bài hát yêu thích",
+  "favoriteSongsLoadingSubtitle": "Danh sách bài hát bạn đã thích đang được đồng bộ.",
+  "favoriteSongsLoadErrorTitle": "Không thể tải bài hát yêu thích",
   "favoriteSongsEmpty": "Chưa có bài hát yêu thích nào",
+  "clearAllFavoritesLabel": "Bỏ thích tất cả",
+  "clearAllFavoritesTitle": "Bỏ thích tất cả",
+  "clearAllFavoritesConfirmation": "Bạn có chắc muốn bỏ thích toàn bộ {count} bài hát không?",
+  "@clearAllFavoritesConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "allFavoritesClearedMessage": "Đã bỏ thích toàn bộ bài hát.",
+  "removeFromFavoritesTooltip": "Bỏ khỏi yêu thích",
   "recentSongsEmpty": "Chưa có bài hát nghe gần đây",
   "trendingTitle": "Thịnh hành",
   "forYouTitle": "Dành cho bạn",

@@ -23,6 +23,11 @@ class InteractionRepositoryImpl implements InteractionRepository {
   }
 
   @override
+  Future<void> clearFavorites(String userId, List<String> songIds) async {
+    await remoteDataSource.clearFavorites(userId, songIds);
+  }
+
+  @override
   Future<List<SongEntity>> getRecents(String userId) async {
     final data = await remoteDataSource.getRecents(userId);
     return data.map((json) => SongEntity.fromJson(json)).toList();

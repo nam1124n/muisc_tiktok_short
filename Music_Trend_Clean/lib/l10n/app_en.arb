@@ -143,7 +143,22 @@
   "yourAudioEmptyTitle": "No audio yet",
   "yourAudioEmptySubtitle": "Each AI music generation creates 2 versions. Those versions will appear here grouped by generation task.",
   "getStartedNow": "Get started now",
+  "favoriteSongsLoadingTitle": "Loading favorite songs",
+  "favoriteSongsLoadingSubtitle": "Your liked songs are being synchronized.",
+  "favoriteSongsLoadErrorTitle": "Unable to load favorite songs",
   "favoriteSongsEmpty": "No favorite songs yet",
+  "clearAllFavoritesLabel": "Clear all",
+  "clearAllFavoritesTitle": "Clear all favorites",
+  "clearAllFavoritesConfirmation": "Are you sure you want to remove all {count} favorite songs?",
+  "@clearAllFavoritesConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "allFavoritesClearedMessage": "All favorite songs have been removed.",
+  "removeFromFavoritesTooltip": "Remove from favorites",
   "recentSongsEmpty": "No recently played songs yet",
   "trendingTitle": "Trending",
   "forYouTitle": "For You",

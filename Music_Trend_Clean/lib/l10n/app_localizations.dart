@@ -623,11 +623,59 @@ abstract class AppLocalizations {
   /// **'Get started now'**
   String get getStartedNow;
 
+  /// No description provided for @favoriteSongsLoadingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading favorite songs'**
+  String get favoriteSongsLoadingTitle;
+
+  /// No description provided for @favoriteSongsLoadingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your liked songs are being synchronized.'**
+  String get favoriteSongsLoadingSubtitle;
+
+  /// No description provided for @favoriteSongsLoadErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load favorite songs'**
+  String get favoriteSongsLoadErrorTitle;
+
   /// No description provided for @favoriteSongsEmpty.
   ///
   /// In en, this message translates to:
   /// **'No favorite songs yet'**
   String get favoriteSongsEmpty;
+
+  /// No description provided for @clearAllFavoritesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get clearAllFavoritesLabel;
+
+  /// No description provided for @clearAllFavoritesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all favorites'**
+  String get clearAllFavoritesTitle;
+
+  /// No description provided for @clearAllFavoritesConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to remove all {count} favorite songs?'**
+  String clearAllFavoritesConfirmation(int count);
+
+  /// No description provided for @allFavoritesClearedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'All favorite songs have been removed.'**
+  String get allFavoritesClearedMessage;
+
+  /// No description provided for @removeFromFavoritesTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites'**
+  String get removeFromFavoritesTooltip;
 
   /// No description provided for @recentSongsEmpty.
   ///
