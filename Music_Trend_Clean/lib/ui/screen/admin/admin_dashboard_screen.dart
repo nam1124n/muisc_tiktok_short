@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/app/providers/session_provider.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/admin/admin_song_form_screen.dart';
 import 'package:login_flutter/ui/screen/admin/admin_year_song_dashboard_screen.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_provider.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_state.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_provider.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_state.dart';
 
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
@@ -15,7 +14,7 @@ class AdminDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final songState = ref.watch(songNotifierProvider);
-    final authState = ref.watch(authNotifierProvider);
+    final hasAdminAccess = ref.watch(sessionHasAdminAccessProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -37,7 +36,7 @@ class AdminDashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: _buildBody(context, ref, authState, songState),
+      body: _buildBody(context, ref, hasAdminAccess, songState),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Row(
         mainAxisSize: MainAxisSize.min,
@@ -79,12 +78,12 @@ class AdminDashboardScreen extends ConsumerWidget {
   Widget _buildBody(
     BuildContext context,
     WidgetRef ref,
-    AuthState authState,
+    bool hasAdminAccess,
     SongState songState,
   ) {
     final l10n = AppLocalizations.of(context)!;
 
-    if (authState is! AuthSuccess || !authState.user.isAdmin) {
+    if (!hasAdminAccess) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

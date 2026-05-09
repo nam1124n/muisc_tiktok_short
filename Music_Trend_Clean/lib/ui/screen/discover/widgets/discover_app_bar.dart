@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/app/providers/session_provider.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/admin/admin_dashboard_screen.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_provider.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_state.dart';
 import 'package:login_flutter/ui/screen/search/search_screen.dart';
 
 class DiscoverAppBar extends ConsumerWidget {
@@ -12,8 +11,7 @@ class DiscoverAppBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final authState = ref.watch(authNotifierProvider);
-    final isAdmin = authState is AuthSuccess && authState.user.isAdmin;
+    final isAdmin = ref.watch(sessionHasAdminAccessProvider);
 
     return Column(
       mainAxisSize: MainAxisSize.min,

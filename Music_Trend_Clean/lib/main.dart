@@ -6,11 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_flutter/app/config/app_config.dart';
 import 'package:login_flutter/app/providers/app_language_provider.dart';
 import 'package:login_flutter/app/providers/app_language_state.dart';
+import 'package:login_flutter/app/providers/app_launch_provider.dart';
 import 'package:login_flutter/app/providers/session_provider.dart';
 import 'package:login_flutter/app/theme/app_theme.dart';
 import 'package:login_flutter/firebase_options.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/auth/login_screen.dart';
+import 'package:login_flutter/ui/screen/auth/onboarding_screen.dart';
 import 'package:login_flutter/ui/screen/home/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -46,8 +48,50 @@ class App extends ConsumerWidget {
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      home: const AuthGate(),
+      home: const AppLaunchGate(),
     );
+  }
+}
+
+class AppLaunchGate extends ConsumerStatefulWidget {
+  const AppLaunchGate({super.key});
+
+  @override
+  ConsumerState<AppLaunchGate> createState() => _AppLaunchGateState();
+}
+
+class _AppLaunchGateState extends ConsumerState<AppLaunchGate>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(ref.read(sessionProvider.notifier).handleAppResumed());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final launchState = ref.watch(appLaunchProvider);
+
+    return switch (resolveAppLaunchDestination(launchState)) {
+      AppLaunchDestination.loading => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      AppLaunchDestination.onboarding => const OnboardingScreen(),
+      AppLaunchDestination.app => const AuthGate(),
+    };
   }
 }
 

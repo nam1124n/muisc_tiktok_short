@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:login_flutter/app/config/app_config.dart';
+import 'package:login_flutter/app/utils/error_message_mapper.dart';
 import 'package:login_flutter/data/dto/auth/user_model.dart';
 import 'package:login_flutter/domain/entities/profile_entity.dart';
 import 'package:login_flutter/domain/entities/user_entity.dart';
@@ -119,7 +120,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       return null;
     }
 
-    return _buildUserModel(user);
+    try {
+      await user.reload();
+      final refreshedUser = _auth.currentUser;
+      if (refreshedUser == null) {
+        return null;
+      }
+      return await _buildUserModel(refreshedUser);
+    } on FirebaseAuthException catch (e) {
+      await _handleTerminalSessionError(e);
+      throw Exception(_sessionMessageFor(e));
+    }
   }
 
   @override
@@ -130,7 +141,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         continue;
       }
 
-      yield await _buildUserModel(user);
+      try {
+        yield await _buildUserModel(user);
+      } on FirebaseAuthException catch (e) {
+        await _handleTerminalSessionError(e);
+        yield null;
+      }
     }
   }
 
@@ -193,6 +209,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         );
       }
 
+      await _handleTerminalSessionError(e);
       throw Exception('Lỗi gửi email xác thực: ${e.message}');
     }
   }
@@ -200,9 +217,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> reloadCurrentUser() async {
     try {
-      await _auth.currentUser?.reload();
+      final user = _auth.currentUser;
+      if (user == null) {
+        return;
+      }
+
+      await user.reload();
     } on FirebaseAuthException catch (e) {
-      throw Exception('Lỗi làm mới trạng thái xác thực: ${e.message}');
+      await _handleTerminalSessionError(e);
+      throw Exception(
+        _sessionMessageFor(
+          e,
+          fallback: 'Lỗi làm mới trạng thái xác thực: ${e.message}',
+        ),
+      );
     }
   }
 
@@ -318,6 +346,29 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
 
     return UserRoles.user;
+  }
+
+  Future<void> _handleTerminalSessionError(FirebaseAuthException error) async {
+    if (_isTerminalSessionCode(error.code)) {
+      await _auth.signOut();
+    }
+  }
+
+  bool _isTerminalSessionCode(String code) {
+    return code == 'invalid-user-token' ||
+        code == 'user-token-expired' ||
+        code == 'user-disabled' ||
+        code == 'user-not-found';
+  }
+
+  String _sessionMessageFor(FirebaseAuthException error, {String? fallback}) {
+    return switch (error.code) {
+      'user-disabled' => ErrorMessageMapper.accountDisabledMessage,
+      'user-not-found' => ErrorMessageMapper.accountNotFoundMessage,
+      'invalid-user-token' ||
+      'user-token-expired' => ErrorMessageMapper.sessionExpiredMessage,
+      _ => fallback ?? 'Có lỗi xác thực xảy ra. Vui lòng thử lại.',
+    };
   }
 }
 

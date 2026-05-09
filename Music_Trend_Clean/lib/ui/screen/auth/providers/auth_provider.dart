@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/app/utils/auth_input_validator.dart';
 import 'package:login_flutter/app/utils/error_message_mapper.dart';
 import 'package:login_flutter/data/datasource/remote/auth_remote_data_source.dart';
 import 'package:login_flutter/data/repositories/auth_repository_impl.dart';
@@ -34,16 +35,6 @@ final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((
 });
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  static final RegExp _emailPattern = RegExp(
-    r'^[\w\.\-]+@([\w\-]+\.)+[\w\-]{2,}$',
-  );
-  static final RegExp _hasUppercase = RegExp(r'[A-Z]');
-  static final RegExp _hasLowercase = RegExp(r'[a-z]');
-  static final RegExp _hasDigit = RegExp(r'\d');
-  static final RegExp _hasSpecialCharacter = RegExp(
-    r'''[!@#$%^&*(),.?":{}|<>\[\]_\-+=/\\;']''',
-  );
-
   final AuthRepository authRepository;
   final LoginUseCase loginUseCase;
   final SignUpUseCase signUpUseCase;
@@ -111,18 +102,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String invalidEmailFormatMessage,
     required String passwordRequiredMessage,
   }) {
-    final trimmedEmail = email.trim();
-    if (trimmedEmail.isEmpty) {
-      return emailRequiredMessage;
-    }
-    if (!_emailPattern.hasMatch(trimmedEmail)) {
-      return invalidEmailFormatMessage;
-    }
-    if (password.trim().isEmpty) {
-      return passwordRequiredMessage;
-    }
-
-    return null;
+    return AuthInputValidator.validateLogin(
+      email: email,
+      password: password,
+      emailRequiredMessage: emailRequiredMessage,
+      invalidEmailFormatMessage: invalidEmailFormatMessage,
+      passwordRequiredMessage: passwordRequiredMessage,
+    );
   }
 
   String? validateSignUpInput({
@@ -140,42 +126,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String passwordsDoNotMatchMessage,
     required String ageGroupRequiredMessage,
   }) {
-    if (fullName.trim().isEmpty) {
-      return fullNameRequiredMessage;
-    }
-
-    final loginValidation = validateLoginInput(
+    return AuthInputValidator.validateSignUp(
+      fullName: fullName,
       email: email,
       password: password,
+      confirmPassword: confirmPassword,
+      ageGroup: ageGroup,
+      fullNameRequiredMessage: fullNameRequiredMessage,
       emailRequiredMessage: emailRequiredMessage,
       invalidEmailFormatMessage: invalidEmailFormatMessage,
       passwordRequiredMessage: passwordRequiredMessage,
+      passwordTooShortMessage: passwordTooShortMessage,
+      passwordWeakMessage: passwordWeakMessage,
+      passwordsDoNotMatchMessage: passwordsDoNotMatchMessage,
+      ageGroupRequiredMessage: ageGroupRequiredMessage,
     );
-    if (loginValidation != null) {
-      return loginValidation;
-    }
-
-    if (password.length < 8) {
-      return passwordTooShortMessage;
-    }
-
-    final isStrongPassword =
-        _hasUppercase.hasMatch(password) &&
-        _hasLowercase.hasMatch(password) &&
-        _hasDigit.hasMatch(password) &&
-        _hasSpecialCharacter.hasMatch(password);
-    if (!isStrongPassword) {
-      return passwordWeakMessage;
-    }
-
-    if (password != confirmPassword) {
-      return passwordsDoNotMatchMessage;
-    }
-
-    if (ageGroup == null || ageGroup.trim().isEmpty) {
-      return ageGroupRequiredMessage;
-    }
-
-    return null;
   }
 }

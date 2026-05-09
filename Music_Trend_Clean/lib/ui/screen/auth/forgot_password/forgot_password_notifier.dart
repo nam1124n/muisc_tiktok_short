@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/app/utils/auth_input_validator.dart';
+import 'package:login_flutter/app/utils/error_message_mapper.dart';
 import 'package:login_flutter/domain/usecases/reset_password_usecase.dart';
 import 'forgot_password_state.dart';
 
@@ -22,25 +24,15 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
     required String invalidEmailFormatMessage,
     required String resetPasswordSentMessage,
   }) async {
-    final email = state.email.trim();
-
-    if (email.isEmpty) {
+    final validationMessage = AuthInputValidator.validateEmail(
+      email: state.email,
+      emailRequiredMessage: emailRequiredMessage,
+      invalidEmailFormatMessage: invalidEmailFormatMessage,
+    );
+    if (validationMessage != null) {
       state = state.copyWith(
         status: ForgotPasswordStatus.error,
-        errorMessage: emailRequiredMessage,
-        successMessage: null,
-      );
-      return;
-    }
-
-    final isValidEmail = RegExp(
-      r'^[\w\.-]+@([\w-]+\.)+[\w-]{2,4}$',
-    ).hasMatch(email);
-
-    if (!isValidEmail) {
-      state = state.copyWith(
-        status: ForgotPasswordStatus.error,
-        errorMessage: invalidEmailFormatMessage,
+        errorMessage: validationMessage,
         successMessage: null,
       );
       return;
@@ -53,7 +45,7 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
     );
 
     try {
-      await resetPasswordUseCase(email);
+      await resetPasswordUseCase(state.email.trim());
       state = state.copyWith(
         status: ForgotPasswordStatus.success,
         successMessage: resetPasswordSentMessage,
@@ -62,7 +54,7 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
     } catch (e) {
       state = state.copyWith(
         status: ForgotPasswordStatus.error,
-        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+        errorMessage: ErrorMessageMapper.map(e),
         successMessage: null,
       );
     }

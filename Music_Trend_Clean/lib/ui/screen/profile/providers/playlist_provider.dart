@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/app/providers/session_provider.dart';
 import 'package:login_flutter/app/utils/error_message_mapper.dart';
 import 'package:login_flutter/data/datasource/remote/playlist_remote_data_source.dart';
 import 'package:login_flutter/data/repositories/playlist_repository_impl.dart';
@@ -9,8 +10,6 @@ import 'package:login_flutter/domain/usecases/create_playlist_usecase.dart';
 import 'package:login_flutter/domain/usecases/delete_playlist_usecase.dart';
 import 'package:login_flutter/domain/usecases/get_user_playlists_usecase.dart';
 import 'package:login_flutter/domain/usecases/update_playlist_songs_usecase.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_provider.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_state.dart';
 
 final playlistRemoteDataSourceProvider = Provider<PlaylistRemoteDataSource>((
   ref,
@@ -46,8 +45,7 @@ final deletePlaylistUseCaseProvider = Provider<DeletePlaylistUseCase>((ref) {
 
 final playlistNotifierProvider =
     StateNotifierProvider<PlaylistNotifier, PlaylistState>((ref) {
-      final authState = ref.watch(authNotifierProvider);
-      final userId = authState is AuthSuccess ? authState.user.id : 'guest';
+      final userId = ref.watch(sessionCurrentUserIdProvider) ?? 'guest';
 
       return PlaylistNotifier(
         userId: userId,

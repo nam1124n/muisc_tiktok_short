@@ -1,14 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/app/providers/session_provider.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/domain/repositories/interaction_repository.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_provider.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_state.dart';
 import 'package:login_flutter/ui/screen/discover/providers/favorites_provider.dart';
 
 final recentNotifierProvider =
     StateNotifierProvider<RecentNotifier, List<SongEntity>>((ref) {
-      final authState = ref.watch(authNotifierProvider);
-      final userId = authState is AuthSuccess ? authState.user.id : 'guest';
+      final userId = ref.watch(sessionCurrentUserIdProvider) ?? 'guest';
       return RecentNotifier(
         userId: userId,
         repository: ref.read(interactionRepositoryProvider),

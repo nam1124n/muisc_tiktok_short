@@ -1,10 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/app/providers/session_provider.dart';
 import 'package:login_flutter/data/datasource/remote/interaction_remote_data_source.dart';
 import 'package:login_flutter/data/repositories/interaction_repository_impl.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/domain/repositories/interaction_repository.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_provider.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_state.dart';
 
 final interactionRemoteDataSourceProvider =
     Provider<InteractionRemoteDataSource>((ref) {
@@ -19,8 +18,7 @@ final interactionRepositoryProvider = Provider<InteractionRepository>((ref) {
 
 final favoriteNotifierProvider =
     StateNotifierProvider<FavoriteNotifier, List<SongEntity>>((ref) {
-      final authState = ref.watch(authNotifierProvider);
-      final userId = authState is AuthSuccess ? authState.user.id : 'guest';
+      final userId = ref.watch(sessionCurrentUserIdProvider) ?? 'guest';
       return FavoriteNotifier(
         userId: userId,
         repository: ref.read(interactionRepositoryProvider),

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/app/providers/session_provider.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/admin/admin_year_song_form_screen.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_state.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_provider.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_state.dart';
 import 'package:login_flutter/ui/screen/genre/providers/year_song_provider.dart';
 
 class AdminYearSongDashboardScreen extends ConsumerWidget {
@@ -14,7 +13,7 @@ class AdminYearSongDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final songState = ref.watch(yearSongNotifierProvider);
-    final authState = ref.watch(authNotifierProvider);
+    final hasAdminAccess = ref.watch(sessionHasAdminAccessProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -36,7 +35,7 @@ class AdminYearSongDashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: _buildBody(context, ref, authState, songState),
+      body: _buildBody(context, ref, hasAdminAccess, songState),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: const Color(0xFF8C52FF),
         foregroundColor: Colors.white,
@@ -55,12 +54,12 @@ class AdminYearSongDashboardScreen extends ConsumerWidget {
   Widget _buildBody(
     BuildContext context,
     WidgetRef ref,
-    AuthState authState,
+    bool hasAdminAccess,
     SongState songState,
   ) {
     final l10n = AppLocalizations.of(context)!;
 
-    if (authState is! AuthSuccess || !authState.user.isAdmin) {
+    if (!hasAdminAccess) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

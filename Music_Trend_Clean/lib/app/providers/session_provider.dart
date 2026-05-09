@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/app/config/app_config.dart';
 import 'package:login_flutter/app/utils/error_message_mapper.dart';
 import 'package:login_flutter/domain/entities/user_entity.dart';
 import 'package:login_flutter/domain/repositories/auth_repository.dart';
@@ -13,7 +14,26 @@ final sessionProvider = StateNotifierProvider<SessionNotifier, SessionState>((
   return SessionNotifier(authRepository: ref.read(authRepositoryProvider));
 });
 
+final sessionCurrentUserIdProvider = Provider<String?>((ref) {
+  return ref.watch(sessionProvider.select((state) => state.currentUser?.id));
+});
+
+final sessionHasAdminAccessProvider = Provider<bool>((ref) {
+  final user = ref.watch(sessionProvider.select((state) => state.currentUser));
+  if (user == null) {
+    return false;
+  }
+
+  return user.isAdmin || AppConfig.isAdminEmail(user.email);
+});
+
 class SessionNotifier extends StateNotifier<SessionState> {
+  static const _terminalSessionMessages = [
+    ErrorMessageMapper.sessionExpiredMessage,
+    ErrorMessageMapper.accountDisabledMessage,
+    ErrorMessageMapper.accountNotFoundMessage,
+  ];
+
   SessionNotifier({required this.authRepository})
     : super(const SessionState.loading()) {
     _sessionSubscription = authRepository.watchCurrentUser().listen(
@@ -43,10 +63,7 @@ class SessionNotifier extends StateNotifier<SessionState> {
         return;
       }
 
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: ErrorMessageMapper.map(error),
-      );
+      _handleStateError(error, isAction: false);
     }
   }
 
@@ -63,7 +80,7 @@ class SessionNotifier extends StateNotifier<SessionState> {
         return;
       }
 
-      state = state.copyWith(actionErrorMessage: ErrorMessageMapper.map(error));
+      _handleStateError(error, isAction: true);
     } finally {
       if (mounted) {
         state = state.copyWith(isSendingVerificationEmail: false);
@@ -71,10 +88,10 @@ class SessionNotifier extends StateNotifier<SessionState> {
     }
   }
 
-  Future<void> refreshCurrentUser() async {
+  Future<void> refreshCurrentUser({bool reportActionError = true}) async {
     state = state.copyWith(
       isRefreshingCurrentUser: true,
-      clearActionErrorMessage: true,
+      clearActionErrorMessage: reportActionError,
     );
 
     try {
@@ -90,7 +107,11 @@ class SessionNotifier extends StateNotifier<SessionState> {
         return;
       }
 
-      state = state.copyWith(actionErrorMessage: ErrorMessageMapper.map(error));
+      _handleStateError(
+        error,
+        isAction: true,
+        reportActionError: reportActionError,
+      );
     } finally {
       if (mounted) {
         state = state.copyWith(isRefreshingCurrentUser: false);
@@ -113,11 +134,25 @@ class SessionNotifier extends StateNotifier<SessionState> {
         return;
       }
 
-      state = state.copyWith(
-        isSigningOut: false,
-        actionErrorMessage: ErrorMessageMapper.map(error),
-      );
+      _handleStateError(error, isAction: true);
+      state = state.copyWith(isSigningOut: false);
     }
+  }
+
+  Future<void> handleAppResumed() async {
+    if (state.isLoading ||
+        state.isRefreshingCurrentUser ||
+        state.isSigningOut ||
+        state.isSendingVerificationEmail) {
+      return;
+    }
+
+    if (!state.isAuthenticated) {
+      await loadCurrentUser(showLoading: false);
+      return;
+    }
+
+    await refreshCurrentUser(reportActionError: false);
   }
 
   void _handleSessionChanged(UserEntity? user) {
@@ -133,10 +168,7 @@ class SessionNotifier extends StateNotifier<SessionState> {
       return;
     }
 
-    state = state.copyWith(
-      isLoading: false,
-      errorMessage: ErrorMessageMapper.map(error),
-    );
+    _handleStateError(error, isAction: false);
   }
 
   void _setCurrentUser(UserEntity? user) {
@@ -146,6 +178,30 @@ class SessionNotifier extends StateNotifier<SessionState> {
       clearErrorMessage: true,
       clearActionErrorMessage: true,
     );
+  }
+
+  void _handleStateError(
+    Object error, {
+    required bool isAction,
+    bool reportActionError = true,
+  }) {
+    final message = ErrorMessageMapper.map(error);
+
+    if (_terminalSessionMessages.contains(message)) {
+      state = const SessionState.unauthenticated().copyWith(
+        errorMessage: message,
+      );
+      return;
+    }
+
+    if (isAction) {
+      state = state.copyWith(
+        actionErrorMessage: reportActionError ? message : null,
+      );
+      return;
+    }
+
+    state = state.copyWith(isLoading: false, errorMessage: message);
   }
 
   @override
