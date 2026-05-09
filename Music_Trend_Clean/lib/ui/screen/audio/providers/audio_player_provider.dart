@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
@@ -13,6 +14,48 @@ final audioPlayerNotifierProvider =
         trackSongListenUseCase: ref.read(trackSongListenUseCaseProvider),
       );
     });
+
+final audioPlaybackForSongProvider =
+    Provider.family<AudioSongPlaybackState, String>((ref, songId) {
+      final playbackSnapshot = ref.watch(
+        audioPlayerNotifierProvider.select(
+          (state) => (
+            currentSongId: state.currentSong?.id,
+            isPlaying: state.isPlaying,
+            isLoading: state.isLoading,
+          ),
+        ),
+      );
+
+      final isCurrentSong = playbackSnapshot.currentSongId == songId;
+      return AudioSongPlaybackState(
+        isCurrentSong: isCurrentSong,
+        isPlaying: isCurrentSong && playbackSnapshot.isPlaying,
+        isLoading: isCurrentSong && playbackSnapshot.isLoading,
+      );
+    });
+
+final miniPlayerStateProvider = Provider<MiniPlayerState>((ref) {
+  final snapshot = ref.watch(
+    audioPlayerNotifierProvider.select(
+      (state) => (
+        currentSong: state.currentSong,
+        isPlaying: state.isPlaying,
+        isLoading: state.isLoading,
+        canGoPrevious: state.currentIndex > 0 || state.position.inSeconds > 3,
+        canGoNext: state.currentIndex < state.playlist.length - 1,
+      ),
+    ),
+  );
+
+  return MiniPlayerState(
+    currentSong: snapshot.currentSong,
+    isPlaying: snapshot.isPlaying,
+    isLoading: snapshot.isLoading,
+    canGoPrevious: snapshot.canGoPrevious,
+    canGoNext: snapshot.canGoNext,
+  );
+});
 
 class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   static const Duration _defaultListenThreshold = Duration(seconds: 30);
@@ -169,4 +212,44 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
     _audioPlayer.dispose();
     super.dispose();
   }
+}
+
+class AudioSongPlaybackState extends Equatable {
+  const AudioSongPlaybackState({
+    required this.isCurrentSong,
+    required this.isPlaying,
+    required this.isLoading,
+  });
+
+  final bool isCurrentSong;
+  final bool isPlaying;
+  final bool isLoading;
+
+  @override
+  List<Object?> get props => [isCurrentSong, isPlaying, isLoading];
+}
+
+class MiniPlayerState extends Equatable {
+  const MiniPlayerState({
+    required this.currentSong,
+    required this.isPlaying,
+    required this.isLoading,
+    required this.canGoPrevious,
+    required this.canGoNext,
+  });
+
+  final SongEntity? currentSong;
+  final bool isPlaying;
+  final bool isLoading;
+  final bool canGoPrevious;
+  final bool canGoNext;
+
+  @override
+  List<Object?> get props => [
+    currentSong,
+    isPlaying,
+    isLoading,
+    canGoPrevious,
+    canGoNext,
+  ];
 }

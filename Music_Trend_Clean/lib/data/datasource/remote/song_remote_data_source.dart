@@ -3,21 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:login_flutter/app/config/app_config.dart';
 import 'package:login_flutter/data/dto/admin/song_model.dart';
-import 'package:login_flutter/domain/entities/song_entity.dart';
+import 'package:login_flutter/domain/entities/song_page_entity.dart';
 import 'package:login_flutter/domain/entities/user_entity.dart';
-
-class SongPageResult {
-  final List<SongEntity> songs;
-  final QueryDocumentSnapshot<Map<String, dynamic>>? lastDocument;
-  final bool hasMore;
-
-  const SongPageResult({
-    required this.songs,
-    required this.lastDocument,
-    required this.hasMore,
-  });
-}
 
 class SongRemoteDataSource {
   static const String _songsCollection = 'songs';
@@ -34,8 +23,7 @@ class SongRemoteDataSource {
 
     final doc = await _db.collection('users').doc(user.uid).get();
     final role = UserRoles.normalize(doc.data()?['role']?.toString());
-    final isAdminEmail =
-        (user.email ?? '').trim().toLowerCase() == 'admin@gmail.com';
+    final isAdminEmail = AppConfig.isAdminEmail(user.email);
 
     if (role != UserRoles.admin && !isAdminEmail) {
       throw Exception('Bạn không có quyền thực hiện thao tác quản trị.');
@@ -44,13 +32,10 @@ class SongRemoteDataSource {
 
   // ── Cloudinary: upload ảnh, trả về URL ──
   Future<String> uploadImage(XFile imageFile) async {
-    const cloudName = 'ddy9wgrbj'; // 👈 thay bằng Cloud Name của bạn
-    const uploadPreset = 'musicapp'; // 👈 thay bằng tên upload preset
-
     return _uploadToCloudinary(
       file: imageFile,
-      cloudName: cloudName,
-      uploadPreset: uploadPreset,
+      cloudName: AppConfig.cloudinaryCloudName,
+      uploadPreset: AppConfig.cloudinaryUploadPreset,
       resourceType: 'image',
       fallbackFileName: 'cover.jpg',
     );
@@ -58,13 +43,10 @@ class SongRemoteDataSource {
 
   // ── Cloudinary: upload audio, trả về URL ──
   Future<String> uploadAudio(XFile audioFile) async {
-    const cloudName = 'ddy9wgrbj'; // 👈 thay bằng Cloud Name của bạn
-    const uploadPreset = 'musicapp'; // 👈 thay bằng tên upload preset
-
     return _uploadToCloudinary(
       file: audioFile,
-      cloudName: cloudName,
-      uploadPreset: uploadPreset,
+      cloudName: AppConfig.cloudinaryCloudName,
+      uploadPreset: AppConfig.cloudinaryUploadPreset,
       resourceType: 'video',
       fallbackFileName: 'audio.mp3',
     );
@@ -126,27 +108,35 @@ class SongRemoteDataSource {
     return _db.collection(_songsCollection).orderBy('title').snapshots();
   }
 
-  Future<SongPageResult> fetchSongsPage({
+  Future<SongPageEntity> fetchSongsPage({
     int limit = 20,
-    QueryDocumentSnapshot<Map<String, dynamic>>? startAfterDocument,
+    SongPageCursor? startAfter,
   }) async {
     Query<Map<String, dynamic>> query = _db
         .collection(_songsCollection)
         .orderBy('title')
+        .orderBy(FieldPath.documentId)
         .limit(limit);
 
-    if (startAfterDocument != null) {
-      query = query.startAfterDocument(startAfterDocument);
+    if (startAfter != null) {
+      query = query.startAfter([startAfter.title, startAfter.id]);
     }
 
     final snapshot = await query.get();
     final songs = snapshot.docs
         .map((doc) => SongModel.fromFirestore(doc.data(), doc.id))
         .toList();
+    final lastDocument = snapshot.docs.isEmpty ? null : snapshot.docs.last;
 
-    return SongPageResult(
+    return SongPageEntity(
       songs: songs,
-      lastDocument: snapshot.docs.isEmpty ? null : snapshot.docs.last,
+      nextCursor: lastDocument == null
+          ? null
+          : SongPageCursor(
+              title:
+                  lastDocument.data()['title']?.toString() ?? songs.last.title,
+              id: lastDocument.id,
+            ),
       hasMore: snapshot.docs.length == limit,
     );
   }

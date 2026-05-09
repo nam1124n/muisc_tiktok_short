@@ -7,11 +7,13 @@ import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/domain/repositories/song_repository.dart';
 import 'package:login_flutter/domain/usecases/add_song_usecase.dart';
 import 'package:login_flutter/domain/usecases/delete_song_usecase.dart';
+import 'package:login_flutter/domain/usecases/get_songs_page_usecase.dart';
 import 'package:login_flutter/domain/usecases/get_songs_usecase.dart';
 import 'package:login_flutter/domain/usecases/get_weekly_trending_songs_usecase.dart';
 import 'package:login_flutter/domain/usecases/track_song_listen_usecase.dart';
 import 'package:login_flutter/domain/usecases/update_song_usecase.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:login_flutter/app/utils/error_message_mapper.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_state.dart';
 
 final songRemoteDataSourceProvider = Provider<SongRemoteDataSource>((ref) {
@@ -24,6 +26,10 @@ final songRepositoryProvider = Provider<SongRepository>((ref) {
 
 final getSongsUseCaseProvider = Provider<GetSongsUseCase>((ref) {
   return GetSongsUseCase(ref.read(songRepositoryProvider));
+});
+
+final getSongsPageUseCaseProvider = Provider<GetSongsPageUseCase>((ref) {
+  return GetSongsPageUseCase(ref.read(songRepositoryProvider));
 });
 
 final addSongUseCaseProvider = Provider<AddSongUseCase>((ref) {
@@ -80,7 +86,7 @@ class SongNotifier extends StateNotifier<SongState> {
     _songsSubscription = getSongsUseCase().listen(
       (songs) => state = SongLoaded(songs),
       onError: (Object error, StackTrace _) {
-        state = SongError(error.toString());
+        state = SongError(ErrorMessageMapper.map(error));
       },
     );
   }
@@ -96,7 +102,7 @@ class SongNotifier extends StateNotifier<SongState> {
       await addSongUseCase(song, imageFile, audioFile);
       state = SongActionSuccess();
     } catch (e) {
-      state = SongError(e.toString());
+      state = SongError(ErrorMessageMapper.map(e));
     }
   }
 
@@ -111,7 +117,7 @@ class SongNotifier extends StateNotifier<SongState> {
       await updateSongUseCase(song, imageFile: imageFile, audioFile: audioFile);
       state = SongActionSuccess();
     } catch (e) {
-      state = SongError(e.toString());
+      state = SongError(ErrorMessageMapper.map(e));
     }
   }
 
@@ -120,7 +126,7 @@ class SongNotifier extends StateNotifier<SongState> {
       await deleteSongUseCase(id);
       state = SongActionSuccess();
     } catch (e) {
-      state = SongError(e.toString());
+      state = SongError(ErrorMessageMapper.map(e));
     }
   }
 

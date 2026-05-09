@@ -1,8 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_flutter/app/providers/app_language_provider.dart';
 import 'package:login_flutter/app/providers/app_language_state.dart';
+import 'package:login_flutter/app/providers/session_provider.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_provider.dart';
 import 'package:login_flutter/ui/screen/audio/providers/audio_player_provider.dart';
@@ -96,8 +96,7 @@ class ProfileHeader extends ConsumerWidget {
               );
 
               if (confirm == true && context.mounted) {
-                // Actually clear Firebase session
-                await FirebaseAuth.instance.signOut();
+                await ref.read(sessionProvider.notifier).signOut();
                 if (!context.mounted) {
                   return;
                 }

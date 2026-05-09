@@ -50,6 +50,11 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Stream<UserEntity?> watchCurrentUser() {
+    return remoteDataSource.watchCurrentUser();
+  }
+
+  @override
   Future<void> resetPassword(String email) async {
     try {
       await remoteDataSource.resetPassword(email);
@@ -62,6 +67,33 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> resendEmailVerification(String email, String password) async {
     try {
       await remoteDataSource.resendEmailVerification(email, password);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> sendCurrentUserEmailVerification() async {
+    try {
+      await remoteDataSource.sendCurrentUserEmailVerification();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> reloadCurrentUser() async {
+    try {
+      await remoteDataSource.reloadCurrentUser();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> signOut() async {
+    try {
+      await remoteDataSource.signOut();
     } catch (e) {
       rethrow;
     }

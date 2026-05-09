@@ -1,9 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/app/providers/session_provider.dart';
 import 'package:login_flutter/app/providers/audio_generation_provider.dart';
 import 'package:login_flutter/domain/usecases/generate_audio_usecase.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_provider.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_state.dart';
 import 'package:login_flutter/ui/screen/create_audio/providers/create_audio_state.dart';
 import 'package:login_flutter/ui/screen/my_audios/providers/my_audios_provider.dart';
 
@@ -63,10 +61,7 @@ class CreateAudioNotifier extends StateNotifier<CreateAudioState> {
     );
 
     try {
-      final authState = ref.read(authNotifierProvider);
-      final userId = authState is AuthSuccess
-          ? authState.user.id
-          : FirebaseAuth.instance.currentUser?.uid ?? 'guest_user';
+      final userId = ref.read(sessionProvider).userId;
 
       final generatedTask = await generateAudioUseCase(
         userId: userId,

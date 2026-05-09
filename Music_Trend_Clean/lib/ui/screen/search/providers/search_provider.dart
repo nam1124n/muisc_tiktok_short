@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/app/utils/error_message_mapper.dart';
 import 'package:login_flutter/app/utils/search_text_normalizer.dart';
 import 'package:login_flutter/domain/entities/search_plan_entity.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
@@ -10,28 +13,78 @@ final searchNotifierProvider =
     });
 
 class SearchNotifier extends StateNotifier<SearchState> {
-  final _SearchPlanBuilder _planBuilder;
-  final _SongSearchRanker _ranker;
+  static const _searchDebounce = Duration(milliseconds: 280);
 
   SearchNotifier()
     : _planBuilder = const _SearchPlanBuilder(),
       _ranker = const _SongSearchRanker(),
-      super(const SearchInitial());
+      super(const SearchState.idle());
 
-  Future<void> search({
-    required String query,
-    required List<SongEntity> songs,
-  }) {
+  final _SearchPlanBuilder _planBuilder;
+  final _SongSearchRanker _ranker;
+  Timer? _debounceTimer;
+  List<SongEntity>? _lastSongsReference;
+  List<_SongSearchIndex> _searchIndex = const [];
+
+  void search({required String query, required List<SongEntity> songs}) {
     final trimmedQuery = query.trim();
+    _debounceTimer?.cancel();
+
     if (trimmedQuery.isEmpty) {
-      state = const SearchInitial();
-      return Future.value();
+      state = const SearchState.idle();
+      return;
     }
 
-    final plan = _planBuilder.build(trimmedQuery);
-    final results = _ranker.rank(songs: songs, plan: plan);
-    state = SearchLoaded(results: results, plan: plan);
-    return Future.value();
+    state = state.copyWith(
+      status: SearchStatus.searching,
+      query: trimmedQuery,
+      results: const [],
+      plan: null,
+      errorMessage: null,
+    );
+
+    _debounceTimer = Timer(_searchDebounce, () {
+      _executeSearch(trimmedQuery, songs);
+    });
+  }
+
+  void _executeSearch(String query, List<SongEntity> songs) {
+    try {
+      _ensureSearchIndex(songs);
+      final plan = _planBuilder.build(query);
+      final results = _ranker.rank(searchIndex: _searchIndex, plan: plan);
+
+      state = state.copyWith(
+        status: results.isEmpty ? SearchStatus.empty : SearchStatus.loaded,
+        query: query,
+        results: results,
+        plan: plan,
+        errorMessage: null,
+      );
+    } catch (error) {
+      state = state.copyWith(
+        status: SearchStatus.error,
+        query: query,
+        results: const [],
+        plan: null,
+        errorMessage: ErrorMessageMapper.map(error),
+      );
+    }
+  }
+
+  void _ensureSearchIndex(List<SongEntity> songs) {
+    if (identical(_lastSongsReference, songs)) {
+      return;
+    }
+
+    _lastSongsReference = songs;
+    _searchIndex = songs.map(_SongSearchIndex.fromSong).toList();
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
   }
 }
 
@@ -57,15 +110,14 @@ class _SongSearchRanker {
   const _SongSearchRanker();
 
   List<SongEntity> rank({
-    required List<SongEntity> songs,
+    required List<_SongSearchIndex> searchIndex,
     required SearchPlanEntity plan,
   }) {
     final normalizedQuery = normalizeSearchText(plan.originalQuery);
     final keywords = plan.keywords;
     final scoredSongs = <_ScoredSong>[];
 
-    for (final song in songs) {
-      final index = _SongSearchIndex.fromSong(song);
+    for (final index in searchIndex) {
       final score = _scoreSong(
         index,
         normalizedQuery: normalizedQuery,
@@ -73,7 +125,7 @@ class _SongSearchRanker {
       );
 
       if (score > 0) {
-        scoredSongs.add(_ScoredSong(song: song, score: score));
+        scoredSongs.add(_ScoredSong(song: index.song, score: score));
       }
     }
 
@@ -161,21 +213,24 @@ class _SongSearchRanker {
 }
 
 class _SongSearchIndex {
-  final String title;
-  final String artist;
-  final String searchDocument;
-
   const _SongSearchIndex({
+    required this.song,
     required this.title,
     required this.artist,
     required this.searchDocument,
   });
+
+  final SongEntity song;
+  final String title;
+  final String artist;
+  final String searchDocument;
 
   factory _SongSearchIndex.fromSong(SongEntity song) {
     final title = normalizeSearchText(song.title);
     final artist = normalizeSearchText(song.artist);
 
     return _SongSearchIndex(
+      song: song,
       title: title,
       artist: artist,
       searchDocument: [
@@ -187,8 +242,8 @@ class _SongSearchIndex {
 }
 
 class _ScoredSong {
+  const _ScoredSong({required this.song, required this.score});
+
   final SongEntity song;
   final int score;
-
-  const _ScoredSong({required this.song, required this.score});
 }

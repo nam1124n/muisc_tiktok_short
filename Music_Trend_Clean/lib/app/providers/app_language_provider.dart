@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_flutter/app/providers/app_language_state.dart';
+import 'package:login_flutter/app/utils/error_message_mapper.dart';
 import 'package:login_flutter/data/datasource/local/app_language_local_data_source.dart';
 import 'package:login_flutter/data/repositories/app_language_repository_impl.dart';
 import 'package:login_flutter/domain/entities/app_language_entity.dart';
@@ -66,7 +67,7 @@ class AppLanguageNotifier extends StateNotifier<AppLanguageState> {
       final language = await getSavedLanguageUseCase();
       state = AppLanguageLoaded(language: language);
     } catch (e) {
-      state = AppLanguageError(message: e.toString());
+      state = AppLanguageError(message: ErrorMessageMapper.map(e));
       state = const AppLanguageLoaded(language: defaultAppLanguage);
     }
   }
@@ -90,7 +91,7 @@ class AppLanguageNotifier extends StateNotifier<AppLanguageState> {
       await saveLanguageUseCase(nextLanguage);
       state = AppLanguageLoaded(language: nextLanguage);
     } catch (e) {
-      state = AppLanguageError(message: e.toString());
+      state = AppLanguageError(message: ErrorMessageMapper.map(e));
       state = AppLanguageLoaded(language: currentLanguage);
     }
   }

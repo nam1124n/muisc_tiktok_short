@@ -33,6 +33,13 @@ class DiscoverSongsPaginationState extends Equatable {
       initialErrorMessage!.trim().isNotEmpty &&
       songs.isEmpty;
 
+  bool get isEmpty => songs.isEmpty && !isInitialLoading && !hasInitialError;
+
+  bool get hasLoadMoreError =>
+      loadMoreErrorMessage != null &&
+      loadMoreErrorMessage!.trim().isNotEmpty &&
+      songs.isNotEmpty;
+
   DiscoverSongsPaginationState copyWith({
     List<SongEntity>? songs,
     bool? isInitialLoading,

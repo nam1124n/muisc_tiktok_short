@@ -1,15 +1,16 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/app/config/app_config.dart';
 import 'package:login_flutter/app/providers/app_language_provider.dart';
 import 'package:login_flutter/app/providers/app_language_state.dart';
+import 'package:login_flutter/app/providers/session_provider.dart';
+import 'package:login_flutter/app/theme/app_theme.dart';
 import 'package:login_flutter/firebase_options.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/auth/login_screen.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_provider.dart';
 import 'package:login_flutter/ui/screen/home/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -41,6 +42,7 @@ class App extends ConsumerWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -49,143 +51,161 @@ class App extends ConsumerWidget {
   }
 }
 
-class AuthGate extends ConsumerStatefulWidget {
+enum AuthGateDestination { loading, sessionError, login, verifyEmail, home }
+
+AuthGateDestination resolveAuthGateDestination(SessionState sessionState) {
+  if (sessionState.isLoading) {
+    return AuthGateDestination.loading;
+  }
+
+  if (sessionState.errorMessage != null && !sessionState.isAuthenticated) {
+    return AuthGateDestination.sessionError;
+  }
+
+  if (!sessionState.isAuthenticated) {
+    return AuthGateDestination.login;
+  }
+
+  final isSystemAdmin =
+      sessionState.isAdmin || AppConfig.isAdminEmail(sessionState.email);
+  if (!sessionState.isEmailVerified && !isSystemAdmin) {
+    return AuthGateDestination.verifyEmail;
+  }
+
+  return AuthGateDestination.home;
+}
+
+class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
 
   @override
-  ConsumerState<AuthGate> createState() => _AuthGateState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sessionState = ref.watch(sessionProvider);
+    return switch (resolveAuthGateDestination(sessionState)) {
+      AuthGateDestination.loading => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      AuthGateDestination.sessionError => _SessionErrorScreen(
+        message: sessionState.errorMessage!,
+      ),
+      AuthGateDestination.login => const LoginScreen(),
+      AuthGateDestination.verifyEmail => const _EmailVerificationScreen(),
+      AuthGateDestination.home => const HomeScreen(),
+    };
+  }
 }
 
-class _AuthGateState extends ConsumerState<AuthGate> {
-  StreamSubscription<User?>? _authSubscription;
+class _SessionErrorScreen extends ConsumerWidget {
+  const _SessionErrorScreen({required this.message});
+
+  final String message;
 
   @override
-  void initState() {
-    super.initState();
-    _syncSession();
-    _authSubscription = FirebaseAuth.instance.userChanges().listen((_) {
-      _syncSession();
-    });
-  }
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
 
-  Future<void> _syncSession() async {
-    await ref.read(authNotifierProvider.notifier).syncCurrentUser();
-  }
-
-  @override
-  void dispose() {
-    _authSubscription?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.userChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        final user = snapshot.data;
-        if (user == null) {
-          return const LoginScreen();
-        }
-
-        final isSystemAdmin = user.email?.trim().toLowerCase() == 'admin@gmail.com';
-        if (!user.emailVerified && !isSystemAdmin) {
-          return const _EmailVerificationScreen();
-        }
-
-        return const HomeScreen();
-      },
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.error_outline_rounded,
+                  size: 64,
+                  color: theme.colorScheme.error,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () {
+                    ref.read(sessionProvider.notifier).loadCurrentUser();
+                  },
+                  child: const Text('Thử lại'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
 
-class _EmailVerificationScreen extends StatefulWidget {
+class _EmailVerificationScreen extends ConsumerStatefulWidget {
   const _EmailVerificationScreen();
 
   @override
-  State<_EmailVerificationScreen> createState() =>
+  ConsumerState<_EmailVerificationScreen> createState() =>
       _EmailVerificationScreenState();
 }
 
-class _EmailVerificationScreenState extends State<_EmailVerificationScreen> {
-  bool _isSending = false;
-  bool _isRefreshing = false;
-
+class _EmailVerificationScreenState
+    extends ConsumerState<_EmailVerificationScreen> {
   Future<void> _resendVerificationEmail(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
+    await ref.read(sessionProvider.notifier).resendVerificationEmail();
+    if (!context.mounted) {
       return;
     }
 
-    setState(() {
-      _isSending = true;
-    });
-
-    try {
-      await user.sendEmailVerification();
-      if (!context.mounted) {
-        return;
-      }
+    final sessionState = ref.read(sessionProvider);
+    if (sessionState.actionErrorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.verificationEmailSentMessage)),
+        SnackBar(
+          content: Text(sessionState.actionErrorMessage!),
+          backgroundColor: Colors.red,
+        ),
       );
-    } on FirebaseAuthException catch (error) {
+      return;
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.verificationEmailSentMessage)));
+  }
+
+  Future<void> _refreshVerificationStatus(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    await ref.read(sessionProvider.notifier).refreshCurrentUser();
+    if (!context.mounted) {
+      return;
+    }
+
+    final sessionState = ref.read(sessionProvider);
+    if (sessionState.actionErrorMessage != null) {
       if (!context.mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(error.message ?? l10n.genericVerificationErrorMessage),
+          content: Text(
+            sessionState.actionErrorMessage ??
+                l10n.genericVerificationErrorMessage,
+          ),
           backgroundColor: Colors.red,
         ),
       );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSending = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _refreshVerificationStatus() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return;
-    }
-
-    setState(() {
-      _isRefreshing = true;
-    });
-
-    try {
-      await user.reload();
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isRefreshing = false;
-        });
-      }
     }
   }
 
   Future<void> _signOut() async {
-    await FirebaseAuth.instance.signOut();
+    await ref.read(sessionProvider.notifier).signOut();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final user = FirebaseAuth.instance.currentUser;
-    final email = user?.email ?? '';
+    final sessionState = ref.watch(sessionProvider);
+    final email = sessionState.email;
 
     return Scaffold(
       body: SafeArea(
@@ -219,10 +239,10 @@ class _EmailVerificationScreenState extends State<_EmailVerificationScreen> {
                   ),
                   const SizedBox(height: 24),
                   FilledButton(
-                    onPressed: _isSending
+                    onPressed: sessionState.isSendingVerificationEmail
                         ? null
                         : () => _resendVerificationEmail(context),
-                    child: _isSending
+                    child: sessionState.isSendingVerificationEmail
                         ? const SizedBox(
                             width: 20,
                             height: 20,
@@ -232,10 +252,10 @@ class _EmailVerificationScreenState extends State<_EmailVerificationScreen> {
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton(
-                    onPressed: _isRefreshing
+                    onPressed: sessionState.isRefreshingCurrentUser
                         ? null
-                        : _refreshVerificationStatus,
-                    child: _isRefreshing
+                        : () => _refreshVerificationStatus(context),
+                    child: sessionState.isRefreshingCurrentUser
                         ? const SizedBox(
                             width: 20,
                             height: 20,
@@ -244,7 +264,10 @@ class _EmailVerificationScreenState extends State<_EmailVerificationScreen> {
                         : Text(l10n.checkVerificationStatus),
                   ),
                   const SizedBox(height: 12),
-                  TextButton(onPressed: _signOut, child: Text(l10n.logout)),
+                  TextButton(
+                    onPressed: sessionState.isSigningOut ? null : _signOut,
+                    child: Text(l10n.logout),
+                  ),
                 ],
               ),
             ),

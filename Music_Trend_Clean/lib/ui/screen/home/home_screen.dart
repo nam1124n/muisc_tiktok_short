@@ -64,6 +64,13 @@ class _HomeBottomBar extends ConsumerWidget {
     final hasCurrentSong = ref.watch(
       audioPlayerNotifierProvider.select((state) => state.currentSong != null),
     );
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isCompact = screenWidth < 360;
+    final isTablet = screenWidth >= 700;
+    final createButtonSize = isTablet ? 60.0 : (isCompact ? 52.0 : 56.0);
+    final navHeight = isTablet ? 76.0 : (isCompact ? 68.0 : 72.0);
+    final navTopOffset = createButtonSize / 2 - (isCompact ? 8.0 : 9.0);
+    final barHeight = navHeight + navTopOffset;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -79,21 +86,23 @@ class _HomeBottomBar extends ConsumerWidget {
           child: SafeArea(
             top: false,
             child: SizedBox(
-              height: 84,
+              height: barHeight,
               child: Stack(
                 alignment: Alignment.topCenter,
                 clipBehavior: Clip.none,
                 children: [
                   Positioned.fill(
-                    top: 19,
+                    top: navTopOffset,
                     child: CustomBottomNav(
                       currentIndex: currentIndex,
                       onTap: onTabChanged,
+                      height: navHeight,
                     ),
                   ),
                   Positioned(
                     top: 0,
                     child: _CreateButton(
+                      size: createButtonSize,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -115,21 +124,25 @@ class _HomeBottomBar extends ConsumerWidget {
 }
 
 class _CreateButton extends StatelessWidget {
-  const _CreateButton({required this.onTap});
+  const _CreateButton({required this.onTap, required this.size});
 
   final VoidCallback onTap;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
+    final iconSize = size * 0.57;
+    final outerPadding = size < 56 ? 3.0 : 4.0;
+
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: EdgeInsets.all(outerPadding),
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white,
       ),
       child: Container(
-        width: 56,
-        height: 56,
+        width: size,
+        height: size,
         decoration: const BoxDecoration(
           shape: BoxShape.circle,
           color: Color(0xFF8C52FF),
@@ -139,8 +152,8 @@ class _CreateButton extends StatelessWidget {
           child: InkWell(
             customBorder: const CircleBorder(),
             onTap: onTap,
-            child: const Center(
-              child: Icon(Icons.add, color: Colors.white, size: 32),
+            child: Center(
+              child: Icon(Icons.add, color: Colors.white, size: iconSize),
             ),
           ),
         ),

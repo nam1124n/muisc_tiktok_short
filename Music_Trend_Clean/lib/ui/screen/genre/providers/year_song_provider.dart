@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:login_flutter/app/utils/error_message_mapper.dart';
 import 'package:login_flutter/data/datasource/remote/song_remote_data_source.dart';
 import 'package:login_flutter/data/datasource/remote/year_song_remote_data_source.dart';
 import 'package:login_flutter/data/repositories/year_song_repository_impl.dart';
@@ -58,6 +60,91 @@ final yearSongNotifierProvider =
       );
     });
 
+final yearSongCatalogProvider =
+    StateNotifierProvider<YearSongCatalogNotifier, YearSongCatalogState>((ref) {
+      return YearSongCatalogNotifier(
+        getYearSongsUseCase: ref.read(getYearSongsUseCaseProvider),
+      );
+    });
+
+class YearSongCatalogState extends Equatable {
+  const YearSongCatalogState({
+    this.songs = const [],
+    this.isLoading = false,
+    this.errorMessage,
+  });
+
+  const YearSongCatalogState.initial() : this(isLoading: true);
+
+  final List<SongEntity> songs;
+  final bool isLoading;
+  final String? errorMessage;
+
+  bool get hasError =>
+      errorMessage != null && errorMessage!.trim().isNotEmpty && songs.isEmpty;
+
+  bool get isEmpty => songs.isEmpty && !isLoading && !hasError;
+
+  YearSongCatalogState copyWith({
+    List<SongEntity>? songs,
+    bool? isLoading,
+    Object? errorMessage = _yearSongCatalogNoChange,
+  }) {
+    return YearSongCatalogState(
+      songs: songs ?? this.songs,
+      isLoading: isLoading ?? this.isLoading,
+      errorMessage: errorMessage == _yearSongCatalogNoChange
+          ? this.errorMessage
+          : errorMessage as String?,
+    );
+  }
+
+  @override
+  List<Object?> get props => [songs, isLoading, errorMessage];
+}
+
+const _yearSongCatalogNoChange = Object();
+
+class YearSongCatalogNotifier extends StateNotifier<YearSongCatalogState> {
+  YearSongCatalogNotifier({required this.getYearSongsUseCase})
+    : super(const YearSongCatalogState.initial()) {
+    loadSongs();
+  }
+
+  final GetYearSongsUseCase getYearSongsUseCase;
+  StreamSubscription<List<SongEntity>>? _songsSubscription;
+
+  Future<void> loadSongs() async {
+    await _songsSubscription?.cancel();
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
+    _songsSubscription = getYearSongsUseCase().listen(
+      (songs) {
+        state = state.copyWith(
+          songs: songs,
+          isLoading: false,
+          errorMessage: null,
+        );
+      },
+      onError: (Object error, StackTrace _) {
+        state = state.copyWith(
+          songs: const [],
+          isLoading: false,
+          errorMessage: ErrorMessageMapper.map(error),
+        );
+      },
+    );
+  }
+
+  Future<void> reload() => loadSongs();
+
+  @override
+  void dispose() {
+    _songsSubscription?.cancel();
+    super.dispose();
+  }
+}
+
 class YearSongNotifier extends StateNotifier<SongState> {
   final GetYearSongsUseCase getYearSongsUseCase;
   final AddYearSongUseCase addYearSongUseCase;
@@ -80,7 +167,7 @@ class YearSongNotifier extends StateNotifier<SongState> {
     _songsSubscription = getYearSongsUseCase().listen(
       (songs) => state = SongLoaded(songs),
       onError: (Object error, StackTrace _) {
-        state = SongError(error.toString());
+        state = SongError(ErrorMessageMapper.map(error));
       },
     );
   }
@@ -96,7 +183,7 @@ class YearSongNotifier extends StateNotifier<SongState> {
       await addYearSongUseCase(song, imageFile, audioFile);
       state = SongActionSuccess();
     } catch (e) {
-      state = SongError(e.toString());
+      state = SongError(ErrorMessageMapper.map(e));
     }
   }
 
@@ -115,7 +202,7 @@ class YearSongNotifier extends StateNotifier<SongState> {
       );
       state = SongActionSuccess();
     } catch (e) {
-      state = SongError(e.toString());
+      state = SongError(ErrorMessageMapper.map(e));
     }
   }
 
@@ -124,7 +211,7 @@ class YearSongNotifier extends StateNotifier<SongState> {
       await deleteYearSongUseCase(id);
       state = SongActionSuccess();
     } catch (e) {
-      state = SongError(e.toString());
+      state = SongError(ErrorMessageMapper.map(e));
     }
   }
 

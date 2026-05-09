@@ -84,20 +84,28 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       return Center(child: Text(songState.message));
     }
 
-    if (searchState is SearchLoaded) {
-      if (searchState.results.isEmpty) {
-        return Column(
-          children: [
-            SearchInfoCard(plan: searchState.plan),
-            const SizedBox(height: 16),
-            Expanded(child: Center(child: Text(l10n.noMatchingSongs))),
-          ],
-        );
-      }
+    if (searchState.isSearching) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
+    if (searchState.hasError) {
+      return Center(child: Text(searchState.errorMessage!));
+    }
+
+    if (searchState.isEmpty && searchState.plan != null) {
       return Column(
         children: [
-          SearchInfoCard(plan: searchState.plan),
+          SearchInfoCard(plan: searchState.plan!),
+          const SizedBox(height: 16),
+          Expanded(child: Center(child: Text(l10n.noMatchingSongs))),
+        ],
+      );
+    }
+
+    if (searchState.hasResults && searchState.plan != null) {
+      return Column(
+        children: [
+          SearchInfoCard(plan: searchState.plan!),
           const SizedBox(height: 12),
           Expanded(child: _buildResultsList(searchState.results)),
         ],

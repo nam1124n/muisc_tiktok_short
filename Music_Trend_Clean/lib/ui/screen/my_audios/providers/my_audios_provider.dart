@@ -1,188 +1,216 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_flutter/app/config/audio_generation_config.dart';
+import 'package:login_flutter/app/providers/app_language_provider.dart';
 import 'package:login_flutter/app/providers/audio_generation_provider.dart';
+import 'package:login_flutter/app/providers/session_provider.dart';
+import 'package:login_flutter/app/utils/error_message_mapper.dart';
 import 'package:login_flutter/data/datasource/remote/generated_audio_library_remote_data_source.dart';
 import 'package:login_flutter/domain/entities/generated_audio_task_entity.dart';
 import 'package:login_flutter/domain/usecases/get_my_songs_usecase.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_provider.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_state.dart';
+import 'package:login_flutter/ui/screen/my_audios/providers/my_audios_sync_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final myAudiosProvider =
-    StateNotifierProvider<MyAudiosNotifier, List<GeneratedAudioTaskEntity>>((
-      ref,
-    ) {
-      final authState = ref.watch(authNotifierProvider);
-      final userId = authState is AuthSuccess
-          ? authState.user.id
-          : FirebaseAuth.instance.currentUser?.uid ?? 'guest_user';
+    StateNotifierProvider<_MyAudiosNotifier, MyAudiosState>((ref) {
+      final userId = ref.watch(sessionProvider.select((state) => state.userId));
 
-      return MyAudiosNotifier(
-        userId,
+      return _MyAudiosNotifier(
+        userId: userId,
+        cacheStore: _MyAudiosCacheStore(ref.read(sharedPreferencesProvider)),
         getMySongsUseCase: ref.read(getMySongsUseCaseProvider),
         libraryRemoteDataSource: ref.read(
           generatedAudioLibraryRemoteDataSourceProvider,
         ),
+        syncHelper: const MyAudiosSyncHelper(),
       );
     });
 
-class MyAudiosNotifier extends StateNotifier<List<GeneratedAudioTaskEntity>> {
-  final String userId;
-  final GetMySongsUseCase getMySongsUseCase;
-  final GeneratedAudioLibraryRemoteDataSource libraryRemoteDataSource;
-  StreamSubscription<List<GeneratedAudioTaskEntity>>? _librarySubscription;
-  Timer? _pendingRefreshTimer;
-  bool _isRefreshingPending = false;
+const _stateNoChange = Object();
 
-  MyAudiosNotifier(
-    this.userId, {
+class MyAudiosState extends Equatable {
+  const MyAudiosState({
+    this.tasks = const [],
+    this.isHydratingCache = false,
+    this.isSyncingRemote = false,
+    this.isPollingPending = false,
+    this.errorMessage,
+    this.lastSyncedAt,
+  });
+
+  final List<GeneratedAudioTaskEntity> tasks;
+  final bool isHydratingCache;
+  final bool isSyncingRemote;
+  final bool isPollingPending;
+  final String? errorMessage;
+  final DateTime? lastSyncedAt;
+
+  bool get isLoadingInitial => isHydratingCache && tasks.isEmpty;
+
+  bool get isEmpty => tasks.isEmpty && !isHydratingCache && !isSyncingRemote;
+
+  bool get hasError =>
+      errorMessage != null && errorMessage!.trim().isNotEmpty && tasks.isEmpty;
+
+  MyAudiosState copyWith({
+    List<GeneratedAudioTaskEntity>? tasks,
+    bool? isHydratingCache,
+    bool? isSyncingRemote,
+    bool? isPollingPending,
+    Object? errorMessage = _stateNoChange,
+    Object? lastSyncedAt = _stateNoChange,
+  }) {
+    return MyAudiosState(
+      tasks: tasks ?? this.tasks,
+      isHydratingCache: isHydratingCache ?? this.isHydratingCache,
+      isSyncingRemote: isSyncingRemote ?? this.isSyncingRemote,
+      isPollingPending: isPollingPending ?? this.isPollingPending,
+      errorMessage: errorMessage == _stateNoChange
+          ? this.errorMessage
+          : errorMessage as String?,
+      lastSyncedAt: lastSyncedAt == _stateNoChange
+          ? this.lastSyncedAt
+          : lastSyncedAt as DateTime?,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    tasks,
+    isHydratingCache,
+    isSyncingRemote,
+    isPollingPending,
+    errorMessage,
+    lastSyncedAt,
+  ];
+}
+
+class _MyAudiosNotifier extends StateNotifier<MyAudiosState> {
+  static const int _maxPendingRefreshAttempt = 3;
+
+  _MyAudiosNotifier({
+    required this.userId,
+    required this.cacheStore,
     required this.getMySongsUseCase,
     required this.libraryRemoteDataSource,
-  }) : super([]) {
+    required this.syncHelper,
+  }) : super(const MyAudiosState(isHydratingCache: true)) {
     _loadTasks();
   }
 
+  final String userId;
+  final _MyAudiosCacheStore cacheStore;
+  final GetMySongsUseCase getMySongsUseCase;
+  final GeneratedAudioLibraryRemoteDataSource libraryRemoteDataSource;
+  final MyAudiosSyncHelper syncHelper;
+  StreamSubscription<List<GeneratedAudioTaskEntity>>? _librarySubscription;
+  Timer? _pendingRefreshTimer;
+  bool _isRefreshingPending = false;
+  int _pendingRefreshAttempt = 0;
+
   String get _key => 'my_generated_tasks_$userId';
 
-  Future<void> _loadTasks() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    
-    final jsonList = prefs.getStringList(_key);
+  Future<void> reload() async {
+    await _loadTasks(forceLibraryResubscribe: true);
+  }
 
-    if (jsonList != null && jsonList.isNotEmpty) {
-      try {
-        state = jsonList
-            .map((str) => GeneratedAudioTaskEntity.fromJson(jsonDecode(str)))
-            .toList();
-      } catch (_) {}
+  Future<void> _loadTasks({bool forceLibraryResubscribe = false}) async {
+    _pendingRefreshTimer?.cancel();
+    _pendingRefreshTimer = null;
+    _pendingRefreshAttempt = 0;
+    state = state.copyWith(
+      isHydratingCache: true,
+      isSyncingRemote: false,
+      errorMessage: null,
+    );
+
+    final cachedTasks = await cacheStore.readTasks(_key);
+    if (!mounted) {
+      return;
     }
 
-    if (userId != 'guest_user') {
-      _listenToLibraryUpdates();
+    state = state.copyWith(
+      tasks: cachedTasks,
+      isHydratingCache: false,
+      errorMessage: null,
+    );
 
+    if (userId != 'guest_user' &&
+        (forceLibraryResubscribe || _librarySubscription == null)) {
+      _listenToLibraryUpdates();
+    }
+
+    await _syncRemoteSources();
+  }
+
+  Future<void> _syncRemoteSources() async {
+    state = state.copyWith(isSyncingRemote: true, errorMessage: null);
+
+    String? syncError;
+
+    if (userId != 'guest_user') {
       try {
         final remoteTasks = await libraryRemoteDataSource.getTasks(userId);
-        if (!mounted) return;
-        state = _mergeTasks(state, remoteTasks);
-        await _saveTasks(state);
-        if (!mounted) return;
-      } catch (_) {}
+        await _mergeAndPersist(remoteTasks, markSynced: false);
+      } catch (error) {
+        syncError = ErrorMessageMapper.map(error);
+      }
     }
 
     try {
       final backendTasks = await getMySongsUseCase(userId: userId);
-      if (!mounted) return;
-
-      if (backendTasks.isEmpty) {
-        _syncPendingRefresh();
+      if (!mounted) {
         return;
       }
 
-      final previousState = state;
-      state = _mergeTasks(state, backendTasks);
-      await _saveTasks(state);
-      if (!mounted) return;
+      if (backendTasks.isNotEmpty) {
+        final previousTasks = state.tasks;
+        await _mergeAndPersist(backendTasks);
 
-      if (userId != 'guest_user') {
-        for (final task in backendTasks) {
-          await _saveTaskToLibraryIfChanged(task, previousState);
+        if (userId != 'guest_user') {
+          for (final task in backendTasks) {
+            await _saveTaskToLibraryIfChanged(task, previousTasks);
+          }
         }
       }
-    } catch (_) {}
-
-    if (mounted) {
-      _syncPendingRefresh();
-    }
-  }
-
-  Future<void> _saveTasks(List<GeneratedAudioTaskEntity> tasks) async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonList = tasks.map((task) => jsonEncode(task.toJson())).toList();
-    await prefs.setStringList(_key, jsonList);
-  }
-
-  List<GeneratedAudioTaskEntity> _mergeTasks(
-    List<GeneratedAudioTaskEntity> current,
-    List<GeneratedAudioTaskEntity> incoming,
-  ) {
-    final map = <String, GeneratedAudioTaskEntity>{
-      for (final task in current) task.id: task,
-    };
-
-    for (final task in incoming) {
-      final existing = map[task.id];
-      map[task.id] = existing == null ? task : _preferTask(existing, task);
+    } catch (error) {
+      syncError ??= ErrorMessageMapper.map(error);
     }
 
-    final merged = map.values.toList();
-    merged.sort((left, right) {
-      final rightTime =
-          right.createdAt?.millisecondsSinceEpoch ??
-          right.updatedAt?.millisecondsSinceEpoch ??
-          0;
-      final leftTime =
-          left.createdAt?.millisecondsSinceEpoch ??
-          left.updatedAt?.millisecondsSinceEpoch ??
-          0;
-      return rightTime.compareTo(leftTime);
-    });
-
-    return merged;
-  }
-
-  GeneratedAudioTaskEntity _preferTask(
-    GeneratedAudioTaskEntity current,
-    GeneratedAudioTaskEntity incoming,
-  ) {
-    if (incoming.tracks.length != current.tracks.length) {
-      return incoming.tracks.length > current.tracks.length
-          ? incoming
-          : current;
+    if (!mounted) {
+      return;
     }
 
-    final incomingRank = _statusRank(incoming.status);
-    final currentRank = _statusRank(current.status);
-    if (incomingRank != currentRank) {
-      return incomingRank > currentRank ? incoming : current;
-    }
-
-    final incomingUpdatedAt =
-        incoming.updatedAt?.millisecondsSinceEpoch ??
-        incoming.createdAt?.millisecondsSinceEpoch ??
-        0;
-    final currentUpdatedAt =
-        current.updatedAt?.millisecondsSinceEpoch ??
-        current.createdAt?.millisecondsSinceEpoch ??
-        0;
-
-    return incomingUpdatedAt >= currentUpdatedAt ? incoming : current;
+    state = state.copyWith(
+      isSyncingRemote: false,
+      errorMessage: syncError,
+      lastSyncedAt: syncError == null ? DateTime.now() : state.lastSyncedAt,
+    );
+    _syncPendingRefresh();
   }
 
-  int _statusRank(String status) {
-    switch (status.trim().toLowerCase()) {
-      case 'completed':
-        return 5;
-      case 'success':
-        return 4;
-      case 'failed':
-        return 3;
-      case 'first_success':
-        return 2;
-      case 'processing':
-        return 1;
-      default:
-        return 0;
+  Future<void> _mergeAndPersist(
+    List<GeneratedAudioTaskEntity> incoming, {
+    bool markSynced = true,
+  }) async {
+    final previousTasks = state.tasks;
+    final mergedTasks = syncHelper.mergeTasks(previousTasks, incoming);
+    if (syncHelper.hasTaskListChanged(previousTasks, mergedTasks)) {
+      _pendingRefreshAttempt = 0;
     }
-  }
-
-  bool _isPendingTask(GeneratedAudioTaskEntity task) {
-    final normalized = task.status.trim().toLowerCase();
-    return normalized == 'processing' || normalized == 'first_success';
+    state = state.copyWith(
+      tasks: mergedTasks,
+      errorMessage: null,
+      lastSyncedAt: markSynced ? DateTime.now() : state.lastSyncedAt,
+    );
+    await cacheStore.writeTasks(_key, mergedTasks);
+    if (!mounted) {
+      return;
+    }
+    _syncPendingRefresh();
   }
 
   void _listenToLibraryUpdates() {
@@ -190,76 +218,98 @@ class MyAudiosNotifier extends StateNotifier<List<GeneratedAudioTaskEntity>> {
     _librarySubscription = libraryRemoteDataSource.watchTasks(userId).listen((
       tasks,
     ) async {
-      if (!mounted) return;
-      state = _mergeTasks(state, tasks);
-      await _saveTasks(state);
-      if (!mounted) return;
-      _syncPendingRefresh();
+      if (!mounted) {
+        return;
+      }
+
+      await _mergeAndPersist(tasks);
     }, onError: (_) {});
   }
 
   void _syncPendingRefresh() {
-    if (state.any(_isPendingTask)) {
-      _pendingRefreshTimer ??= Timer.periodic(
-        const Duration(
-          seconds: AudioGenerationConfig.pendingRefreshIntervalSeconds,
-        ),
-        (_) => _refreshPendingTasks(),
-      );
+    final shouldPoll = syncHelper.shouldPollPending(state.tasks);
+    if (state.isPollingPending != shouldPoll) {
+      state = state.copyWith(isPollingPending: shouldPoll);
+    }
+
+    if (!shouldPoll) {
+      _pendingRefreshAttempt = 0;
+      _pendingRefreshTimer?.cancel();
+      _pendingRefreshTimer = null;
       return;
     }
 
-    _pendingRefreshTimer?.cancel();
-    _pendingRefreshTimer = null;
+    if (_isRefreshingPending) {
+      return;
+    }
+
+    _scheduleNextPendingRefresh();
   }
 
   Future<void> _refreshPendingTasks() async {
-    if (_isRefreshingPending || !state.any(_isPendingTask)) {
+    if (_isRefreshingPending || !syncHelper.shouldPollPending(state.tasks)) {
       return;
     }
 
     _isRefreshingPending = true;
+    _pendingRefreshTimer?.cancel();
+    _pendingRefreshTimer = null;
+    var hadProgress = false;
     try {
       final backendTasks = await getMySongsUseCase(userId: userId);
-      if (!mounted) return;
-
-      if (backendTasks.isEmpty) {
+      if (!mounted) {
         return;
       }
 
-      final previousState = state;
-      state = _mergeTasks(state, backendTasks);
-      await _saveTasks(state);
-      if (!mounted) return;
+      if (backendTasks.isNotEmpty) {
+        final previousTasks = state.tasks;
+        await _mergeAndPersist(backendTasks);
+        hadProgress = syncHelper.hasTaskListChanged(previousTasks, state.tasks);
 
-      if (userId != 'guest_user') {
-        for (final task in backendTasks) {
-          await _saveTaskToLibraryIfChanged(task, previousState);
+        if (userId != 'guest_user') {
+          for (final task in backendTasks) {
+            await _saveTaskToLibraryIfChanged(task, previousTasks);
+          }
         }
       }
     } catch (_) {
+      hadProgress = false;
     } finally {
       if (mounted) {
+        _pendingRefreshAttempt = syncHelper.nextPollingAttempt(
+          previousAttempt: _pendingRefreshAttempt,
+          hadProgress: hadProgress,
+          maxAttempt: _maxPendingRefreshAttempt,
+        );
         _isRefreshingPending = false;
         _syncPendingRefresh();
       }
     }
   }
 
+  void _scheduleNextPendingRefresh() {
+    final delay = syncHelper.pollingDelayForAttempt(
+      attempt: _pendingRefreshAttempt,
+      baseSeconds: AudioGenerationConfig.pendingRefreshIntervalSeconds,
+      maxSeconds: AudioGenerationConfig.pendingRefreshMaxIntervalSeconds,
+    );
+    _pendingRefreshTimer?.cancel();
+    _pendingRefreshTimer = Timer(delay, _refreshPendingTasks);
+  }
+
   Future<void> _saveTaskToLibraryIfChanged(
     GeneratedAudioTaskEntity task,
-    List<GeneratedAudioTaskEntity> sourceState,
+    List<GeneratedAudioTaskEntity> sourceTasks,
   ) async {
     GeneratedAudioTaskEntity? existingTask;
-    for (final item in sourceState) {
+    for (final item in sourceTasks) {
       if (item.id == task.id) {
         existingTask = item;
         break;
       }
     }
 
-    if (existingTask != null &&
-        jsonEncode(existingTask.toJson()) == jsonEncode(task.toJson())) {
+    if (!syncHelper.hasTaskChanged(existingTask, task)) {
       return;
     }
 
@@ -267,10 +317,7 @@ class MyAudiosNotifier extends StateNotifier<List<GeneratedAudioTaskEntity>> {
   }
 
   Future<void> saveTask(GeneratedAudioTaskEntity task) async {
-    state = _mergeTasks(state, [task]);
-    await _saveTasks(state);
-    if (!mounted) return;
-    _syncPendingRefresh();
+    await _mergeAndPersist([task]);
 
     if (userId == 'guest_user') {
       return;
@@ -280,9 +327,12 @@ class MyAudiosNotifier extends StateNotifier<List<GeneratedAudioTaskEntity>> {
   }
 
   Future<void> removeTask(String taskId) async {
-    state = state.where((task) => task.id != taskId).toList();
-    await _saveTasks(state);
-    if (!mounted) return;
+    final nextTasks = state.tasks.where((task) => task.id != taskId).toList();
+    state = state.copyWith(tasks: nextTasks, errorMessage: null);
+    await cacheStore.writeTasks(_key, nextTasks);
+    if (!mounted) {
+      return;
+    }
     _syncPendingRefresh();
 
     if (userId == 'guest_user') {
@@ -297,5 +347,34 @@ class MyAudiosNotifier extends StateNotifier<List<GeneratedAudioTaskEntity>> {
     _librarySubscription?.cancel();
     _pendingRefreshTimer?.cancel();
     super.dispose();
+  }
+}
+
+class _MyAudiosCacheStore {
+  const _MyAudiosCacheStore(this.sharedPreferences);
+
+  final SharedPreferences sharedPreferences;
+
+  Future<List<GeneratedAudioTaskEntity>> readTasks(String key) async {
+    final jsonList = sharedPreferences.getStringList(key);
+    if (jsonList == null || jsonList.isEmpty) {
+      return const [];
+    }
+
+    try {
+      return jsonList
+          .map((value) => GeneratedAudioTaskEntity.fromJson(jsonDecode(value)))
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> writeTasks(
+    String key,
+    List<GeneratedAudioTaskEntity> tasks,
+  ) async {
+    final jsonList = tasks.map((task) => jsonEncode(task.toJson())).toList();
+    await sharedPreferences.setStringList(key, jsonList);
   }
 }

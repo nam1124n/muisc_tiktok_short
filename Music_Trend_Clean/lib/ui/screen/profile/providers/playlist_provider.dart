@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/app/utils/error_message_mapper.dart';
 import 'package:login_flutter/data/datasource/remote/playlist_remote_data_source.dart';
 import 'package:login_flutter/data/repositories/playlist_repository_impl.dart';
 import 'package:login_flutter/domain/entities/playlist_entity.dart';
@@ -127,7 +128,10 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
       state = state.copyWith(playlists: playlists, isLoading: false);
     } catch (e) {
       if (!mounted) return;
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: ErrorMessageMapper.map(e),
+      );
     }
   }
 
@@ -162,7 +166,10 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
       return true;
     } catch (e) {
       if (!mounted) return false;
-      state = state.copyWith(isCreating: false, errorMessage: e.toString());
+      state = state.copyWith(
+        isCreating: false,
+        errorMessage: ErrorMessageMapper.map(e),
+      );
       return false;
     }
   }
@@ -216,7 +223,7 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
       return true;
     } catch (e) {
       if (!mounted) return false;
-      state = state.copyWith(errorMessage: e.toString());
+      state = state.copyWith(errorMessage: ErrorMessageMapper.map(e));
       return false;
     }
   }
@@ -241,7 +248,7 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
       return true;
     } catch (e) {
       if (!mounted) return false;
-      state = state.copyWith(errorMessage: e.toString());
+      state = state.copyWith(errorMessage: ErrorMessageMapper.map(e));
       return false;
     }
   }

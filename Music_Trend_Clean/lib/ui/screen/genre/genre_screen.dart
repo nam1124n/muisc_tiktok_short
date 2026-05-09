@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
-import 'package:login_flutter/ui/screen/admin/providers/song_state.dart';
 import 'package:login_flutter/ui/screen/audio/providers/audio_player_provider.dart';
-import 'package:login_flutter/ui/screen/audio/providers/audio_player_state.dart';
 import 'package:login_flutter/ui/screen/genre/providers/year_song_provider.dart';
 
 class GenreScreen extends ConsumerStatefulWidget {
@@ -30,8 +28,7 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isVietnamese = Localizations.localeOf(context).languageCode == 'vi';
-    final yearSongState = ref.watch(yearSongNotifierProvider);
-    final playerState = ref.watch(audioPlayerNotifierProvider);
+    final yearSongState = ref.watch(yearSongCatalogProvider);
 
     return Scaffold(
       backgroundColor: _background,
@@ -84,7 +81,6 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
                 l10n: l10n,
                 isVietnamese: isVietnamese,
                 songState: yearSongState,
-                playerState: playerState,
               ),
             ),
           ],
@@ -98,16 +94,15 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
     required WidgetRef ref,
     required AppLocalizations l10n,
     required bool isVietnamese,
-    required SongState songState,
-    required AudioPlayerState playerState,
+    required YearSongCatalogState songState,
   }) {
-    if (songState is SongLoading || songState is SongInitial) {
+    if (songState.isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: Color(0xFF7B43F3)),
       );
     }
 
-    if (songState is SongError) {
+    if (songState.hasError) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -116,11 +111,11 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
             children: [
               const Icon(Icons.error_outline, size: 56, color: Colors.red),
               const SizedBox(height: 12),
-              Text(songState.message, textAlign: TextAlign.center),
+              Text(songState.errorMessage!, textAlign: TextAlign.center),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () =>
-                    ref.read(yearSongNotifierProvider.notifier).loadSongs(),
+                    ref.read(yearSongCatalogProvider.notifier).reload(),
                 child: Text(l10n.retry),
               ),
             ],
@@ -129,9 +124,7 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
       );
     }
 
-    final songs = songState is SongLoaded
-        ? songState.songs
-        : const <SongEntity>[];
+    final songs = songState.songs;
     final songsByYear = _groupSongsByYear(songs);
     final autoSelectedYear = _preferredYear(songsByYear);
     final selectedYear = _didSelectYear ? _selectedYear : autoSelectedYear;
@@ -183,15 +176,8 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
               padding: const EdgeInsets.only(bottom: 14),
               child: _SongMemoryCard(
                 song: song,
+                playlist: selectedSongs,
                 note: _memoryNote(selectedYear, isVietnamese),
-                isPlaying:
-                    playerState.currentSong?.id == song.id &&
-                    playerState.isPlaying,
-                isLoading:
-                    playerState.currentSong?.id == song.id &&
-                    playerState.isLoading,
-                onPlayPressed: () =>
-                    _handlePlayAction(song: song, playlist: selectedSongs),
               ),
             ),
           ),
@@ -266,25 +252,6 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
         },
       ),
     );
-  }
-
-  Future<void> _handlePlayAction({
-    required SongEntity song,
-    required List<SongEntity> playlist,
-  }) async {
-    final playerState = ref.read(audioPlayerNotifierProvider);
-    final playerNotifier = ref.read(audioPlayerNotifierProvider.notifier);
-
-    if (playerState.currentSong?.id == song.id) {
-      if (playerState.isPlaying) {
-        playerNotifier.pause();
-      } else {
-        playerNotifier.resume();
-      }
-      return;
-    }
-
-    await playerNotifier.playSong(song, playlist: playlist);
   }
 
   Map<int, List<SongEntity>> _groupSongsByYear(List<SongEntity> songs) {
@@ -574,23 +541,25 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _SongMemoryCard extends StatelessWidget {
+class _SongMemoryCard extends ConsumerWidget {
   const _SongMemoryCard({
     required this.song,
+    required this.playlist,
     required this.note,
-    required this.isPlaying,
-    required this.isLoading,
-    required this.onPlayPressed,
   });
 
   final SongEntity song;
+  final List<SongEntity> playlist;
   final String note;
-  final bool isPlaying;
-  final bool isLoading;
-  final VoidCallback onPlayPressed;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playback = ref.watch(audioPlaybackForSongProvider(song.id));
+    final playerNotifier = ref.read(audioPlayerNotifierProvider.notifier);
+    final isCurrentSong = playback.isCurrentSong;
+    final isPlaying = playback.isPlaying;
+    final isLoading = playback.isLoading;
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -652,7 +621,19 @@ class _SongMemoryCard extends StatelessWidget {
           Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: onPlayPressed,
+              onTap: () async {
+                if (isPlaying) {
+                  playerNotifier.pause();
+                  return;
+                }
+
+                if (isCurrentSong) {
+                  playerNotifier.resume();
+                  return;
+                }
+
+                await playerNotifier.playSong(song, playlist: playlist);
+              },
               customBorder: const CircleBorder(),
               child: Ink(
                 width: 48,

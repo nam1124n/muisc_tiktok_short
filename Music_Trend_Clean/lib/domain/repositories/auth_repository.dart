@@ -9,7 +9,11 @@ abstract class AuthRepository {
     String ageGroup,
   );
   Future<UserEntity?> getCurrentUser();
+  Stream<UserEntity?> watchCurrentUser();
 
   Future<void> resetPassword(String email);
   Future<void> resendEmailVerification(String email, String password);
+  Future<void> sendCurrentUserEmailVerification();
+  Future<void> reloadCurrentUser();
+  Future<void> signOut();
 }

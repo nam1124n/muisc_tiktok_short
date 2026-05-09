@@ -13,7 +13,8 @@ class MyAudiosScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final myAudios = ref.watch(myAudiosProvider);
+    final myAudiosState = ref.watch(myAudiosProvider);
+    final tasks = myAudiosState.tasks;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -29,58 +30,132 @@ class MyAudiosScreen extends ConsumerWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
-      body: myAudios.isEmpty
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 82,
-                      height: 82,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEDE4FF),
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                      child: const Icon(
-                        Icons.music_note_rounded,
-                        size: 36,
-                        color: Color(0xFF8C52FF),
+      body: RefreshIndicator(
+        onRefresh: () => ref.read(myAudiosProvider.notifier).reload(),
+        child: Builder(
+          builder: (context) {
+            if (myAudiosState.isLoadingInitial) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (myAudiosState.hasError) {
+              return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  SizedBox(
+                    height: MediaQuery.sizeOf(context).height * 0.6,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 28),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.error_outline_rounded,
+                              size: 44,
+                              color: Colors.redAccent,
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              myAudiosState.errorMessage!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                height: 1.45,
+                                color: Color(0xFF6B7280),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            FilledButton(
+                              onPressed: () {
+                                ref.read(myAudiosProvider.notifier).reload();
+                              },
+                              child: Text(l10n.retry),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    Text(
-                      l10n.yourAudioEmptyTitle,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF1F2937),
+                  ),
+                ],
+              );
+            }
+
+            if (myAudiosState.isEmpty) {
+              return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  SizedBox(
+                    height: MediaQuery.sizeOf(context).height * 0.6,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 28),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 82,
+                              height: 82,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEDE4FF),
+                                borderRadius: BorderRadius.circular(28),
+                              ),
+                              child: const Icon(
+                                Icons.music_note_rounded,
+                                size: 36,
+                                color: Color(0xFF8C52FF),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              l10n.yourAudioEmptyTitle,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF1F2937),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              l10n.yourAudioEmptySubtitle,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                height: 1.45,
+                                color: Color(0xFF6B7280),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      l10n.yourAudioEmptySubtitle,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        height: 1.45,
-                        color: Color(0xFF6B7280),
-                      ),
-                    ),
-                  ],
+                  ),
+                ],
+              );
+            }
+
+            return Column(
+              children: [
+                if (myAudiosState.isSyncingRemote)
+                  const LinearProgressIndicator(minHeight: 2),
+                Expanded(
+                  child: ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: tasks.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final task = tasks[index];
+                      return _AudioTaskCard(task: task);
+                    },
+                  ),
                 ),
-              ),
-            )
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: myAudios.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final task = myAudios[index];
-                return _AudioTaskCard(task: task);
-              },
-            ),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 }

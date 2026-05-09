@@ -77,7 +77,7 @@
     }
   },
   "discoverTabSuggestions": "Gợi ý",
-  "yourAudioLabel": "Âm thanh của bạn",
+  "yourAudioLabel": "Âm thanh",
   "importAudioFromVideo": "Nhập âm thanh từ video",
   "importAudioFromVideoSubtitle": "Tự động trích xuất âm thanh từ clip của bạn",
   "importAudioFromDevice": "Nhập âm thanh từ thiết bị",
@@ -115,7 +115,7 @@
   "noSongDataSubtitle": "Thêm bài hát trong Firestore hoặc từ trang admin để giao diện này hiển thị dữ liệu thật.",
   "searchHint": "Tìm bài hát, ca sĩ, mood, trend...",
   "noMatchingSongs": "Không tìm thấy bài hát phù hợp",
-  "enterSearchPrompt": "Nhập câu tìm kiếm để AI phân tích",
+  "enterSearchPrompt": "Nhập câu tìm kiếm để khám phá âm nhạc mới... ",
   "searchSourceLabel": "Nguồn: {provider}",
   "@searchSourceLabel": {
     "placeholders": {

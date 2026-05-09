@@ -1,5 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/app/providers/session_provider.dart';
+import 'package:login_flutter/app/utils/error_message_mapper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:login_flutter/data/datasource/remote/profile_remote_data_source.dart';
 import 'package:login_flutter/data/datasource/remote/song_remote_data_source.dart';
@@ -8,8 +9,6 @@ import 'package:login_flutter/domain/repositories/profile_repository.dart';
 import 'package:login_flutter/domain/usecases/get_profile_usecase.dart';
 import 'package:login_flutter/domain/usecases/update_avatar_usecase.dart';
 import 'package:login_flutter/domain/usecases/update_profile_usecase.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_provider.dart';
-import 'package:login_flutter/ui/screen/auth/providers/auth_state.dart';
 import 'package:login_flutter/ui/screen/profile/providers/profile_state.dart';
 
 final profileRemoteDataSourceProvider = Provider<ProfileRemoteDataSource>((
@@ -43,9 +42,9 @@ final updateProfileUseCaseProvider = Provider<UpdateProfileUseCase>((ref) {
 
 final profileNotifierProvider =
     StateNotifierProvider.autoDispose<ProfileNotifier, ProfileState>((ref) {
-      final authState = ref.watch(authNotifierProvider);
-      final hasAuthenticatedSession =
-          authState is AuthSuccess || FirebaseAuth.instance.currentUser != null;
+      final hasAuthenticatedSession = ref.watch(
+        sessionProvider.select((state) => state.isAuthenticated),
+      );
 
       return ProfileNotifier(
         getProfileUseCase: ref.read(getProfileUseCaseProvider),
@@ -88,7 +87,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       state = ProfileLoaded(profile: profile);
     } catch (e) {
       if (!mounted) return;
-      state = ProfileError(message: e.toString());
+      state = ProfileError(message: ErrorMessageMapper.map(e));
     }
   }
 
@@ -108,7 +107,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       state = ProfileLoaded(profile: updatedProfile);
     } catch (e) {
       if (!mounted) return;
-      state = ProfileError(message: e.toString());
+      state = ProfileError(message: ErrorMessageMapper.map(e));
       state = ProfileLoaded(profile: currentState.profile);
     }
   }
@@ -134,7 +133,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       state = ProfileLoaded(profile: updatedProfile);
     } catch (e) {
       if (!mounted) return;
-      state = ProfileError(message: e.toString());
+      state = ProfileError(message: ErrorMessageMapper.map(e));
       state = ProfileLoaded(profile: currentState.profile);
     }
   }

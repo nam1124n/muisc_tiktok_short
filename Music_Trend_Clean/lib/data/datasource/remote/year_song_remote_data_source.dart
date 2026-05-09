@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:login_flutter/app/config/app_config.dart';
 import 'package:login_flutter/domain/entities/user_entity.dart';
 
 class YearSongRemoteDataSource {
@@ -16,8 +17,7 @@ class YearSongRemoteDataSource {
 
     final doc = await _db.collection('users').doc(user.uid).get();
     final role = UserRoles.normalize(doc.data()?['role']?.toString());
-    final isAdminEmail =
-        (user.email ?? '').trim().toLowerCase() == 'admin@gmail.com';
+    final isAdminEmail = AppConfig.isAdminEmail(user.email);
 
     if (role != UserRoles.admin && !isAdminEmail) {
       throw Exception('Bạn không có quyền thực hiện thao tác quản trị.');

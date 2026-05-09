@@ -1,4 +1,5 @@
 import 'package:image_picker/image_picker.dart';
+import 'package:login_flutter/domain/entities/song_page_entity.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/domain/entities/trending_song_entity.dart';
 import 'package:login_flutter/domain/repositories/song_repository.dart';
@@ -19,6 +20,17 @@ class SongRepositoryImpl implements SongRepository {
         );
       }).toList();
     });
+  }
+
+  @override
+  Future<SongPageEntity> fetchSongsPage({
+    int limit = 20,
+    SongPageCursor? startAfter,
+  }) {
+    return remoteDataSource.fetchSongsPage(
+      limit: limit,
+      startAfter: startAfter,
+    );
   }
 
   @override

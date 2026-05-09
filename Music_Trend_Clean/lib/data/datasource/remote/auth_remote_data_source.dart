@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:login_flutter/app/config/app_config.dart';
 import 'package:login_flutter/data/dto/auth/user_model.dart';
 import 'package:login_flutter/domain/entities/profile_entity.dart';
 import 'package:login_flutter/domain/entities/user_entity.dart';
@@ -13,8 +14,12 @@ abstract class AuthRemoteDataSource {
     String ageGroup,
   );
   Future<UserModel?> getCurrentUser();
+  Stream<UserModel?> watchCurrentUser();
   Future<void> resetPassword(String email);
   Future<void> resendEmailVerification(String email, String password);
+  Future<void> sendCurrentUserEmailVerification();
+  Future<void> reloadCurrentUser();
+  Future<void> signOut();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -114,17 +119,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       return null;
     }
 
-    final profile = await _syncUserProfile(user);
-    final token = await user.getIdToken();
+    return _buildUserModel(user);
+  }
 
-    return UserModel(
-      id: user.uid,
-      email: user.email ?? '',
-      fullName: profile.fullName,
-      token: token ?? '',
-      role: profile.role,
-      isEmailVerified: user.emailVerified,
-    );
+  @override
+  Stream<UserModel?> watchCurrentUser() async* {
+    await for (final user in _auth.userChanges()) {
+      if (user == null) {
+        yield null;
+        continue;
+      }
+
+      yield await _buildUserModel(user);
+    }
   }
 
   @override
@@ -154,14 +161,54 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       await _auth.signOut();
     } on FirebaseAuthException catch (e) {
       if (e.code == 'too-many-requests') {
-        throw Exception('Bạn đã gửi yêu cầu quá nhiều lần. Vui lòng chờ vài phút rồi thử lại.');
+        throw Exception(
+          'Bạn đã gửi yêu cầu quá nhiều lần. Vui lòng chờ vài phút rồi thử lại.',
+        );
       } else if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
-        throw Exception('Không tìm thấy tài khoản hoặc thông tin đăng nhập sai.');
+        throw Exception(
+          'Không tìm thấy tài khoản hoặc thông tin đăng nhập sai.',
+        );
       } else if (e.code == 'wrong-password') {
         throw Exception('Mật khẩu không chính xác.');
       }
       throw Exception('Lỗi gửi lại email: ${e.message}');
     }
+  }
+
+  @override
+  Future<void> sendCurrentUserEmailVerification() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('Không tìm thấy tài khoản hiện tại.');
+      }
+
+      if (!user.emailVerified) {
+        await user.sendEmailVerification();
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'too-many-requests') {
+        throw Exception(
+          'Bạn đã gửi yêu cầu quá nhiều lần. Vui lòng chờ vài phút rồi thử lại.',
+        );
+      }
+
+      throw Exception('Lỗi gửi email xác thực: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> reloadCurrentUser() async {
+    try {
+      await _auth.currentUser?.reload();
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Lỗi làm mới trạng thái xác thực: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> signOut() async {
+    await _auth.signOut();
   }
 
   Future<_SyncedUserProfile> _syncUserProfile(
@@ -219,6 +266,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
   }
 
+  Future<UserModel> _buildUserModel(User user) async {
+    final profile = await _syncUserProfile(user);
+    final token = await user.getIdToken();
+
+    return UserModel(
+      id: user.uid,
+      email: user.email ?? '',
+      fullName: profile.fullName,
+      token: token ?? '',
+      role: profile.role,
+      isEmailVerified: user.emailVerified,
+    );
+  }
+
   String _resolveFullName(
     String? storedFullName,
     String? firebaseDisplayName,
@@ -252,7 +313,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       return UserRoles.normalize(storedRole);
     }
 
-    if (email.trim().toLowerCase() == 'admin@gmail.com') {
+    if (AppConfig.isAdminEmail(email)) {
       return UserRoles.admin;
     }
 

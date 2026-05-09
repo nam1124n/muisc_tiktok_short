@@ -84,6 +84,7 @@ class AudioGenerationConfig {
 
   static const int timeoutSeconds = 30;
   static const int pendingRefreshIntervalSeconds = 10;
+  static const int pendingRefreshMaxIntervalSeconds = 60;
 
   static bool _isLoopbackUrl(String value) {
     return value.startsWith(_localhostBaseUrl) ||

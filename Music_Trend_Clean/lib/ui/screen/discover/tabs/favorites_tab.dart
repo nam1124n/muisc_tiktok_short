@@ -130,19 +130,16 @@ class FavoritesTab extends ConsumerWidget {
           ),
           Consumer(
             builder: (context, ref, _) {
-              final playerState = ref.watch(audioPlayerNotifierProvider);
-              final isPlayingThisSong =
-                  playerState.currentSong?.id == song.id &&
-                  playerState.isPlaying;
-              final isLoadingThisSong =
-                  playerState.currentSong?.id == song.id &&
-                  playerState.isLoading;
+              final playback = ref.watch(audioPlaybackForSongProvider(song.id));
+              final isCurrentSong = playback.isCurrentSong;
+              final isPlayingThisSong = playback.isPlaying;
+              final isLoadingThisSong = playback.isLoading;
 
               return GestureDetector(
                 onTap: () {
                   if (isPlayingThisSong) {
                     ref.read(audioPlayerNotifierProvider.notifier).pause();
-                  } else if (playerState.currentSong?.id == song.id) {
+                  } else if (isCurrentSong) {
                     ref.read(audioPlayerNotifierProvider.notifier).resume();
                   } else {
                     ref

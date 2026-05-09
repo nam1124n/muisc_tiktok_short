@@ -27,64 +27,115 @@ void main() {
         audioUrl: 'audio-3',
         imageUrl: 'image-3',
       ),
+      SongEntity(
+        id: '4',
+        title: 'Thu Cuoi Remix',
+        artist: 'DJ Example',
+        audioUrl: 'audio-4',
+        imageUrl: 'image-4',
+      ),
     ];
 
-    test('returns initial state when query is empty', () async {
+    testWidgets('returns idle state immediately when query is empty', (
+      tester,
+    ) async {
       final notifier = SearchNotifier();
 
-      await notifier.search(query: '   ', songs: songs);
+      notifier.search(query: '   ', songs: songs);
 
-      expect(notifier.state, isA<SearchInitial>());
+      expect(notifier.state.status, SearchStatus.idle);
+      expect(notifier.state.query, isEmpty);
+      expect(notifier.state.results, isEmpty);
+      expect(notifier.state.plan, isNull);
+
+      notifier.dispose();
     });
 
-    test('matches artist names after normalizing accents and spaces', () async {
-      final notifier = SearchNotifier();
-
-      await notifier.search(query: '  sơn tùng  ', songs: songs);
-
-      final state = notifier.state as SearchLoaded;
-      expect(state.results.first.id, '1');
-      expect(state.plan.keywords, ['son', 'tung']);
-    });
-
-    test('matches artist name with local search', () async {
-      final notifier = SearchNotifier();
-
-      await notifier.search(query: 'da lab', songs: songs);
-
-      final state = notifier.state as SearchLoaded;
-      expect(state.results.first.id, '2');
-      expect(state.plan.provider, 'normal');
-    });
-
-    test('keeps exact title matches first', () async {
-      final notifier = SearchNotifier();
-
-      await notifier.search(query: 'thu cuoi', songs: songs);
-
-      final state = notifier.state as SearchLoaded;
-      expect(state.results.first.id, '3');
-    });
-
-    test('does not match removed tag or alias metadata anymore', () async {
-      final notifier = SearchNotifier();
-
-      await notifier.search(query: 'tiktok', songs: songs);
-
-      final state = notifier.state as SearchLoaded;
-      expect(state.results, isEmpty);
-    });
-
-    test(
-      'returns loaded state with empty results when nothing matches',
-      () async {
+    testWidgets(
+      'stays searching until debounce completes then returns results',
+      (tester) async {
         final notifier = SearchNotifier();
 
-        await notifier.search(query: 'bolero khong ton tai', songs: songs);
+        notifier.search(query: 'son tung', songs: songs);
 
-        final state = notifier.state as SearchLoaded;
-        expect(state.results, isEmpty);
+        expect(notifier.state.status, SearchStatus.searching);
+        expect(notifier.state.query, 'son tung');
+        expect(notifier.state.results, isEmpty);
+
+        await tester.pump(const Duration(milliseconds: 279));
+        expect(notifier.state.status, SearchStatus.searching);
+
+        await tester.pump(const Duration(milliseconds: 1));
+        expect(notifier.state.status, SearchStatus.loaded);
+        expect(notifier.state.results.first.id, '1');
+
+        notifier.dispose();
       },
     );
+
+    testWidgets(
+      'cancels the previous debounce and keeps only the latest query',
+      (tester) async {
+        final notifier = SearchNotifier();
+
+        notifier.search(query: 'son tung', songs: songs);
+        await tester.pump(const Duration(milliseconds: 120));
+
+        notifier.search(query: 'da lab', songs: songs);
+        expect(notifier.state.status, SearchStatus.searching);
+        expect(notifier.state.query, 'da lab');
+
+        await tester.pump(const Duration(milliseconds: 280));
+        expect(notifier.state.status, SearchStatus.loaded);
+        expect(notifier.state.results.first.id, '2');
+
+        notifier.dispose();
+      },
+    );
+
+    testWidgets('matches artist names after normalizing accents and spaces', (
+      tester,
+    ) async {
+      final notifier = SearchNotifier();
+
+      notifier.search(query: '  sơn tùng  ', songs: songs);
+      await tester.pump(const Duration(milliseconds: 280));
+
+      expect(notifier.state.status, SearchStatus.loaded);
+      expect(notifier.state.results.first.id, '1');
+      expect(notifier.state.plan?.keywords, ['son', 'tung']);
+
+      notifier.dispose();
+    });
+
+    testWidgets('keeps exact title matches ahead of partial matches', (
+      tester,
+    ) async {
+      final notifier = SearchNotifier();
+
+      notifier.search(query: 'thu cuoi', songs: songs);
+      await tester.pump(const Duration(milliseconds: 280));
+
+      expect(notifier.state.status, SearchStatus.loaded);
+      expect(notifier.state.results.map((song) => song.id).take(2), ['3', '4']);
+
+      notifier.dispose();
+    });
+
+    testWidgets('returns empty state with search plan when nothing matches', (
+      tester,
+    ) async {
+      final notifier = SearchNotifier();
+
+      notifier.search(query: 'bolero khong ton tai', songs: songs);
+      await tester.pump(const Duration(milliseconds: 280));
+
+      expect(notifier.state.status, SearchStatus.empty);
+      expect(notifier.state.results, isEmpty);
+      expect(notifier.state.plan, isNotNull);
+      expect(notifier.state.errorMessage, isNull);
+
+      notifier.dispose();
+    });
   });
 }

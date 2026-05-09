@@ -115,7 +115,7 @@
   "noSongDataSubtitle": "Add songs in Firestore or from the admin page to show real data here.",
   "searchHint": "Search songs, artists, mood, trends...",
   "noMatchingSongs": "No matching songs found",
-  "enterSearchPrompt": "Enter a query for AI to analyze",
+  "enterSearchPrompt": "Enter a query for better search results",
   "searchSourceLabel": "Source: {provider}",
   "@searchSourceLabel": {
     "placeholders": {

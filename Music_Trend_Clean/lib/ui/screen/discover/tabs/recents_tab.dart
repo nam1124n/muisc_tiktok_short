@@ -44,12 +44,11 @@ class RecentsTab extends ConsumerWidget {
     return Consumer(
       builder: (context, ref, _) {
         final favoriteSongs = ref.watch(favoriteNotifierProvider);
-        final playerState = ref.watch(audioPlayerNotifierProvider);
+        final playback = ref.watch(audioPlaybackForSongProvider(song.id));
         final isFavorite = favoriteSongs.any((s) => s.id == song.id);
-        final isPlayingThisSong =
-            playerState.currentSong?.id == song.id && playerState.isPlaying;
-        final isLoadingThisSong =
-            playerState.currentSong?.id == song.id && playerState.isLoading;
+        final isCurrentSong = playback.isCurrentSong;
+        final isPlayingThisSong = playback.isPlaying;
+        final isLoadingThisSong = playback.isLoading;
 
         return Container(
           padding: const EdgeInsets.all(12),
@@ -153,7 +152,7 @@ class RecentsTab extends ConsumerWidget {
                 onTap: () {
                   if (isPlayingThisSong) {
                     ref.read(audioPlayerNotifierProvider.notifier).pause();
-                  } else if (playerState.currentSong?.id == song.id) {
+                  } else if (isCurrentSong) {
                     ref.read(audioPlayerNotifierProvider.notifier).resume();
                   } else {
                     ref

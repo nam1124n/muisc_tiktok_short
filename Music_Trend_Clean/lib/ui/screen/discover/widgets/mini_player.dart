@@ -7,9 +7,11 @@ class MiniPlayer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(audioPlayerNotifierProvider);
+    final state = ref.watch(miniPlayerStateProvider);
+    final notifier = ref.read(audioPlayerNotifierProvider.notifier);
 
-    if (state.currentSong == null) {
+    final currentSong = state.currentSong;
+    if (currentSong == null) {
       return const SizedBox.shrink();
     }
 
@@ -28,11 +30,11 @@ class MiniPlayer extends ConsumerWidget {
               color: Colors.black87,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: state.currentSong!.imageUrl.isNotEmpty
+            child: currentSong.imageUrl.isNotEmpty
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(
-                      state.currentSong!.imageUrl,
+                      currentSong.imageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) => const Center(
                         child: Icon(
@@ -58,7 +60,7 @@ class MiniPlayer extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  state.currentSong!.title,
+                  currentSong.title,
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -68,7 +70,7 @@ class MiniPlayer extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  state.currentSong!.artist,
+                  currentSong.artist,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 12,
@@ -87,22 +89,20 @@ class MiniPlayer extends ConsumerWidget {
                 constraints: const BoxConstraints(),
                 icon: Icon(
                   Icons.skip_previous,
-                  color: state.currentIndex > 0 || state.position.inSeconds > 3
-                      ? Colors.white
-                      : Colors.white38,
+                  color: state.canGoPrevious ? Colors.white : Colors.white38,
                   size: 24,
                 ),
                 onPressed: () {
-                  ref.read(audioPlayerNotifierProvider.notifier).previous();
+                  notifier.previous();
                 },
               ),
               const SizedBox(width: 16),
               GestureDetector(
                 onTap: () {
                   if (state.isPlaying) {
-                    ref.read(audioPlayerNotifierProvider.notifier).pause();
+                    notifier.pause();
                   } else {
-                    ref.read(audioPlayerNotifierProvider.notifier).resume();
+                    notifier.resume();
                   }
                 },
                 child: Container(
@@ -133,13 +133,11 @@ class MiniPlayer extends ConsumerWidget {
                 constraints: const BoxConstraints(),
                 icon: Icon(
                   Icons.skip_next,
-                  color: state.currentIndex < state.playlist.length - 1
-                      ? Colors.white
-                      : Colors.white38,
+                  color: state.canGoNext ? Colors.white : Colors.white38,
                   size: 24,
                 ),
                 onPressed: () {
-                  ref.read(audioPlayerNotifierProvider.notifier).next();
+                  notifier.next();
                 },
               ),
               const SizedBox(width: 8),

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/app/utils/error_message_mapper.dart';
 import 'package:login_flutter/data/datasource/remote/auth_remote_data_source.dart';
 import 'package:login_flutter/data/repositories/auth_repository_impl.dart';
 import 'package:login_flutter/domain/repositories/auth_repository.dart';
@@ -60,7 +61,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final user = await loginUseCase(email, password);
       state = AuthSuccess(user);
     } catch (e) {
-      state = AuthFailure(_readableError(e));
+      state = AuthFailure(ErrorMessageMapper.map(e));
     }
   }
 
@@ -76,7 +77,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final user = await signUpUseCase(fullName, email, password, ageGroup);
       state = AuthSuccess(user);
     } catch (e) {
-      state = AuthFailure(_readableError(e));
+      state = AuthFailure(ErrorMessageMapper.map(e));
     }
   }
 
@@ -85,7 +86,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final user = await authRepository.getCurrentUser();
       state = user == null ? AuthInitial() : AuthSuccess(user);
     } catch (e) {
-      state = AuthFailure(_readableError(e));
+      state = AuthFailure(ErrorMessageMapper.map(e));
     }
   }
 
@@ -95,7 +96,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await authRepository.resendEmailVerification(email, password);
       state = AuthInitial();
     } catch (e) {
-      state = AuthFailure(_readableError(e));
+      state = AuthFailure(ErrorMessageMapper.map(e));
     }
   }
 
@@ -176,9 +177,5 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
 
     return null;
-  }
-
-  String _readableError(Object error) {
-    return error.toString().replaceFirst('Exception: ', '').trim();
   }
 }

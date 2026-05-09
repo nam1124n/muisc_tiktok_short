@@ -683,10 +683,10 @@ class _FavoriteSongPlayButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final playerState = ref.watch(audioPlayerNotifierProvider);
-    final isCurrentSong = playerState.currentSong?.id == song.id;
-    final isPlayingThisSong = isCurrentSong && playerState.isPlaying;
-    final isLoadingThisSong = isCurrentSong && playerState.isLoading;
+    final playback = ref.watch(audioPlaybackForSongProvider(song.id));
+    final isCurrentSong = playback.isCurrentSong;
+    final isPlayingThisSong = playback.isPlaying;
+    final isLoadingThisSong = playback.isLoading;
 
     return IconButton(
       onPressed: () {
