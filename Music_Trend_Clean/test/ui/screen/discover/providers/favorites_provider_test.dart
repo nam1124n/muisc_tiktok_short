@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:login_flutter/domain/entities/listening_history_entry_entity.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/domain/repositories/interaction_repository.dart';
 import 'package:login_flutter/ui/screen/discover/providers/favorites_provider.dart';
@@ -112,12 +113,28 @@ class FakeInteractionRepository implements InteractionRepository {
   }
 
   @override
-  Future<List<SongEntity>> getRecents(String userId) {
+  Future<List<ListeningHistoryEntryEntity>> getHistoryEntries(String userId) {
     throw UnimplementedError();
   }
 
   @override
   Future<void> addRecent(String userId, SongEntity song) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> updateRecentProgress(
+    String userId,
+    SongEntity song, {
+    required Duration position,
+    required Duration duration,
+    bool markCompleted = false,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> clearRecents(String userId, List<String> songIds) {
     throw UnimplementedError();
   }
 }

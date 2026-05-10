@@ -8,7 +8,6 @@ import 'package:login_flutter/ui/screen/audio/providers/audio_player_provider.da
 import 'package:login_flutter/ui/screen/discover/providers/favorites_provider.dart';
 import 'package:login_flutter/ui/screen/discover/providers/discover_songs_pagination_provider.dart';
 import 'package:login_flutter/ui/screen/discover/providers/discover_songs_pagination_state.dart';
-import 'package:login_flutter/ui/screen/discover/providers/recents_provider.dart';
 
 class SuggestionsTab extends ConsumerStatefulWidget {
   const SuggestionsTab({super.key});
@@ -535,9 +534,6 @@ class _SuggestionsTabState extends ConsumerState<SuggestionsTab> {
                           ref
                               .read(audioPlayerNotifierProvider.notifier)
                               .playSong(song, playlist: songs);
-                          ref
-                              .read(recentNotifierProvider.notifier)
-                              .addRecent(song);
                         }
                       },
                       child: Container(

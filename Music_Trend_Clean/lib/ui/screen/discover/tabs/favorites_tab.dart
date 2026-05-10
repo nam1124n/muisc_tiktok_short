@@ -4,7 +4,6 @@ import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/audio/providers/audio_player_provider.dart';
 import 'package:login_flutter/ui/screen/discover/providers/favorites_provider.dart';
-import 'package:login_flutter/ui/screen/discover/providers/recents_provider.dart';
 
 class FavoritesTab extends ConsumerWidget {
   const FavoritesTab({super.key});
@@ -187,7 +186,6 @@ class FavoritesTab extends ConsumerWidget {
                     ref
                         .read(audioPlayerNotifierProvider.notifier)
                         .playSong(song, playlist: playlist);
-                    ref.read(recentNotifierProvider.notifier).addRecent(song);
                   }
                 },
                 child: Container(

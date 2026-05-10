@@ -41,6 +41,7 @@
   "genreScreenSubtitle": "Short tracks are grouped by year so you can revisit the vibe of each period.",
   "playlistsLabel": "Playlists",
   "recentLabel": "Recent",
+  "historyLabel": "History",
   "favoritesLabel": "Favorites",
   "followersLabel": "Followers",
   "followingLabel": "Following",
@@ -160,6 +161,65 @@
   "allFavoritesClearedMessage": "All favorite songs have been removed.",
   "removeFromFavoritesTooltip": "Remove from favorites",
   "recentSongsEmpty": "No recently played songs yet",
+  "historyLoadingTitle": "Loading listening history",
+  "historyLoadingSubtitle": "Your recently played songs are being synchronized.",
+  "historyLoadErrorTitle": "Unable to load listening history",
+  "historyEmpty": "No listening history yet",
+  "historyContinueListeningLabel": "Continue listening",
+  "historyRecentlyPlayedLabel": "Recently played",
+  "historyMostPlayedLabel": "Most played",
+  "historyContinueCount": "{count} to continue",
+  "@historyContinueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyResumeFrom": "Resume from {time}",
+  "@historyResumeFrom": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "historyPlayedRecentlyLabel": "Just now",
+  "historyPlayedMinutesAgo": "{count} min ago",
+  "@historyPlayedMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyPlayedHoursAgo": "{count} hr ago",
+  "@historyPlayedHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyPlayedDaysAgo": "{count} days ago",
+  "@historyPlayedDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clearHistoryLabel": "Clear history",
+  "clearHistoryTitle": "Clear listening history",
+  "clearHistoryConfirmation": "Are you sure you want to remove all {count} songs from your listening history?",
+  "@clearHistoryConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyClearedMessage": "Listening history cleared.",
   "trendingTitle": "Trending",
   "forYouTitle": "For You",
   "fromFirestore": "From Firestore",

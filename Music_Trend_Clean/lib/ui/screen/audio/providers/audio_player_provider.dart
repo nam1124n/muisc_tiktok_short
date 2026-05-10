@@ -7,11 +7,31 @@ import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/domain/usecases/track_song_listen_usecase.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_provider.dart';
 import 'package:login_flutter/ui/screen/audio/providers/audio_player_state.dart';
+import 'package:login_flutter/ui/screen/discover/providers/recents_provider.dart';
 
 final audioPlayerNotifierProvider =
     StateNotifierProvider<AudioPlayerNotifier, AudioPlayerState>((ref) {
       return AudioPlayerNotifier(
         trackSongListenUseCase: ref.read(trackSongListenUseCaseProvider),
+        recordRecentSong: (song) {
+          return ref.read(recentNotifierProvider.notifier).addRecent(song);
+        },
+        syncRecentPlayback:
+            ({
+              required SongEntity song,
+              required Duration position,
+              required Duration duration,
+              required bool markCompleted,
+            }) {
+              return ref
+                  .read(recentNotifierProvider.notifier)
+                  .syncPlaybackProgress(
+                    song,
+                    position: position,
+                    duration: duration,
+                    markCompleted: markCompleted,
+                  );
+            },
       );
     });
 
@@ -59,18 +79,39 @@ final miniPlayerStateProvider = Provider<MiniPlayerState>((ref) {
 
 class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   static const Duration _defaultListenThreshold = Duration(seconds: 30);
+  static const Duration _progressSyncStep = Duration(seconds: 15);
 
   final AudioPlayer _audioPlayer;
   final TrackSongListenUseCase _trackSongListenUseCase;
+  final Future<void> Function(SongEntity song) _recordRecentSong;
+  final Future<void> Function({
+    required SongEntity song,
+    required Duration position,
+    required Duration duration,
+    required bool markCompleted,
+  })
+  _syncRecentPlayback;
   StreamSubscription<PlayerState>? _playerStateSubscription;
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<Duration?>? _durationSubscription;
   bool _hasTrackedCurrentPlayback = false;
+  int _lastSyncedProgressBucket = -1;
 
-  AudioPlayerNotifier({required TrackSongListenUseCase trackSongListenUseCase})
-    : _audioPlayer = AudioPlayer(),
-      _trackSongListenUseCase = trackSongListenUseCase,
-      super(const AudioPlayerState()) {
+  AudioPlayerNotifier({
+    required TrackSongListenUseCase trackSongListenUseCase,
+    required Future<void> Function(SongEntity song) recordRecentSong,
+    required Future<void> Function({
+      required SongEntity song,
+      required Duration position,
+      required Duration duration,
+      required bool markCompleted,
+    })
+    syncRecentPlayback,
+  }) : _audioPlayer = AudioPlayer(),
+       _trackSongListenUseCase = trackSongListenUseCase,
+       _recordRecentSong = recordRecentSong,
+       _syncRecentPlayback = syncRecentPlayback,
+       super(const AudioPlayerState()) {
     _initStreams();
   }
 
@@ -82,6 +123,8 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
       final processingState = playerState.processingState;
 
       if (processingState == ProcessingState.completed) {
+        unawaited(_flushCurrentProgress(markCompleted: true));
+        _lastSyncedProgressBucket = -1;
         if (state.playlist.isNotEmpty &&
             state.currentIndex < state.playlist.length - 1) {
           next();
@@ -102,6 +145,7 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
 
     _positionSubscription = _audioPlayer.positionStream.listen((position) {
       state = state.copyWith(position: position);
+      unawaited(_syncProgressIfNeeded(position));
       unawaited(_trackListenIfNeeded(position));
     });
 
@@ -110,11 +154,32 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
     });
   }
 
-  Future<void> playSong(SongEntity song, {List<SongEntity>? playlist}) async {
+  Future<void> playSong(
+    SongEntity song, {
+    List<SongEntity>? playlist,
+    Duration initialPosition = Duration.zero,
+  }) async {
     try {
+      final previousSong = state.currentSong;
+      final previousPosition = state.position;
+      final previousDuration = state.duration;
+      final isSwitchingSong =
+          previousSong != null && previousSong.id != song.id;
+      if (isSwitchingSong) {
+        unawaited(
+          _syncRecentPlayback(
+            song: previousSong,
+            position: previousPosition,
+            duration: previousDuration,
+            markCompleted: false,
+          ),
+        );
+      }
+
       final currentPlaylist = playlist ?? state.playlist;
       final index = currentPlaylist.indexWhere((s) => s.id == song.id);
       _hasTrackedCurrentPlayback = false;
+      _lastSyncedProgressBucket = -1;
 
       state = state.copyWith(
         currentSong: song,
@@ -127,6 +192,11 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
       );
 
       await _audioPlayer.setUrl(song.audioUrl);
+      if (initialPosition > Duration.zero) {
+        await _audioPlayer.seek(initialPosition);
+        state = state.copyWith(position: initialPosition);
+      }
+      unawaited(_recordRecentSong(song));
       _audioPlayer.play();
     } catch (e) {
       state = state.copyWith(isError: true, isLoading: false);
@@ -135,6 +205,7 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
 
   void pause() {
     _audioPlayer.pause();
+    unawaited(_flushCurrentProgress());
   }
 
   void resume() {
@@ -142,7 +213,10 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   }
 
   void seek(Duration position) {
+    _lastSyncedProgressBucket = -1;
     _audioPlayer.seek(position);
+    state = state.copyWith(position: position);
+    unawaited(_flushCurrentProgress(positionOverride: position));
   }
 
   Future<void> next() async {
@@ -194,6 +268,53 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
     } catch (_) {
       _hasTrackedCurrentPlayback = false;
     }
+  }
+
+  Future<void> _syncProgressIfNeeded(Duration position) async {
+    final song = state.currentSong;
+    if (song == null || state.duration == Duration.zero || !state.isPlaying) {
+      return;
+    }
+
+    final bucket = position.inSeconds ~/ _progressSyncStep.inSeconds;
+    if (bucket <= _lastSyncedProgressBucket || bucket <= 0) {
+      return;
+    }
+
+    _lastSyncedProgressBucket = bucket;
+    await _syncRecentPlayback(
+      song: song,
+      position: position,
+      duration: state.duration,
+      markCompleted: false,
+    );
+  }
+
+  Future<void> _flushCurrentProgress({
+    bool markCompleted = false,
+    Duration? positionOverride,
+  }) async {
+    final song = state.currentSong;
+    if (song == null) {
+      return;
+    }
+
+    final duration = state.duration;
+    final position = markCompleted
+        ? (duration == Duration.zero ? state.position : duration)
+        : (positionOverride ?? state.position);
+    if (!markCompleted &&
+        position <= Duration.zero &&
+        duration == Duration.zero) {
+      return;
+    }
+
+    await _syncRecentPlayback(
+      song: song,
+      position: position,
+      duration: duration,
+      markCompleted: markCompleted,
+    );
   }
 
   Duration _listenThresholdFor(Duration duration) {

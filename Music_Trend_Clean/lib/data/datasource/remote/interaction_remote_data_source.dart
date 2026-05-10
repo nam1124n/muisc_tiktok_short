@@ -10,6 +10,14 @@ abstract class InteractionRemoteDataSource {
   Future<void> clearFavorites(String userId, List<String> songIds);
   Future<List<Map<String, dynamic>>> getRecents(String userId);
   Future<void> addRecent(String userId, Map<String, dynamic> songData);
+  Future<void> updateRecentProgress(
+    String userId,
+    Map<String, dynamic> songData, {
+    required int positionSeconds,
+    required int durationSeconds,
+    required bool markCompleted,
+  });
+  Future<void> clearRecents(String userId, List<String> songIds);
 }
 
 class InteractionRemoteDataSourceImpl implements InteractionRemoteDataSource {
@@ -76,7 +84,7 @@ class InteractionRemoteDataSourceImpl implements InteractionRemoteDataSource {
         .doc(userId)
         .collection('recents')
         .orderBy('timestamp', descending: true)
-        .limit(20)
+        .limit(50)
         .get();
 
     return snapshot.docs.map((doc) => doc.data()).toList();
@@ -91,7 +99,53 @@ class InteractionRemoteDataSourceImpl implements InteractionRemoteDataSource {
         .collection('recents')
         .doc(songId);
 
-    // Xóa record cũ nếu có (bằng cách ghi đè) sẽ tự động làm nhờ docRef.set, nhưng timestamps sẽ được cập nhật.
-    await docRef.set({...songData, 'timestamp': FieldValue.serverTimestamp()});
+    await docRef.set({
+      ...songData,
+      'timestamp': FieldValue.serverTimestamp(),
+      'playCount': FieldValue.increment(1),
+    }, SetOptions(merge: true));
+  }
+
+  @override
+  Future<void> updateRecentProgress(
+    String userId,
+    Map<String, dynamic> songData, {
+    required int positionSeconds,
+    required int durationSeconds,
+    required bool markCompleted,
+  }) async {
+    final songId = songData['id'] as String;
+    final docRef = _db
+        .collection('users')
+        .doc(userId)
+        .collection('recents')
+        .doc(songId);
+
+    await docRef.set({
+      ...songData,
+      'timestamp': FieldValue.serverTimestamp(),
+      'lastPositionSeconds': markCompleted ? 0 : positionSeconds,
+      'durationSeconds': durationSeconds,
+      if (markCompleted) 'completedCount': FieldValue.increment(1),
+    }, SetOptions(merge: true));
+  }
+
+  @override
+  Future<void> clearRecents(String userId, List<String> songIds) async {
+    if (songIds.isEmpty) {
+      return;
+    }
+
+    final batch = _db.batch();
+    final collectionRef = _db
+        .collection('users')
+        .doc(userId)
+        .collection('recents');
+
+    for (final songId in songIds) {
+      batch.delete(collectionRef.doc(songId));
+    }
+
+    await batch.commit();
   }
 }

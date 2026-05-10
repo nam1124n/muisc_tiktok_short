@@ -299,6 +299,12 @@ abstract class AppLocalizations {
   /// **'Recent'**
   String get recentLabel;
 
+  /// No description provided for @historyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historyLabel;
+
   /// No description provided for @favoritesLabel.
   ///
   /// In en, this message translates to:
@@ -682,6 +688,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No recently played songs yet'**
   String get recentSongsEmpty;
+
+  /// No description provided for @historyLoadingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading listening history'**
+  String get historyLoadingTitle;
+
+  /// No description provided for @historyLoadingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your recently played songs are being synchronized.'**
+  String get historyLoadingSubtitle;
+
+  /// No description provided for @historyLoadErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load listening history'**
+  String get historyLoadErrorTitle;
+
+  /// No description provided for @historyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No listening history yet'**
+  String get historyEmpty;
+
+  /// No description provided for @historyContinueListeningLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue listening'**
+  String get historyContinueListeningLabel;
+
+  /// No description provided for @historyRecentlyPlayedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently played'**
+  String get historyRecentlyPlayedLabel;
+
+  /// No description provided for @historyMostPlayedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Most played'**
+  String get historyMostPlayedLabel;
+
+  /// No description provided for @historyContinueCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} to continue'**
+  String historyContinueCount(int count);
+
+  /// No description provided for @historyResumeFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume from {time}'**
+  String historyResumeFrom(String time);
+
+  /// No description provided for @historyPlayedRecentlyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get historyPlayedRecentlyLabel;
+
+  /// No description provided for @historyPlayedMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min ago'**
+  String historyPlayedMinutesAgo(int count);
+
+  /// No description provided for @historyPlayedHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hr ago'**
+  String historyPlayedHoursAgo(int count);
+
+  /// No description provided for @historyPlayedDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days ago'**
+  String historyPlayedDaysAgo(int count);
+
+  /// No description provided for @clearHistoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear history'**
+  String get clearHistoryLabel;
+
+  /// No description provided for @clearHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear listening history'**
+  String get clearHistoryTitle;
+
+  /// No description provided for @clearHistoryConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to remove all {count} songs from your listening history?'**
+  String clearHistoryConfirmation(int count);
+
+  /// No description provided for @historyClearedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening history cleared.'**
+  String get historyClearedMessage;
 
   /// No description provided for @trendingTitle.
   ///

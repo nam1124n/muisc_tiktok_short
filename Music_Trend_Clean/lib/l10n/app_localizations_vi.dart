@@ -113,6 +113,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get recentLabel => 'Gần đây';
 
   @override
+  String get historyLabel => 'Lịch sử';
+
+  @override
   String get favoritesLabel => 'Yêu thích';
 
   @override
@@ -317,6 +320,69 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get recentSongsEmpty => 'Chưa có bài hát nghe gần đây';
+
+  @override
+  String get historyLoadingTitle => 'Đang tải lịch sử nghe';
+
+  @override
+  String get historyLoadingSubtitle => 'Các bài hát bạn đã nghe gần đây đang được đồng bộ.';
+
+  @override
+  String get historyLoadErrorTitle => 'Không thể tải lịch sử nghe';
+
+  @override
+  String get historyEmpty => 'Chưa có lịch sử nghe nào';
+
+  @override
+  String get historyContinueListeningLabel => 'Tiếp tục nghe';
+
+  @override
+  String get historyRecentlyPlayedLabel => 'Nghe gần đây';
+
+  @override
+  String get historyMostPlayedLabel => 'Nghe nhiều nhất';
+
+  @override
+  String historyContinueCount(int count) {
+    return '$count bài nghe dở';
+  }
+
+  @override
+  String historyResumeFrom(String time) {
+    return 'Nghe tiếp từ $time';
+  }
+
+  @override
+  String get historyPlayedRecentlyLabel => 'Vừa xong';
+
+  @override
+  String historyPlayedMinutesAgo(int count) {
+    return '$count phút trước';
+  }
+
+  @override
+  String historyPlayedHoursAgo(int count) {
+    return '$count giờ trước';
+  }
+
+  @override
+  String historyPlayedDaysAgo(int count) {
+    return '$count ngày trước';
+  }
+
+  @override
+  String get clearHistoryLabel => 'Xóa lịch sử';
+
+  @override
+  String get clearHistoryTitle => 'Xóa lịch sử nghe';
+
+  @override
+  String clearHistoryConfirmation(int count) {
+    return 'Bạn có chắc muốn xóa toàn bộ $count bài hát khỏi lịch sử nghe không?';
+  }
+
+  @override
+  String get historyClearedMessage => 'Đã xóa lịch sử nghe.';
 
   @override
   String get trendingTitle => 'Thịnh hành';

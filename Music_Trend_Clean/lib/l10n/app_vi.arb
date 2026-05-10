@@ -41,6 +41,7 @@
   "genreScreenSubtitle": "Những đoạn nhạc ngắn được gom theo từng năm để bạn nghe lại đúng vibe của từng giai đoạn.",
   "playlistsLabel": "Danh sách phát",
   "recentLabel": "Gần đây",
+  "historyLabel": "Lịch sử",
   "favoritesLabel": "Yêu thích",
   "followersLabel": "Người theo dõi",
   "followingLabel": "Đang theo dõi",
@@ -160,6 +161,65 @@
   "allFavoritesClearedMessage": "Đã bỏ thích toàn bộ bài hát.",
   "removeFromFavoritesTooltip": "Bỏ khỏi yêu thích",
   "recentSongsEmpty": "Chưa có bài hát nghe gần đây",
+  "historyLoadingTitle": "Đang tải lịch sử nghe",
+  "historyLoadingSubtitle": "Các bài hát bạn đã nghe gần đây đang được đồng bộ.",
+  "historyLoadErrorTitle": "Không thể tải lịch sử nghe",
+  "historyEmpty": "Chưa có lịch sử nghe nào",
+  "historyContinueListeningLabel": "Tiếp tục nghe",
+  "historyRecentlyPlayedLabel": "Nghe gần đây",
+  "historyMostPlayedLabel": "Nghe nhiều nhất",
+  "historyContinueCount": "{count} bài nghe dở",
+  "@historyContinueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyResumeFrom": "Nghe tiếp từ {time}",
+  "@historyResumeFrom": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "historyPlayedRecentlyLabel": "Vừa xong",
+  "historyPlayedMinutesAgo": "{count} phút trước",
+  "@historyPlayedMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyPlayedHoursAgo": "{count} giờ trước",
+  "@historyPlayedHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyPlayedDaysAgo": "{count} ngày trước",
+  "@historyPlayedDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clearHistoryLabel": "Xóa lịch sử",
+  "clearHistoryTitle": "Xóa lịch sử nghe",
+  "clearHistoryConfirmation": "Bạn có chắc muốn xóa toàn bộ {count} bài hát khỏi lịch sử nghe không?",
+  "@clearHistoryConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyClearedMessage": "Đã xóa lịch sử nghe.",
   "trendingTitle": "Thịnh hành",
   "forYouTitle": "Dành cho bạn",
   "fromFirestore": "Từ Firestore",

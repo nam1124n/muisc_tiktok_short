@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/domain/entities/listening_history_entry_entity.dart';
 import 'package:login_flutter/domain/entities/playlist_entity.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
@@ -188,7 +189,7 @@ class ProfileContent extends ConsumerWidget {
   }
 }
 
-enum _ProfileLibraryTab { playlists, favorites }
+enum _ProfileLibraryTab { playlists, favorites, history }
 
 class _LibrarySection extends StatefulWidget {
   const _LibrarySection();
@@ -220,9 +221,17 @@ class _LibrarySectionState extends State<_LibrarySection> {
         const SizedBox(height: 16),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 180),
-          child: _selectedTab == _ProfileLibraryTab.playlists
-              ? const _PlaylistLibraryContent(key: ValueKey('playlists'))
-              : const _FavoritesLibraryContent(key: ValueKey('favorites')),
+          child: switch (_selectedTab) {
+            _ProfileLibraryTab.playlists => const _PlaylistLibraryContent(
+              key: ValueKey('playlists'),
+            ),
+            _ProfileLibraryTab.favorites => const _FavoritesLibraryContent(
+              key: ValueKey('favorites'),
+            ),
+            _ProfileLibraryTab.history => const _HistoryLibraryContent(
+              key: ValueKey('history'),
+            ),
+          },
         ),
       ],
     );
@@ -268,6 +277,14 @@ class _LibraryTabs extends StatelessWidget {
               icon: Icons.favorite_rounded,
               isActive: selectedTab == _ProfileLibraryTab.favorites,
               onTap: () => onTabSelected(_ProfileLibraryTab.favorites),
+            ),
+          ),
+          Expanded(
+            child: _LibraryTabItem(
+              label: l10n.historyLabel,
+              icon: Icons.history_rounded,
+              isActive: selectedTab == _ProfileLibraryTab.history,
+              onTap: () => onTabSelected(_ProfileLibraryTab.history),
             ),
           ),
         ],
@@ -937,7 +954,6 @@ class _FavoriteSongPlayButton extends ConsumerWidget {
         ref
             .read(audioPlayerNotifierProvider.notifier)
             .playSong(song, playlist: playlist);
-        ref.read(recentNotifierProvider.notifier).addRecent(song);
       },
       icon: isLoadingThisSong
           ? const SizedBox(
@@ -959,6 +975,742 @@ class _FavoriteSongPlayButton extends ConsumerWidget {
             ),
     );
   }
+}
+
+class _HistoryLibraryContent extends ConsumerWidget {
+  const _HistoryLibraryContent({super.key});
+
+  Future<void> _clearHistory(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final recentState = ref.read(recentNotifierProvider);
+    final count = recentState.entries.length;
+
+    if (count == 0) {
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: Text(
+            l10n.clearHistoryTitle,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          content: Text(l10n.clearHistoryConfirmation(count)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l10n.clearHistoryLabel),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    await ref.read(recentNotifierProvider.notifier).clearRecents();
+    if (!context.mounted) {
+      return;
+    }
+
+    final updatedState = ref.read(recentNotifierProvider);
+    if (updatedState.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(updatedState.errorMessage!),
+          backgroundColor: Colors.red,
+        ),
+      );
+      ref.read(recentNotifierProvider.notifier).clearError();
+      return;
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.historyClearedMessage)));
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final recentState = ref.watch(recentNotifierProvider);
+    final continueListening = recentState.continueListening;
+    final recentlyPlayed = recentState.recentlyPlayed;
+    final mostPlayed = recentState.mostPlayed;
+
+    if (recentState.isLoading && recentState.entries.isEmpty) {
+      return _PlaylistStatusCard(
+        key: const ValueKey('history-loading'),
+        child: _PlaylistStatusContent(
+          icon: Icons.history_rounded,
+          title: l10n.historyLoadingTitle,
+          subtitle: l10n.historyLoadingSubtitle,
+          trailing: const CircularProgressIndicator(
+            color: ProfileScreen._primary,
+          ),
+        ),
+      );
+    }
+
+    if (recentState.errorMessage != null && recentState.entries.isEmpty) {
+      return _PlaylistStatusCard(
+        key: const ValueKey('history-error'),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.redAccent,
+              size: 32,
+            ),
+            const SizedBox(height: 14),
+            Text(
+              l10n.historyLoadErrorTitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: ProfileScreen._textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              recentState.errorMessage!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: ProfileScreen._textMuted,
+                fontSize: 14,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () {
+                ref.read(recentNotifierProvider.notifier).refresh();
+              },
+              child: Text(l10n.retry),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (recentState.entries.isEmpty) {
+      return Container(
+        key: const ValueKey('history-empty'),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.78),
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: ProfileScreen._secondary.withValues(alpha: 0.12),
+              ),
+              child: const Icon(
+                Icons.history_rounded,
+                color: ProfileScreen._secondary,
+                size: 24,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.historyEmpty,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: ProfileScreen._textPrimary,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      key: const ValueKey('history-content'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.78),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.historyLabel,
+                          style: const TextStyle(
+                            color: ProfileScreen._textPrimary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _ProfileMetaChip(
+                              label: l10n.trackCount(
+                                recentState.entries.length,
+                              ),
+                              color: ProfileScreen._secondary,
+                            ),
+                            if (continueListening.isNotEmpty)
+                              _ProfileMetaChip(
+                                label: l10n.historyContinueCount(
+                                  continueListening.length,
+                                ),
+                                color: ProfileScreen._primary,
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: recentState.isClearing
+                        ? null
+                        : () => _clearHistory(context, ref),
+                    icon: const Icon(Icons.clear_all_rounded),
+                    label: Text(l10n.clearHistoryLabel),
+                  ),
+                ],
+              ),
+              if (recentState.isClearing) ...[
+                const SizedBox(height: 10),
+                const LinearProgressIndicator(minHeight: 2),
+              ],
+            ],
+          ),
+        ),
+        if (continueListening.isNotEmpty) ...[
+          const SizedBox(height: 18),
+          _ProfileHistorySectionHeader(
+            title: l10n.historyContinueListeningLabel,
+            icon: Icons.play_circle_outline_rounded,
+          ),
+          const SizedBox(height: 12),
+          for (var index = 0; index < continueListening.length; index++) ...[
+            _ProfileContinueListeningCard(
+              entry: continueListening[index],
+              playlist: [for (final item in continueListening) item.song],
+            ),
+            if (index < continueListening.length - 1)
+              const SizedBox(height: 12),
+          ],
+        ],
+        const SizedBox(height: 18),
+        _ProfileHistorySectionHeader(
+          title: l10n.historyRecentlyPlayedLabel,
+          icon: Icons.history_rounded,
+        ),
+        const SizedBox(height: 12),
+        for (var index = 0; index < recentlyPlayed.length; index++) ...[
+          _ProfileHistorySongCard(
+            entry: recentlyPlayed[index],
+            playlist: [for (final item in recentlyPlayed) item.song],
+            badge: _ProfileMetaChip(
+              label: _profileFormatLastPlayed(
+                context,
+                recentlyPlayed[index].lastPlayedAt,
+              ),
+              color: ProfileScreen._secondary,
+            ),
+          ),
+          if (index < recentlyPlayed.length - 1) const SizedBox(height: 12),
+        ],
+        if (mostPlayed.isNotEmpty) ...[
+          const SizedBox(height: 18),
+          _ProfileHistorySectionHeader(
+            title: l10n.historyMostPlayedLabel,
+            icon: Icons.local_fire_department_outlined,
+          ),
+          const SizedBox(height: 12),
+          for (var index = 0; index < mostPlayed.length; index++) ...[
+            _ProfileHistorySongCard(
+              entry: mostPlayed[index],
+              playlist: [for (final item in mostPlayed) item.song],
+              badge: _ProfileMetaChip(
+                label: l10n.playsCount(mostPlayed[index].playCount.toString()),
+                color: const Color(0xFFFF8A3D),
+              ),
+            ),
+            if (index < mostPlayed.length - 1) const SizedBox(height: 12),
+          ],
+        ],
+      ],
+    );
+  }
+}
+
+class _ProfileHistorySectionHeader extends StatelessWidget {
+  const _ProfileHistorySectionHeader({required this.title, required this.icon});
+
+  final String title;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: ProfileScreen._textPrimary),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            color: ProfileScreen._textPrimary,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileContinueListeningCard extends ConsumerWidget {
+  const _ProfileContinueListeningCard({
+    required this.entry,
+    required this.playlist,
+  });
+
+  final ListeningHistoryEntryEntity entry;
+  final List<SongEntity> playlist;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final playback = ref.watch(audioPlaybackForSongProvider(entry.song.id));
+    final isFavorite = ref.watch(isFavoriteSongProvider(entry.song.id));
+    final isFavoriteBusy = ref.watch(isFavoriteSongBusyProvider(entry.song.id));
+    final progress = entry.progress.clamp(0, 1).toDouble();
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: ProfileScreen._secondary.withValues(alpha: 0.28),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _ProfileHistoryArtwork(
+                imageUrl: entry.song.imageUrl,
+                backgroundColor: ProfileScreen._primary,
+                fallbackIcon: Icons.play_circle_outline_rounded,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.song.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: ProfileScreen._textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      entry.song.artist,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: ProfileScreen._textMuted,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _ProfileMetaChip(
+                          label: l10n.historyResumeFrom(
+                            _profileFormatDuration(entry.lastPosition),
+                          ),
+                          color: ProfileScreen._primary,
+                        ),
+                        const SizedBox(width: 8),
+                        _ProfileMetaChip(
+                          label: '${(progress * 100).round()}%',
+                          color: ProfileScreen._secondary,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: isFavoriteBusy
+                    ? null
+                    : () {
+                        ref
+                            .read(favoriteNotifierProvider.notifier)
+                            .toggleFavorite(entry.song);
+                      },
+                icon: isFavoriteBusy
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: ProfileScreen._primary,
+                        ),
+                      )
+                    : Icon(
+                        isFavorite
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border,
+                        color: isFavorite
+                            ? ProfileScreen._primary
+                            : ProfileScreen._textMuted,
+                      ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              backgroundColor: const Color(0xFFE9E4F7),
+              valueColor: const AlwaysStoppedAnimation(ProfileScreen._primary),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+              onPressed: () {
+                if (playback.isPlaying) {
+                  ref.read(audioPlayerNotifierProvider.notifier).pause();
+                  return;
+                }
+
+                if (playback.isCurrentSong) {
+                  ref.read(audioPlayerNotifierProvider.notifier).resume();
+                  return;
+                }
+
+                ref
+                    .read(audioPlayerNotifierProvider.notifier)
+                    .playSong(
+                      entry.song,
+                      playlist: playlist,
+                      initialPosition: entry.lastPosition,
+                    );
+              },
+              icon: Icon(
+                playback.isPlaying
+                    ? Icons.pause_rounded
+                    : Icons.play_arrow_rounded,
+              ),
+              label: Text(l10n.historyContinueListeningLabel),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileHistorySongCard extends ConsumerWidget {
+  const _ProfileHistorySongCard({
+    required this.entry,
+    required this.playlist,
+    required this.badge,
+  });
+
+  final ListeningHistoryEntryEntity entry;
+  final List<SongEntity> playlist;
+  final Widget badge;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final isFavorite = ref.watch(isFavoriteSongProvider(entry.song.id));
+    final isFavoriteBusy = ref.watch(isFavoriteSongBusyProvider(entry.song.id));
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: ProfileScreen._secondary.withValues(alpha: 0.28),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          _ProfileHistoryArtwork(
+            imageUrl: entry.song.imageUrl,
+            backgroundColor: ProfileScreen._secondary,
+            fallbackIcon: Icons.history_rounded,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  entry.song.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: ProfileScreen._textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  entry.song.artist,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: ProfileScreen._textMuted,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                badge,
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: isFavoriteBusy
+                ? null
+                : () {
+                    ref
+                        .read(favoriteNotifierProvider.notifier)
+                        .toggleFavorite(entry.song);
+                  },
+            icon: isFavoriteBusy
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: ProfileScreen._primary,
+                    ),
+                  )
+                : Icon(
+                    isFavorite ? Icons.favorite_rounded : Icons.favorite_border,
+                    color: isFavorite
+                        ? ProfileScreen._primary
+                        : ProfileScreen._textMuted,
+                  ),
+          ),
+          _ProfileHistoryPlayButton(song: entry.song, playlist: playlist),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileHistoryPlayButton extends ConsumerWidget {
+  const _ProfileHistoryPlayButton({required this.song, required this.playlist});
+
+  final SongEntity song;
+  final List<SongEntity> playlist;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playback = ref.watch(audioPlaybackForSongProvider(song.id));
+    final isCurrentSong = playback.isCurrentSong;
+    final isPlayingThisSong = playback.isPlaying;
+    final isLoadingThisSong = playback.isLoading;
+
+    return IconButton(
+      onPressed: () {
+        if (isPlayingThisSong) {
+          ref.read(audioPlayerNotifierProvider.notifier).pause();
+          return;
+        }
+
+        if (isCurrentSong) {
+          ref.read(audioPlayerNotifierProvider.notifier).resume();
+          return;
+        }
+
+        ref
+            .read(audioPlayerNotifierProvider.notifier)
+            .playSong(song, playlist: playlist);
+      },
+      icon: isLoadingThisSong
+          ? const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: ProfileScreen._primary,
+              ),
+            )
+          : Icon(
+              isPlayingThisSong
+                  ? Icons.pause_circle_outline_rounded
+                  : Icons.play_circle_outline_rounded,
+              size: 28,
+              color: isCurrentSong
+                  ? ProfileScreen._primary
+                  : ProfileScreen._textMuted,
+            ),
+    );
+  }
+}
+
+class _ProfileHistoryArtwork extends StatelessWidget {
+  const _ProfileHistoryArtwork({
+    required this.imageUrl,
+    required this.backgroundColor,
+    required this.fallbackIcon,
+  });
+
+  final String imageUrl;
+  final Color backgroundColor;
+  final IconData fallbackIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 58,
+      height: 58,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: backgroundColor.withValues(alpha: 0.18),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: imageUrl.isNotEmpty
+          ? Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) =>
+                  Icon(fallbackIcon, color: backgroundColor, size: 26),
+            )
+          : Icon(fallbackIcon, color: backgroundColor, size: 26),
+    );
+  }
+}
+
+class _ProfileMetaChip extends StatelessWidget {
+  const _ProfileMetaChip({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+String _profileFormatDuration(Duration duration) {
+  final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+  final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+  if (duration.inHours > 0) {
+    final hours = duration.inHours.toString().padLeft(2, '0');
+    return '$hours:$minutes:$seconds';
+  }
+
+  return '$minutes:$seconds';
+}
+
+String _profileFormatLastPlayed(BuildContext context, DateTime? lastPlayedAt) {
+  final l10n = AppLocalizations.of(context)!;
+  if (lastPlayedAt == null) {
+    return l10n.historyPlayedRecentlyLabel;
+  }
+
+  final difference = DateTime.now().difference(lastPlayedAt);
+  if (difference.inMinutes < 1) {
+    return l10n.historyPlayedRecentlyLabel;
+  }
+
+  if (difference.inHours < 1) {
+    return l10n.historyPlayedMinutesAgo(difference.inMinutes);
+  }
+
+  if (difference.inDays < 1) {
+    return l10n.historyPlayedHoursAgo(difference.inHours);
+  }
+
+  return l10n.historyPlayedDaysAgo(difference.inDays);
 }
 
 class _PlaylistStatusCard extends StatelessWidget {

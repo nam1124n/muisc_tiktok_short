@@ -113,6 +113,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recentLabel => 'Recent';
 
   @override
+  String get historyLabel => 'History';
+
+  @override
   String get favoritesLabel => 'Favorites';
 
   @override
@@ -317,6 +320,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recentSongsEmpty => 'No recently played songs yet';
+
+  @override
+  String get historyLoadingTitle => 'Loading listening history';
+
+  @override
+  String get historyLoadingSubtitle => 'Your recently played songs are being synchronized.';
+
+  @override
+  String get historyLoadErrorTitle => 'Unable to load listening history';
+
+  @override
+  String get historyEmpty => 'No listening history yet';
+
+  @override
+  String get historyContinueListeningLabel => 'Continue listening';
+
+  @override
+  String get historyRecentlyPlayedLabel => 'Recently played';
+
+  @override
+  String get historyMostPlayedLabel => 'Most played';
+
+  @override
+  String historyContinueCount(int count) {
+    return '$count to continue';
+  }
+
+  @override
+  String historyResumeFrom(String time) {
+    return 'Resume from $time';
+  }
+
+  @override
+  String get historyPlayedRecentlyLabel => 'Just now';
+
+  @override
+  String historyPlayedMinutesAgo(int count) {
+    return '$count min ago';
+  }
+
+  @override
+  String historyPlayedHoursAgo(int count) {
+    return '$count hr ago';
+  }
+
+  @override
+  String historyPlayedDaysAgo(int count) {
+    return '$count days ago';
+  }
+
+  @override
+  String get clearHistoryLabel => 'Clear history';
+
+  @override
+  String get clearHistoryTitle => 'Clear listening history';
+
+  @override
+  String clearHistoryConfirmation(int count) {
+    return 'Are you sure you want to remove all $count songs from your listening history?';
+  }
+
+  @override
+  String get historyClearedMessage => 'Listening history cleared.';
 
   @override
   String get trendingTitle => 'Trending';

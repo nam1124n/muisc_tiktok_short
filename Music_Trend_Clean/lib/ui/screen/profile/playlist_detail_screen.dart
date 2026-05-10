@@ -7,7 +7,6 @@ import 'package:login_flutter/ui/screen/admin/providers/song_provider.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_state.dart';
 import 'package:login_flutter/ui/screen/audio/providers/audio_player_provider.dart';
 import 'package:login_flutter/ui/screen/discover/providers/favorites_provider.dart';
-import 'package:login_flutter/ui/screen/discover/providers/recents_provider.dart';
 import 'package:login_flutter/ui/screen/profile/providers/playlist_provider.dart';
 
 String? _playlistErrorText(BuildContext context, PlaylistState state) {
@@ -652,9 +651,6 @@ class PlaylistDetailScreen extends ConsumerWidget {
                                     playlistSongs.first,
                                     playlist: playlistSongs,
                                   );
-                              ref
-                                  .read(recentNotifierProvider.notifier)
-                                  .addRecent(playlistSongs.first);
                             },
                     ),
                     const SizedBox(height: 18),
@@ -1018,7 +1014,6 @@ class _PlaylistSongTile extends ConsumerWidget {
               ref
                   .read(audioPlayerNotifierProvider.notifier)
                   .playSong(song, playlist: playlistSongs);
-              ref.read(recentNotifierProvider.notifier).addRecent(song);
             },
             icon: isLoadingThisSong
                 ? const SizedBox(

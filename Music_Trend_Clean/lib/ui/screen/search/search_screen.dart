@@ -5,7 +5,6 @@ import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_provider.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_state.dart';
 import 'package:login_flutter/ui/screen/audio/providers/audio_player_provider.dart';
-import 'package:login_flutter/ui/screen/discover/providers/recents_provider.dart';
 import 'package:login_flutter/ui/screen/search/providers/search_provider.dart';
 import 'package:login_flutter/ui/screen/search/providers/search_state.dart';
 import 'package:login_flutter/ui/screen/search/widgets/search_info_card.dart';
@@ -127,7 +126,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ref
                 .read(audioPlayerNotifierProvider.notifier)
                 .playSong(song, playlist: results);
-            ref.read(recentNotifierProvider.notifier).addRecent(song);
           },
         );
       },
