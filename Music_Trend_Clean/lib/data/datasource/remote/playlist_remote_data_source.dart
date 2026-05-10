@@ -7,10 +7,12 @@ abstract class PlaylistRemoteDataSource {
     required String userId,
     required String name,
   });
-  Future<void> updatePlaylistName({
+  Future<void> updatePlaylistDetails({
     required String userId,
     required String playlistId,
     required String name,
+    required String description,
+    required String coverUrl,
   });
   Future<void> updatePlaylistSongs({
     required String userId,
@@ -55,6 +57,7 @@ class PlaylistRemoteDataSourceImpl implements PlaylistRemoteDataSource {
     final playlist = PlaylistModel(
       id: docRef.id,
       name: name,
+      description: '',
       coverUrl: '',
       songIds: const [],
       createdAt: now,
@@ -71,10 +74,12 @@ class PlaylistRemoteDataSourceImpl implements PlaylistRemoteDataSource {
   }
 
   @override
-  Future<void> updatePlaylistName({
+  Future<void> updatePlaylistDetails({
     required String userId,
     required String playlistId,
     required String name,
+    required String description,
+    required String coverUrl,
   }) async {
     await _db
         .collection('users')
@@ -83,6 +88,8 @@ class PlaylistRemoteDataSourceImpl implements PlaylistRemoteDataSource {
         .doc(playlistId)
         .set({
           'name': name,
+          'description': description,
+          'coverUrl': coverUrl,
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
   }

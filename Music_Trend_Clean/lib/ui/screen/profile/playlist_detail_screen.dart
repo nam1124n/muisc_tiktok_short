@@ -366,51 +366,168 @@ class PlaylistDetailScreen extends ConsumerWidget {
     ).showSnackBar(SnackBar(content: Text(l10n.playlistDeletedMessage)));
   }
 
-  Future<void> _renamePlaylist(
+  Future<void> _editPlaylistDetails(
     BuildContext context,
     WidgetRef ref,
     PlaylistEntity currentPlaylist,
+    List<SongEntity> playlistSongs,
   ) async {
     final l10n = AppLocalizations.of(context)!;
-    final controller = TextEditingController(text: currentPlaylist.name);
-    final result = await showDialog<String>(
+    final nameController = TextEditingController(text: currentPlaylist.name);
+    final descriptionController = TextEditingController(
+      text: currentPlaylist.description,
+    );
+    final coverCandidates = {
+      for (final song in playlistSongs)
+        if (song.imageUrl.isNotEmpty) song.imageUrl,
+    }.toList(growable: false);
+
+    final result = await showModalBottomSheet<_PlaylistDetailsDraft>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-          title: Text(
-            l10n.renamePlaylistTitle,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (value) => Navigator.of(dialogContext).pop(value),
-            decoration: InputDecoration(
-              labelText: l10n.playlistNameLabel,
-              hintText: 'Midnight Echoes',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        var selectedCoverUrl = currentPlaylist.coverUrl;
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.viewInsetsOf(context).bottom,
               ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(l10n.cancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(controller.text),
-              child: Text(l10n.saveChanges),
-            ),
-          ],
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 44,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Text(
+                          l10n.editPlaylistDetailsTitle,
+                          style: const TextStyle(
+                            color: _textPrimary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: nameController,
+                          textInputAction: TextInputAction.next,
+                          decoration: InputDecoration(
+                            labelText: l10n.playlistNameLabel,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        TextField(
+                          controller: descriptionController,
+                          minLines: 2,
+                          maxLines: 4,
+                          decoration: InputDecoration(
+                            labelText: l10n.playlistDescriptionLabel,
+                            hintText: l10n.playlistDescriptionHint,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Text(
+                          l10n.playlistCoverLabel,
+                          style: const TextStyle(
+                            color: _textPrimary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            _CoverChoiceTile(
+                              isSelected: selectedCoverUrl.isEmpty,
+                              imageUrl: '',
+                              label: l10n.playlistCoverNoneOption,
+                              onTap: () {
+                                setModalState(() {
+                                  selectedCoverUrl = '';
+                                });
+                              },
+                            ),
+                            for (final coverUrl in coverCandidates)
+                              _CoverChoiceTile(
+                                isSelected: selectedCoverUrl == coverUrl,
+                                imageUrl: coverUrl,
+                                label: l10n.playlistCoverFromSongOption,
+                                onTap: () {
+                                  setModalState(() {
+                                    selectedCoverUrl = coverUrl;
+                                  });
+                                },
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () =>
+                                    Navigator.of(sheetContext).pop(),
+                                child: Text(l10n.cancel),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: FilledButton(
+                                onPressed: () {
+                                  Navigator.of(sheetContext).pop(
+                                    _PlaylistDetailsDraft(
+                                      name: nameController.text,
+                                      description: descriptionController.text,
+                                      coverUrl: selectedCoverUrl,
+                                    ),
+                                  );
+                                },
+                                child: Text(l10n.saveChanges),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
         );
       },
     );
-    controller.dispose();
+
+    nameController.dispose();
+    descriptionController.dispose();
 
     if (result == null) {
       return;
@@ -418,7 +535,12 @@ class PlaylistDetailScreen extends ConsumerWidget {
 
     final success = await ref
         .read(playlistNotifierProvider.notifier)
-        .renamePlaylist(playlistId: currentPlaylist.id, name: result);
+        .updatePlaylistDetails(
+          playlistId: currentPlaylist.id,
+          name: result.name,
+          description: result.description,
+          coverUrl: result.coverUrl,
+        );
 
     if (!context.mounted) {
       return;
@@ -434,10 +556,54 @@ class PlaylistDetailScreen extends ConsumerWidget {
       return;
     }
 
-    if (result.trim().isNotEmpty && result.trim() != currentPlaylist.name) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.playlistDetailsUpdatedMessage)));
+  }
+
+  Future<void> _reorderPlaylistSongs(
+    BuildContext context,
+    WidgetRef ref, {
+    required PlaylistEntity currentPlaylist,
+    required List<SongEntity> playlistSongs,
+    required int oldIndex,
+    required int newIndex,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (oldIndex == newIndex) {
+      return;
+    }
+
+    final adjustedNewIndex = oldIndex < newIndex ? newIndex - 1 : newIndex;
+    final reorderedSongIds = [...currentPlaylist.songIds];
+    final movedSongId = reorderedSongIds.removeAt(oldIndex);
+    reorderedSongIds.insert(adjustedNewIndex, movedSongId);
+
+    final success = await ref
+        .read(playlistNotifierProvider.notifier)
+        .savePlaylistSongs(
+          playlistId: currentPlaylist.id,
+          songIds: reorderedSongIds,
+        );
+
+    if (!context.mounted) {
+      return;
+    }
+
+    final playlistState = ref.read(playlistNotifierProvider);
+    final errorMessage = _playlistErrorText(context, playlistState);
+    if (!success && errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+      );
+      ref.read(playlistNotifierProvider.notifier).clearError();
+      return;
+    }
+
+    if (playlistSongs.isNotEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.playlistRenamedMessage)));
+      ).showSnackBar(SnackBar(content: Text(l10n.playlistUpdatedMessage)));
     }
   }
 
@@ -578,25 +744,30 @@ class PlaylistDetailScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       onSelected: (value) {
-                        if (value == 'rename') {
-                          _renamePlaylist(context, ref, currentPlaylist);
+                        if (value == 'edit') {
+                          _editPlaylistDetails(
+                            context,
+                            ref,
+                            currentPlaylist,
+                            playlistSongs,
+                          );
                         } else if (value == 'delete') {
                           _deletePlaylist(context, ref, currentPlaylist);
                         }
                       },
                       itemBuilder: (context) => [
                         PopupMenuItem<String>(
-                          value: 'rename',
+                          value: 'edit',
                           child: Row(
                             children: [
                               Icon(
-                                Icons.edit_outlined,
+                                Icons.tune_rounded,
                                 color: _textPrimary,
                                 size: 20,
                               ),
                               SizedBox(width: 10),
                               Text(
-                                l10n.renamePlaylistTitle,
+                                l10n.editPlaylistDetailsTitle,
                                 style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                             ],
@@ -653,6 +824,18 @@ class PlaylistDetailScreen extends ConsumerWidget {
                                   );
                             },
                     ),
+                    if (currentPlaylist.description.trim().isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        currentPlaylist.description,
+                        style: const TextStyle(
+                          color: _textMuted,
+                          fontSize: 14,
+                          height: 1.45,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 18),
                     if (songState is SongLoading || songState is SongInitial)
                       _StatusCard(
@@ -714,24 +897,64 @@ class PlaylistDetailScreen extends ConsumerWidget {
                         ),
                       )
                     else ...[
-                      for (
-                        var index = 0;
-                        index < playlistSongs.length;
-                        index++
-                      ) ...[
-                        _PlaylistSongTile(
-                          song: playlistSongs[index],
-                          playlistSongs: playlistSongs,
-                          onRemove: () => _removeSongFromPlaylist(
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.drag_indicator_rounded,
+                              color: _textMuted,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              l10n.playlistReorderHint,
+                              style: const TextStyle(
+                                color: _textMuted,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      ReorderableListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        buildDefaultDragHandles: false,
+                        itemCount: playlistSongs.length,
+                        onReorder: (oldIndex, newIndex) {
+                          _reorderPlaylistSongs(
                             context,
                             ref,
                             currentPlaylist: currentPlaylist,
-                            song: playlistSongs[index],
-                          ),
-                        ),
-                        if (index < playlistSongs.length - 1)
-                          const SizedBox(height: 12),
-                      ],
+                            playlistSongs: playlistSongs,
+                            oldIndex: oldIndex,
+                            newIndex: newIndex,
+                          );
+                        },
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            key: ValueKey(playlistSongs[index].id),
+                            padding: EdgeInsets.only(
+                              bottom: index == playlistSongs.length - 1
+                                  ? 0
+                                  : 12,
+                            ),
+                            child: _PlaylistSongTile(
+                              song: playlistSongs[index],
+                              playlistSongs: playlistSongs,
+                              reorderIndex: index,
+                              onRemove: () => _removeSongFromPlaylist(
+                                context,
+                                ref,
+                                currentPlaylist: currentPlaylist,
+                                song: playlistSongs[index],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ],
                 ),
@@ -790,10 +1013,24 @@ class _PlaylistHeroCard extends StatelessWidget {
             Positioned(
               right: 20,
               top: 24,
-              child: _ArtworkFallback(
-                label: _playlistMonogram(playlist.name),
-                size: 84,
-              ),
+              child: playlist.coverUrl.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: Image.network(
+                        playlist.coverUrl,
+                        width: 84,
+                        height: 84,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => _ArtworkFallback(
+                          label: _playlistMonogram(playlist.name),
+                          size: 84,
+                        ),
+                      ),
+                    )
+                  : _ArtworkFallback(
+                      label: _playlistMonogram(playlist.name),
+                      size: 84,
+                    ),
             ),
             Positioned(
               left: 24,
@@ -811,7 +1048,7 @@ class _PlaylistHeroCard extends StatelessWidget {
             Positioned(
               left: 24,
               right: 120,
-              bottom: 52,
+              bottom: playlist.description.trim().isEmpty ? 52 : 78,
               child: Text(
                 playlist.name,
                 maxLines: 3,
@@ -824,6 +1061,23 @@ class _PlaylistHeroCard extends StatelessWidget {
                 ),
               ),
             ),
+            if (playlist.description.trim().isNotEmpty)
+              Positioned(
+                left: 24,
+                right: 120,
+                bottom: 44,
+                child: Text(
+                  playlist.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.82),
+                    fontSize: 13,
+                    height: 1.35,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
             Positioned(
               left: 24,
               bottom: 24,
@@ -879,15 +1133,109 @@ class _PlaylistMetaRow extends StatelessWidget {
   }
 }
 
+class _PlaylistDetailsDraft {
+  const _PlaylistDetailsDraft({
+    required this.name,
+    required this.description,
+    required this.coverUrl,
+  });
+
+  final String name;
+  final String description;
+  final String coverUrl;
+}
+
+class _CoverChoiceTile extends StatelessWidget {
+  const _CoverChoiceTile({
+    required this.isSelected,
+    required this.imageUrl,
+    required this.label,
+    required this.onTap,
+  });
+
+  final bool isSelected;
+  final String imageUrl;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Ink(
+          width: 90,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: isSelected
+                  ? PlaylistDetailScreen._primary
+                  : PlaylistDetailScreen._secondary.withValues(alpha: 0.24),
+              width: isSelected ? 1.6 : 1,
+            ),
+            color: isSelected
+                ? PlaylistDetailScreen._primary.withValues(alpha: 0.08)
+                : Colors.white,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  color: PlaylistDetailScreen._primary.withValues(alpha: 0.12),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: imageUrl.isNotEmpty
+                    ? Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => const Icon(
+                          Icons.photo_rounded,
+                          color: PlaylistDetailScreen._primary,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.layers_clear_rounded,
+                        color: PlaylistDetailScreen._primary,
+                      ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: PlaylistDetailScreen._textPrimary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _PlaylistSongTile extends ConsumerWidget {
   const _PlaylistSongTile({
     required this.song,
     required this.playlistSongs,
+    required this.reorderIndex,
     required this.onRemove,
   });
 
   final SongEntity song;
   final List<SongEntity> playlistSongs;
+  final int reorderIndex;
   final VoidCallback onRemove;
 
   @override
@@ -1033,6 +1381,16 @@ class _PlaylistSongTile extends ConsumerWidget {
                         ? PlaylistDetailScreen._primary
                         : PlaylistDetailScreen._textMuted,
                   ),
+          ),
+          ReorderableDragStartListener(
+            index: reorderIndex,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Icon(
+                Icons.drag_handle_rounded,
+                color: PlaylistDetailScreen._textMuted.withValues(alpha: 0.8),
+              ),
+            ),
           ),
         ],
       ),

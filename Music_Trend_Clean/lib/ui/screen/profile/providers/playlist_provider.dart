@@ -259,11 +259,86 @@ class PlaylistNotifier extends StateNotifier<PlaylistState> {
         userId: userId,
         playlistId: playlistId,
         name: trimmedName,
+        description: currentPlaylist.description,
+        coverUrl: currentPlaylist.coverUrl,
       );
       if (!mounted) return false;
 
       final updatedPlaylist = currentPlaylist.copyWith(
         name: trimmedName,
+        updatedAt: DateTime.now(),
+      );
+      state = state.copyWith(
+        playlists: _sortPlaylists([
+          for (final playlist in state.playlists)
+            if (playlist.id == playlistId) updatedPlaylist else playlist,
+        ]),
+        isSaving: false,
+        clearErrorMessage: true,
+      );
+      return true;
+    } catch (e) {
+      if (!mounted) return false;
+      state = state.copyWith(
+        isSaving: false,
+        errorType: null,
+        errorMessage: ErrorMessageMapper.map(e),
+      );
+      return false;
+    }
+  }
+
+  Future<bool> updatePlaylistDetails({
+    required String playlistId,
+    required String name,
+    required String description,
+    required String coverUrl,
+  }) async {
+    final currentPlaylist = findById(playlistId);
+    final trimmedName = name.trim();
+    final trimmedDescription = description.trim();
+
+    if (currentPlaylist == null) {
+      state = state.copyWith(errorType: PlaylistErrorType.playlistNotFound);
+      return false;
+    }
+
+    if (trimmedName.isEmpty) {
+      state = state.copyWith(errorType: PlaylistErrorType.emptyName);
+      return false;
+    }
+
+    if (userId == 'guest') {
+      state = state.copyWith(
+        errorType: PlaylistErrorType.authenticationRequiredForUpdate,
+      );
+      return false;
+    }
+
+    final hasNoChanges =
+        trimmedName == currentPlaylist.name &&
+        trimmedDescription == currentPlaylist.description &&
+        coverUrl == currentPlaylist.coverUrl;
+    if (hasNoChanges) {
+      return true;
+    }
+
+    state = state.copyWith(isSaving: true, clearErrorMessage: true);
+
+    try {
+      await updatePlaylistNameUseCase(
+        userId: userId,
+        playlistId: playlistId,
+        name: trimmedName,
+        description: trimmedDescription,
+        coverUrl: coverUrl,
+      );
+      if (!mounted) return false;
+
+      final updatedPlaylist = currentPlaylist.copyWith(
+        name: trimmedName,
+        description: trimmedDescription,
+        coverUrl: coverUrl,
         updatedAt: DateTime.now(),
       );
       state = state.copyWith(

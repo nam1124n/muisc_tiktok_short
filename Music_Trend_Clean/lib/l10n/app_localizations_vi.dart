@@ -162,6 +162,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playlistNameLabel => 'Tên playlist';
 
   @override
+  String get playlistDescriptionLabel => 'Mô tả';
+
+  @override
+  String get playlistDescriptionHint => 'Thêm cảm hứng hoặc mục đích cho playlist này.';
+
+  @override
   String get playlistLoadingTitle => 'Đang tải playlist';
 
   @override
@@ -209,10 +215,28 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playlistDeletedMessage => 'Đã xóa playlist.';
 
   @override
+  String get editPlaylistDetailsTitle => 'Chỉnh sửa playlist';
+
+  @override
+  String get playlistDetailsUpdatedMessage => 'Đã cập nhật thông tin playlist.';
+
+  @override
   String get renamePlaylistTitle => 'Đổi tên playlist';
 
   @override
   String get playlistRenamedMessage => 'Đã đổi tên playlist.';
+
+  @override
+  String get playlistCoverLabel => 'Ảnh bìa playlist';
+
+  @override
+  String get playlistCoverNoneOption => 'Không dùng ảnh';
+
+  @override
+  String get playlistCoverFromSongOption => 'Từ bài hát';
+
+  @override
+  String get playlistReorderHint => 'Kéo thả để sắp xếp lại thứ tự bài hát.';
 
   @override
   String get removeSongFromPlaylistTitle => 'Xóa bài hát';

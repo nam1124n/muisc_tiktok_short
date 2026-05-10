@@ -9,11 +9,15 @@ class UpdatePlaylistNameUseCase {
     required String userId,
     required String playlistId,
     required String name,
+    required String description,
+    required String coverUrl,
   }) async {
-    await repository.updatePlaylistName(
+    await repository.updatePlaylistDetails(
       userId: userId,
       playlistId: playlistId,
       name: name,
+      description: description,
+      coverUrl: coverUrl,
     );
   }
 }

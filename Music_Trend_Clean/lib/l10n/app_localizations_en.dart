@@ -162,6 +162,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistNameLabel => 'Playlist name';
 
   @override
+  String get playlistDescriptionLabel => 'Description';
+
+  @override
+  String get playlistDescriptionHint => 'Set the mood or purpose of this playlist.';
+
+  @override
   String get playlistLoadingTitle => 'Loading playlists';
 
   @override
@@ -209,10 +215,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistDeletedMessage => 'Playlist deleted.';
 
   @override
+  String get editPlaylistDetailsTitle => 'Edit playlist details';
+
+  @override
+  String get playlistDetailsUpdatedMessage => 'Playlist details updated.';
+
+  @override
   String get renamePlaylistTitle => 'Rename playlist';
 
   @override
   String get playlistRenamedMessage => 'Playlist renamed.';
+
+  @override
+  String get playlistCoverLabel => 'Playlist cover';
+
+  @override
+  String get playlistCoverNoneOption => 'No cover';
+
+  @override
+  String get playlistCoverFromSongOption => 'From track';
+
+  @override
+  String get playlistReorderHint => 'Drag songs to reorder the playlist.';
 
   @override
   String get removeSongFromPlaylistTitle => 'Remove song';

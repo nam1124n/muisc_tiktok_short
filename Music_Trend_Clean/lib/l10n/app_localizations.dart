@@ -389,6 +389,18 @@ abstract class AppLocalizations {
   /// **'Playlist name'**
   String get playlistNameLabel;
 
+  /// No description provided for @playlistDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get playlistDescriptionLabel;
+
+  /// No description provided for @playlistDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the mood or purpose of this playlist.'**
+  String get playlistDescriptionHint;
+
   /// No description provided for @playlistLoadingTitle.
   ///
   /// In en, this message translates to:
@@ -479,6 +491,18 @@ abstract class AppLocalizations {
   /// **'Playlist deleted.'**
   String get playlistDeletedMessage;
 
+  /// No description provided for @editPlaylistDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit playlist details'**
+  String get editPlaylistDetailsTitle;
+
+  /// No description provided for @playlistDetailsUpdatedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist details updated.'**
+  String get playlistDetailsUpdatedMessage;
+
   /// No description provided for @renamePlaylistTitle.
   ///
   /// In en, this message translates to:
@@ -490,6 +514,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Playlist renamed.'**
   String get playlistRenamedMessage;
+
+  /// No description provided for @playlistCoverLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist cover'**
+  String get playlistCoverLabel;
+
+  /// No description provided for @playlistCoverNoneOption.
+  ///
+  /// In en, this message translates to:
+  /// **'No cover'**
+  String get playlistCoverNoneOption;
+
+  /// No description provided for @playlistCoverFromSongOption.
+  ///
+  /// In en, this message translates to:
+  /// **'From track'**
+  String get playlistCoverFromSongOption;
+
+  /// No description provided for @playlistReorderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag songs to reorder the playlist.'**
+  String get playlistReorderHint;
 
   /// No description provided for @removeSongFromPlaylistTitle.
   ///

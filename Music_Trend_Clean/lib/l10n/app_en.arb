@@ -73,6 +73,8 @@
   "errorLabel": "Error",
   "createNewPlaylist": "Create New Playlist",
   "playlistNameLabel": "Playlist name",
+  "playlistDescriptionLabel": "Description",
+  "playlistDescriptionHint": "Set the mood or purpose of this playlist.",
   "playlistLoadingTitle": "Loading playlists",
   "playlistLoadingSubtitle": "Your personal library is being synchronized.",
   "playlistLoadErrorTitle": "Unable to load playlists",
@@ -95,8 +97,14 @@
     }
   },
   "playlistDeletedMessage": "Playlist deleted.",
+  "editPlaylistDetailsTitle": "Edit playlist details",
+  "playlistDetailsUpdatedMessage": "Playlist details updated.",
   "renamePlaylistTitle": "Rename playlist",
   "playlistRenamedMessage": "Playlist renamed.",
+  "playlistCoverLabel": "Playlist cover",
+  "playlistCoverNoneOption": "No cover",
+  "playlistCoverFromSongOption": "From track",
+  "playlistReorderHint": "Drag songs to reorder the playlist.",
   "removeSongFromPlaylistTitle": "Remove song",
   "removeSongFromPlaylistConfirmation": "Remove \"{songTitle}\" from playlist \"{playlistName}\"?",
   "@removeSongFromPlaylistConfirmation": {

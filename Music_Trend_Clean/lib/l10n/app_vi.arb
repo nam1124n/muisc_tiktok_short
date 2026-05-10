@@ -73,6 +73,8 @@
   "errorLabel": "Lỗi",
   "createNewPlaylist": "Tạo playlist mới",
   "playlistNameLabel": "Tên playlist",
+  "playlistDescriptionLabel": "Mô tả",
+  "playlistDescriptionHint": "Thêm cảm hứng hoặc mục đích cho playlist này.",
   "playlistLoadingTitle": "Đang tải playlist",
   "playlistLoadingSubtitle": "Thư viện cá nhân của bạn đang được đồng bộ.",
   "playlistLoadErrorTitle": "Không thể tải playlist",
@@ -95,8 +97,14 @@
     }
   },
   "playlistDeletedMessage": "Đã xóa playlist.",
+  "editPlaylistDetailsTitle": "Chỉnh sửa playlist",
+  "playlistDetailsUpdatedMessage": "Đã cập nhật thông tin playlist.",
   "renamePlaylistTitle": "Đổi tên playlist",
   "playlistRenamedMessage": "Đã đổi tên playlist.",
+  "playlistCoverLabel": "Ảnh bìa playlist",
+  "playlistCoverNoneOption": "Không dùng ảnh",
+  "playlistCoverFromSongOption": "Từ bài hát",
+  "playlistReorderHint": "Kéo thả để sắp xếp lại thứ tự bài hát.",
   "removeSongFromPlaylistTitle": "Xóa bài hát",
   "removeSongFromPlaylistConfirmation": "Xóa \"{songTitle}\" khỏi playlist \"{playlistName}\"?",
   "@removeSongFromPlaylistConfirmation": {

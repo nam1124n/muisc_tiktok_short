@@ -21,15 +21,19 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
   }
 
   @override
-  Future<void> updatePlaylistName({
+  Future<void> updatePlaylistDetails({
     required String userId,
     required String playlistId,
     required String name,
+    required String description,
+    required String coverUrl,
   }) async {
-    await remoteDataSource.updatePlaylistName(
+    await remoteDataSource.updatePlaylistDetails(
       userId: userId,
       playlistId: playlistId,
       name: name,
+      description: description,
+      coverUrl: coverUrl,
     );
   }
 

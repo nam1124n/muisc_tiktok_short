@@ -1874,7 +1874,7 @@ class _FeaturedPlaylistCard extends StatelessWidget {
                 Positioned(
                   left: 22,
                   right: 120,
-                  bottom: 38,
+                  bottom: playlist.description.trim().isEmpty ? 38 : 56,
                   child: Text(
                     playlist.name,
                     maxLines: 2,
@@ -1886,6 +1886,21 @@ class _FeaturedPlaylistCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (playlist.description.trim().isNotEmpty)
+                  Positioned(
+                    left: 22,
+                    right: 120,
+                    bottom: 34,
+                    child: Text(
+                      playlist.description,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.82),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
                 Positioned(
                   left: 22,
                   bottom: 16,
@@ -2033,7 +2048,7 @@ class _PlaylistGridCard extends StatelessWidget {
                 Positioned(
                   left: 16,
                   right: 16,
-                  bottom: 34,
+                  bottom: playlist.description.trim().isEmpty ? 34 : 52,
                   child: Text(
                     playlist.name,
                     maxLines: 2,
@@ -2045,6 +2060,21 @@ class _PlaylistGridCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (playlist.description.trim().isNotEmpty)
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: 32,
+                    child: Text(
+                      playlist.description,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.82),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
                 Positioned(
                   left: 16,
                   bottom: 14,

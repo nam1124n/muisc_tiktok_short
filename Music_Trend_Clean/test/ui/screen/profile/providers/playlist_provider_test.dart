@@ -70,6 +70,41 @@ void main() {
       },
     );
 
+    test('updatePlaylistDetails stores description and cover', () async {
+      final repository = FakePlaylistRepository(
+        playlists: [
+          _playlist(
+            id: 'mix',
+            name: 'Mix',
+            description: 'Old description',
+            coverUrl: '',
+            updatedAt: DateTime(2025, 1, 1),
+          ),
+        ],
+      );
+
+      final notifier = _buildNotifier(repository);
+      addTearDown(notifier.dispose);
+
+      await Future<void>.delayed(Duration.zero);
+      final success = await notifier.updatePlaylistDetails(
+        playlistId: 'mix',
+        name: 'Mix',
+        description: 'Night drive and neon rain',
+        coverUrl: 'https://image.test/cover.jpg',
+      );
+
+      expect(success, isTrue);
+      expect(
+        notifier.state.playlists.single.description,
+        'Night drive and neon rain',
+      );
+      expect(
+        notifier.state.playlists.single.coverUrl,
+        'https://image.test/cover.jpg',
+      );
+    });
+
     test('removeSongFromPlaylist removes only the target song id', () async {
       final repository = FakePlaylistRepository(
         playlists: [
@@ -93,6 +128,35 @@ void main() {
 
       expect(success, isTrue);
       expect(notifier.state.playlists.single.songIds, ['song-1', 'song-3']);
+    });
+
+    test('savePlaylistSongs can persist reordered song ids', () async {
+      final repository = FakePlaylistRepository(
+        playlists: [
+          _playlist(
+            id: 'mix',
+            name: 'Mix',
+            songIds: const ['song-1', 'song-2', 'song-3'],
+            updatedAt: DateTime(2025, 1, 1),
+          ),
+        ],
+      );
+
+      final notifier = _buildNotifier(repository);
+      addTearDown(notifier.dispose);
+
+      await Future<void>.delayed(Duration.zero);
+      final success = await notifier.savePlaylistSongs(
+        playlistId: 'mix',
+        songIds: const ['song-3', 'song-1', 'song-2'],
+      );
+
+      expect(success, isTrue);
+      expect(notifier.state.playlists.single.songIds, [
+        'song-3',
+        'song-1',
+        'song-2',
+      ]);
     });
 
     test('clearError removes the latest playlist validation error', () async {
@@ -150,15 +214,22 @@ class FakePlaylistRepository implements PlaylistRepository {
   }
 
   @override
-  Future<void> updatePlaylistName({
+  Future<void> updatePlaylistDetails({
     required String userId,
     required String playlistId,
     required String name,
+    required String description,
+    required String coverUrl,
   }) async {
     _playlists = [
       for (final playlist in _playlists)
         if (playlist.id == playlistId)
-          playlist.copyWith(name: name, updatedAt: DateTime.now())
+          playlist.copyWith(
+            name: name,
+            description: description,
+            coverUrl: coverUrl,
+            updatedAt: DateTime.now(),
+          )
         else
           playlist,
     ];
@@ -194,13 +265,16 @@ class FakePlaylistRepository implements PlaylistRepository {
 PlaylistEntity _playlist({
   required String id,
   required String name,
+  String description = '',
+  String coverUrl = '',
   List<String> songIds = const [],
   DateTime? updatedAt,
 }) {
   return PlaylistEntity(
     id: id,
     name: name,
-    coverUrl: '',
+    description: description,
+    coverUrl: coverUrl,
     songIds: songIds,
     createdAt: DateTime(2025, 1, 1),
     updatedAt: updatedAt,

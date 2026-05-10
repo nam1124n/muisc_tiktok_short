@@ -4,6 +4,7 @@ class PlaylistModel extends PlaylistEntity {
   const PlaylistModel({
     required super.id,
     required super.name,
+    super.description,
     required super.coverUrl,
     super.songIds,
     super.createdAt,
@@ -14,6 +15,7 @@ class PlaylistModel extends PlaylistEntity {
     return PlaylistModel(
       id: id,
       name: json['name']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
       coverUrl: json['coverUrl']?.toString() ?? '',
       songIds: (json['songIds'] as List<dynamic>? ?? const [])
           .map((item) => item.toString())
@@ -27,6 +29,7 @@ class PlaylistModel extends PlaylistEntity {
     return PlaylistModel(
       id: entity.id,
       name: entity.name,
+      description: entity.description,
       coverUrl: entity.coverUrl,
       songIds: entity.songIds,
       createdAt: entity.createdAt,
@@ -38,6 +41,7 @@ class PlaylistModel extends PlaylistEntity {
     return {
       'id': id,
       'name': name,
+      'description': description,
       'coverUrl': coverUrl,
       'songIds': songIds,
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
