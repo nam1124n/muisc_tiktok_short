@@ -10,6 +10,7 @@ abstract class ProfileRemoteDataSource {
     required String ageGroup,
   });
   Future<ProfileModel> getProfile();
+  Future<ProfileModel> getProfileById(String userId);
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -52,25 +53,40 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<ProfileModel> getProfile() async {
     final user = _auth.currentUser;
     if (user != null) {
-      final doc = await _db.collection('users').doc(user.uid).get();
-      final data = doc.data() ?? {};
-
-      return ProfileModel(
-        username:
-            data['username'] ??
-            user.displayName ??
-            '@user_${user.uid.substring(0, 5)}',
-        id: user.uid,
-        avatarUrl: data['avatarUrl'] ?? '',
-        followers: data['followers'] ?? 1200,
-        following: data['following'] ?? 450,
-        likes: data['likes'] ?? 15000,
-        ageGroup: ProfileAgeGroups.normalize(data['ageGroup']?.toString()),
+      return _readProfileModel(
+        userId: user.uid,
+        fallbackUsername: user.displayName,
       );
     } else {
       throw Exception(
         'Không tìm thấy tài khoản để lấy profile. Yêu cầu đăng nhập.',
       );
     }
+  }
+
+  @override
+  Future<ProfileModel> getProfileById(String userId) async {
+    return _readProfileModel(userId: userId);
+  }
+
+  Future<ProfileModel> _readProfileModel({
+    required String userId,
+    String? fallbackUsername,
+  }) async {
+    final doc = await _db.collection('users').doc(userId).get();
+    final data = doc.data() ?? {};
+
+    return ProfileModel(
+      username:
+          data['username'] ??
+          fallbackUsername ??
+          '@user_${userId.substring(0, 5)}',
+      id: userId,
+      avatarUrl: data['avatarUrl'] ?? '',
+      followers: data['followers'] ?? 1200,
+      following: data['following'] ?? 450,
+      likes: data['likes'] ?? 15000,
+      ageGroup: ProfileAgeGroups.normalize(data['ageGroup']?.toString()),
+    );
   }
 }

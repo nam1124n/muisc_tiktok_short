@@ -18,6 +18,16 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
+  Future<ProfileEntity> getProfileById(String userId) async {
+    try {
+      final profileModel = await remoteDataSource.getProfileById(userId);
+      return profileModel;
+    } catch (e) {
+      throw Exception('Failed to get public profile: $e');
+    }
+  }
+
+  @override
   Future<void> updateAvatarUrl(String url) async {
     await remoteDataSource.updateAvatarUrl(url);
   }

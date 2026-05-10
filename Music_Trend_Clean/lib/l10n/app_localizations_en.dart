@@ -134,6 +134,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareButton => 'Share';
 
   @override
+  String get copyProfileLink => 'Copy profile link';
+
+  @override
+  String get profileLinkCopiedMessage => 'Profile link copied.';
+
+  @override
+  String get shareProfileAction => 'Share profile';
+
+  @override
+  String get viewPublicProfile => 'View public profile';
+
+  @override
+  String get publicProfileTitle => 'Public Profile';
+
+  @override
+  String get publicPlaylistsTitle => 'Public Playlists';
+
+  @override
+  String get publicPlaylistsSubtitle => 'Playlists shared from this profile.';
+
+  @override
+  String get publicPlaylistsEmpty => 'No public playlists yet';
+
+  @override
   String profileShareMessage(String username, int followers) {
     return 'Check out $username\'s beautiful profile on Music Trend App! They already have $followers followers.\nDownload the app to listen to great music together!';
   }

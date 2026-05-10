@@ -4,11 +4,14 @@ class AppConfig {
   static const String _cloudinaryCloudNameEnvKey = 'CLOUDINARY_CLOUD_NAME';
   static const String _cloudinaryUploadPresetEnvKey =
       'CLOUDINARY_UPLOAD_PRESET';
+  static const String _profileShareBaseUrlEnvKey = 'PROFILE_SHARE_BASE_URL';
 
   static const String _defaultEnvironment = 'development';
   static const String _defaultAdminEmail = 'admin@gmail.com';
   static const String _defaultCloudinaryCloudName = 'ddy9wgrbj';
   static const String _defaultCloudinaryUploadPreset = 'musicapp';
+  static const String _defaultProfileShareBaseUrl =
+      'https://musictrend.app/profile';
 
   static String get environment {
     const configuredEnvironment = String.fromEnvironment(_appEnvironmentEnvKey);
@@ -62,5 +65,23 @@ class AppConfig {
     }
 
     return configuredUploadPreset.trim();
+  }
+
+  static String get profileShareBaseUrl {
+    const configuredBaseUrl = String.fromEnvironment(
+      _profileShareBaseUrlEnvKey,
+    );
+
+    if (configuredBaseUrl.isEmpty) {
+      return _defaultProfileShareBaseUrl;
+    }
+
+    return configuredBaseUrl.trim();
+  }
+
+  static String buildPublicProfileUrl(String profileId) {
+    final trimmedBaseUrl = profileShareBaseUrl.replaceAll(RegExp(r'/$'), '');
+    final trimmedProfileId = profileId.trim();
+    return '$trimmedBaseUrl/$trimmedProfileId';
   }
 }

@@ -134,6 +134,30 @@ class AppLocalizationsVi extends AppLocalizations {
   String get shareButton => 'Chia sẻ';
 
   @override
+  String get copyProfileLink => 'Sao chép link hồ sơ';
+
+  @override
+  String get profileLinkCopiedMessage => 'Đã sao chép link hồ sơ.';
+
+  @override
+  String get shareProfileAction => 'Chia sẻ hồ sơ';
+
+  @override
+  String get viewPublicProfile => 'Xem hồ sơ công khai';
+
+  @override
+  String get publicProfileTitle => 'Hồ sơ công khai';
+
+  @override
+  String get publicPlaylistsTitle => 'Playlist công khai';
+
+  @override
+  String get publicPlaylistsSubtitle => 'Các playlist đang được chia sẻ từ hồ sơ này.';
+
+  @override
+  String get publicPlaylistsEmpty => 'Chưa có playlist công khai nào';
+
+  @override
   String profileShareMessage(String username, int followers) {
     return 'Xem hồ sơ của $username trên Music Trend App! Họ đã có $followers người theo dõi.\nTải app để cùng nghe nhạc ngay.';
   }

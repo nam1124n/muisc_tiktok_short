@@ -5,8 +5,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:login_flutter/data/datasource/remote/profile_remote_data_source.dart';
 import 'package:login_flutter/data/datasource/remote/song_remote_data_source.dart';
 import 'package:login_flutter/data/repositories/profile_repository_impl.dart';
+import 'package:login_flutter/domain/entities/profile_entity.dart';
 import 'package:login_flutter/domain/repositories/profile_repository.dart';
 import 'package:login_flutter/domain/usecases/get_profile_usecase.dart';
+import 'package:login_flutter/domain/usecases/get_profile_by_id_usecase.dart';
 import 'package:login_flutter/domain/usecases/update_avatar_usecase.dart';
 import 'package:login_flutter/domain/usecases/update_profile_usecase.dart';
 import 'package:login_flutter/ui/screen/profile/providers/profile_state.dart';
@@ -32,6 +34,10 @@ final getProfileUseCaseProvider = Provider<GetProfileUseCase>((ref) {
   return GetProfileUseCase(ref.read(profileRepositoryProvider));
 });
 
+final getProfileByIdUseCaseProvider = Provider<GetProfileByIdUseCase>((ref) {
+  return GetProfileByIdUseCase(ref.read(profileRepositoryProvider));
+});
+
 final updateAvatarUseCaseProvider = Provider<UpdateAvatarUseCase>((ref) {
   return UpdateAvatarUseCase(ref.read(profileRepositoryProvider));
 });
@@ -53,6 +59,11 @@ final profileNotifierProvider =
         remoteDataSource: ref.read(profileImageUploadRemoteDataSourceProvider),
         hasAuthenticatedSession: hasAuthenticatedSession,
       );
+    });
+
+final publicProfileProvider = FutureProvider.autoDispose
+    .family<ProfileEntity, String>((ref, userId) async {
+      return ref.read(getProfileByIdUseCaseProvider)(userId);
     });
 
 class ProfileNotifier extends StateNotifier<ProfileState> {

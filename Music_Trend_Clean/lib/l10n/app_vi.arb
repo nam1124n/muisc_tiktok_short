@@ -48,6 +48,14 @@
   "likesLabel": "Lượt thích",
   "editProfileButton": "Chỉnh sửa hồ sơ",
   "shareButton": "Chia sẻ",
+  "copyProfileLink": "Sao chép link hồ sơ",
+  "profileLinkCopiedMessage": "Đã sao chép link hồ sơ.",
+  "shareProfileAction": "Chia sẻ hồ sơ",
+  "viewPublicProfile": "Xem hồ sơ công khai",
+  "publicProfileTitle": "Hồ sơ công khai",
+  "publicPlaylistsTitle": "Playlist công khai",
+  "publicPlaylistsSubtitle": "Các playlist đang được chia sẻ từ hồ sơ này.",
+  "publicPlaylistsEmpty": "Chưa có playlist công khai nào",
   "profileShareMessage": "Xem hồ sơ của {username} trên Music Trend App! Họ đã có {followers} người theo dõi.\nTải app để cùng nghe nhạc ngay.",
   "@profileShareMessage": {
     "placeholders": {

@@ -48,6 +48,14 @@
   "likesLabel": "Likes",
   "editProfileButton": "Edit Profile",
   "shareButton": "Share",
+  "copyProfileLink": "Copy profile link",
+  "profileLinkCopiedMessage": "Profile link copied.",
+  "shareProfileAction": "Share profile",
+  "viewPublicProfile": "View public profile",
+  "publicProfileTitle": "Public Profile",
+  "publicPlaylistsTitle": "Public Playlists",
+  "publicPlaylistsSubtitle": "Playlists shared from this profile.",
+  "publicPlaylistsEmpty": "No public playlists yet",
   "profileShareMessage": "Check out {username}'s beautiful profile on Music Trend App! They already have {followers} followers.\nDownload the app to listen to great music together!",
   "@profileShareMessage": {
     "placeholders": {

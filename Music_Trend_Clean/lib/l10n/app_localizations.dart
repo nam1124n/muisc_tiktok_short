@@ -341,6 +341,54 @@ abstract class AppLocalizations {
   /// **'Share'**
   String get shareButton;
 
+  /// No description provided for @copyProfileLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy profile link'**
+  String get copyProfileLink;
+
+  /// No description provided for @profileLinkCopiedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile link copied.'**
+  String get profileLinkCopiedMessage;
+
+  /// No description provided for @shareProfileAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Share profile'**
+  String get shareProfileAction;
+
+  /// No description provided for @viewPublicProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'View public profile'**
+  String get viewPublicProfile;
+
+  /// No description provided for @publicProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Public Profile'**
+  String get publicProfileTitle;
+
+  /// No description provided for @publicPlaylistsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Public Playlists'**
+  String get publicPlaylistsTitle;
+
+  /// No description provided for @publicPlaylistsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists shared from this profile.'**
+  String get publicPlaylistsSubtitle;
+
+  /// No description provided for @publicPlaylistsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No public playlists yet'**
+  String get publicPlaylistsEmpty;
+
   /// No description provided for @profileShareMessage.
   ///
   /// In en, this message translates to:

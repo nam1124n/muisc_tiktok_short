@@ -66,6 +66,11 @@ final playlistNotifierProvider =
       );
     });
 
+final publicPlaylistsProvider = FutureProvider.autoDispose
+    .family<List<PlaylistEntity>, String>((ref, userId) async {
+      return ref.read(getUserPlaylistsUseCaseProvider)(userId);
+    });
+
 const _playlistStateNoChange = Object();
 
 enum PlaylistErrorType {
