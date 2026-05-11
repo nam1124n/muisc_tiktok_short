@@ -11,6 +11,7 @@ import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/domain/repositories/year_song_repository.dart';
 import 'package:login_flutter/domain/usecases/add_year_song_usecase.dart';
 import 'package:login_flutter/domain/usecases/delete_year_song_usecase.dart';
+import 'package:login_flutter/domain/usecases/get_admin_year_songs_usecase.dart';
 import 'package:login_flutter/domain/usecases/get_year_songs_usecase.dart';
 import 'package:login_flutter/domain/usecases/update_year_song_usecase.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_state.dart';
@@ -38,6 +39,12 @@ final getYearSongsUseCaseProvider = Provider<GetYearSongsUseCase>((ref) {
   return GetYearSongsUseCase(ref.read(yearSongRepositoryProvider));
 });
 
+final getAdminYearSongsUseCaseProvider = Provider<GetAdminYearSongsUseCase>((
+  ref,
+) {
+  return GetAdminYearSongsUseCase(ref.read(yearSongRepositoryProvider));
+});
+
 final addYearSongUseCaseProvider = Provider<AddYearSongUseCase>((ref) {
   return AddYearSongUseCase(ref.read(yearSongRepositoryProvider));
 });
@@ -53,7 +60,7 @@ final deleteYearSongUseCaseProvider = Provider<DeleteYearSongUseCase>((ref) {
 final yearSongNotifierProvider =
     StateNotifierProvider<YearSongNotifier, SongState>((ref) {
       return YearSongNotifier(
-        getYearSongsUseCase: ref.read(getYearSongsUseCaseProvider),
+        watchSongs: ref.read(getAdminYearSongsUseCaseProvider).call,
         addYearSongUseCase: ref.read(addYearSongUseCaseProvider),
         updateYearSongUseCase: ref.read(updateYearSongUseCaseProvider),
         deleteYearSongUseCase: ref.read(deleteYearSongUseCaseProvider),
@@ -146,14 +153,14 @@ class YearSongCatalogNotifier extends StateNotifier<YearSongCatalogState> {
 }
 
 class YearSongNotifier extends StateNotifier<SongState> {
-  final GetYearSongsUseCase getYearSongsUseCase;
+  final Stream<List<SongEntity>> Function() watchSongs;
   final AddYearSongUseCase addYearSongUseCase;
   final UpdateYearSongUseCase updateYearSongUseCase;
   final DeleteYearSongUseCase deleteYearSongUseCase;
   StreamSubscription<List<SongEntity>>? _songsSubscription;
 
   YearSongNotifier({
-    required this.getYearSongsUseCase,
+    required this.watchSongs,
     required this.addYearSongUseCase,
     required this.updateYearSongUseCase,
     required this.deleteYearSongUseCase,
@@ -164,7 +171,7 @@ class YearSongNotifier extends StateNotifier<SongState> {
   Future<void> loadSongs() async {
     await _songsSubscription?.cancel();
     state = SongLoading();
-    _songsSubscription = getYearSongsUseCase().listen(
+    _songsSubscription = watchSongs().listen(
       (songs) => state = SongLoaded(songs),
       onError: (Object error, StackTrace _) {
         state = SongError(ErrorMessageMapper.map(error));
@@ -213,6 +220,83 @@ class YearSongNotifier extends StateNotifier<SongState> {
     } catch (e) {
       state = SongError(ErrorMessageMapper.map(e));
     }
+  }
+
+  Future<void> updateSongModeration(
+    SongEntity song, {
+    required String status,
+    String moderationReason = '',
+    String moderatedBy = '',
+  }) async {
+    state = SongLoading();
+
+    try {
+      await _saveModeratedSong(
+        song,
+        status: status,
+        moderationReason: moderationReason,
+        moderatedBy: moderatedBy,
+      );
+      state = SongActionSuccess();
+    } catch (e) {
+      state = SongError(ErrorMessageMapper.map(e));
+    }
+  }
+
+  Future<void> updateSongsModerationBatch(
+    List<SongEntity> songs, {
+    required String status,
+    String moderationReason = '',
+    String moderatedBy = '',
+  }) async {
+    state = SongLoading();
+
+    try {
+      for (final song in songs) {
+        await _saveModeratedSong(
+          song,
+          status: status,
+          moderationReason: moderationReason,
+          moderatedBy: moderatedBy,
+        );
+      }
+      state = SongActionSuccess();
+    } catch (e) {
+      state = SongError(ErrorMessageMapper.map(e));
+    }
+  }
+
+  Future<void> archiveSongsById(Iterable<String> songIds) async {
+    state = SongLoading();
+
+    try {
+      for (final songId in songIds) {
+        await deleteYearSongUseCase(songId);
+      }
+      state = SongActionSuccess();
+    } catch (e) {
+      state = SongError(ErrorMessageMapper.map(e));
+    }
+  }
+
+  Future<void> _saveModeratedSong(
+    SongEntity song, {
+    required String status,
+    required String moderationReason,
+    required String moderatedBy,
+  }) {
+    final now = DateTime.now();
+    return updateYearSongUseCase(
+      song.copyWith(
+        status: status,
+        moderationReason: moderationReason,
+        moderatedBy: moderatedBy,
+        moderatedAt: now,
+        publishedAt: status == SongStatuses.published ? now : song.publishedAt,
+        updatedAt: now,
+        deletedAt: status == SongStatuses.archived ? now : null,
+      ),
+    );
   }
 
   @override

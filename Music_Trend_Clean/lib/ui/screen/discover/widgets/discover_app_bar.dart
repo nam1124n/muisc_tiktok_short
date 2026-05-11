@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_flutter/app/providers/session_provider.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
-import 'package:login_flutter/ui/screen/admin/admin_dashboard_screen.dart';
 import 'package:login_flutter/ui/screen/search/search_screen.dart';
+
+const _adminRouteName = '/admin';
 
 class DiscoverAppBar extends ConsumerWidget {
   const DiscoverAppBar({super.key});
@@ -41,14 +43,9 @@ class DiscoverAppBar extends ConsumerWidget {
                 ),
               ),
               const Spacer(),
-              if (isAdmin)
+              if (isAdmin && kIsWeb)
                 GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AdminDashboardScreen(),
-                    ),
-                  ),
+                  onTap: () => Navigator.of(context).pushNamed(_adminRouteName),
                   child: Container(
                     width: 40,
                     height: 40,
@@ -64,7 +61,7 @@ class DiscoverAppBar extends ConsumerWidget {
                     ),
                   ),
                 ),
-              if (isAdmin) const SizedBox(width: 8),
+              if (isAdmin && kIsWeb) const SizedBox(width: 8),
               Container(
                 width: 40,
                 height: 40,

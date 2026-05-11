@@ -83,6 +83,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ref.invalidate(recentNotifierProvider);
     ref.invalidate(searchNotifierProvider);
     ref.invalidate(songNotifierProvider);
+    ref.invalidate(adminSongNotifierProvider);
     ref.invalidate(profileNotifierProvider);
     ref.invalidate(playlistNotifierProvider);
     ref.invalidate(myAudiosProvider);

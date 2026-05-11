@@ -78,6 +78,34 @@
   "profileSignInRequiredTitle": "Not signed in",
   "profileSignInRequiredSubtitle": "Please sign in to view and customize your profile.",
   "profileSignInRequiredAction": "Sign in now",
+  "adminWorkspaceTitle": "Admin Workspace",
+  "adminSongsSectionLabel": "Songs",
+  "adminYearSongsSectionLabel": "By year music",
+  "adminAnalyticsSectionLabel": "Analytics",
+  "adminOpenAppLabel": "Open app",
+  "adminWebOnlyTitle": "Admin is available on web",
+  "adminWebOnlyMessage": "Use the web build to manage content with the new admin workspace.",
+  "adminAnalyticsTitle": "Admin Analytics",
+  "adminAnalyticsOverviewTitle": "Catalog overview",
+  "adminTotalSongsLabel": "Total songs",
+  "adminPublishedSongsLabel": "Published songs",
+  "adminPendingSongsLabel": "Pending songs",
+  "adminHiddenSongsLabel": "Hidden songs",
+  "adminArchivedSongsLabel": "Archived songs",
+  "adminAnalyticsControlsTitle": "Analytics filters",
+  "adminRecentlyUpdatedTitle": "Recently updated",
+  "adminRecentlyUpdatedSubtitle": "Songs that were edited or moderated most recently.",
+  "adminNoRecentlyUpdatedMessage": "No recent updates match the current filters.",
+  "adminPendingOldestTitle": "Oldest pending songs",
+  "adminPendingOldestSubtitle": "Use this list to clear long-waiting review items first.",
+  "adminNoPendingOldestMessage": "No pending songs match the current filters.",
+  "adminYearSongsRecentlyUpdatedTitle": "Recently updated by-year songs",
+  "adminYearSongsRecentlyUpdatedSubtitle": "Quickly track by-year content that changed most recently.",
+  "adminNoYearSongsRecentlyUpdatedMessage": "No by-year updates match the current filters.",
+  "adminYearSongsAnalyticsTitle": "By-year note",
+  "adminYearSongsAnalyticsSubtitle": "By-year songs do not have a separate weekly trending feed yet. For now, the dashboard highlights the most recent updates so admins can still monitor that catalog slice.",
+  "adminWeeklyTrendingTitle": "Top weekly trending",
+  "adminWeeklyTrendingSubtitle": "Based on unique listeners and total plays from the current week.",
   "errorLabel": "Error",
   "createNewPlaylist": "Create New Playlist",
   "playlistNameLabel": "Playlist name",
@@ -416,6 +444,88 @@
   "accessDeniedMessage": "You do not have permission to access this page.",
   "goBack": "Go back",
   "retry": "Retry",
+  "adminFilterAll": "All",
+  "adminFilterPublished": "Published",
+  "adminFilterPending": "Pending",
+  "adminFilterHidden": "Hidden",
+  "adminFilterArchived": "Archived",
+  "adminNoSongsForFilterTitle": "No songs in this filter",
+  "adminNoSongsForFilterSubtitle": "Try switching the status filter or restore archived content.",
+  "songStatusPublished": "Published",
+  "songStatusPending": "Pending",
+  "songStatusHidden": "Hidden",
+  "songStatusArchived": "Archived",
+  "adminBatchActionsTitle": "Batch actions",
+  "adminSelectAllVisibleAction": "Select all visible",
+  "adminClearSelectionAction": "Clear selection",
+  "adminSelectedItemsSummary": "{count} selected",
+  "@adminSelectedItemsSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminModerationReasonLabel": "Moderation reason",
+  "adminModerationReasonHint": "Example: Content is not ready for publishing yet or metadata still needs cleanup.",
+  "adminArchiveReasonHint": "Example: Content should be taken out of circulation for review or no longer fits the public catalog.",
+  "adminModerationReasonRequiredMessage": "Please enter a moderation reason.",
+  "adminModeratedByLabel": "Moderated by: {value}",
+  "@adminModeratedByLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "adminModeratedAtLabel": "At: {value}",
+  "@adminModeratedAtLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "adminModerationPresetMetadata": "Metadata still needs cleanup before publishing",
+  "adminModerationPresetQuality": "Audio quality is not ready for release",
+  "adminModerationPresetDuplicate": "Content duplicates or closely overlaps another track",
+  "adminModerationPresetArchivedReview": "Archive for further review before reuse",
+  "adminModerationPresetOutdated": "Content is outdated and no longer fits the public catalog",
+  "adminSearchHint": "Search by title, artist, status, or moderation reason",
+  "adminSortLabel": "Sort by",
+  "adminSortUpdatedNewest": "Newest updated",
+  "adminSortUpdatedOldest": "Oldest updated",
+  "adminSortTitleAsc": "Title A-Z",
+  "adminUpdatedAtLabel": "Updated: {value}",
+  "@adminUpdatedAtLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "adminArchiveSelectedItemsMessage": "Archive {count} selected items so listeners can no longer see them?",
+  "@adminArchiveSelectedItemsMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminPendingSubmissionNotice": "New content will be saved as pending first. After review, you can publish it directly from the admin dashboard.",
+  "hideSongAction": "Hide from app",
+  "publishSongAction": "Publish to app",
+  "archiveSongAction": "Archive",
+  "restoreSongAction": "Restore",
+  "archiveSongTitle": "Archive song",
+  "archiveSongConfirmMessage": "Archive \"{title}\" so it no longer appears in the app?",
+  "@archiveSongConfirmMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "noSongsYetTitle": "No songs yet",
   "noSongsYetSubtitle": "Tap + to add your first song",
   "deleteConfirmTitle": "Confirm delete",
@@ -456,6 +566,14 @@
   "yearSongEmptySubtitle": "Tap add to place songs into the by-year archive from 2018 to 2026.",
   "deleteYearSongConfirmMessage": "Are you sure you want to delete the by-year song \"{title}\"?",
   "@deleteYearSongConfirmMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "archiveYearSongConfirmMessage": "Archive the by-year song \"{title}\" so listeners can no longer see it?",
+  "@archiveYearSongConfirmMessage": {
     "placeholders": {
       "title": {
         "type": "String"

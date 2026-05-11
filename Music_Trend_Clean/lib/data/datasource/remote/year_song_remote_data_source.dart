@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:login_flutter/app/config/app_config.dart';
+import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/domain/entities/user_entity.dart';
 
 class YearSongRemoteDataSource {
@@ -32,14 +33,28 @@ class YearSongRemoteDataSource {
   }
 
   Future<void> addSong(Map<String, dynamic> data) async {
-    await _db.collection(_collection).add(data);
+    await _db.collection(_collection).add({
+      ...data,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   Future<void> updateSong(String id, Map<String, dynamic> data) async {
-    await _db.collection(_collection).doc(id).update(data);
+    await _db.collection(_collection).doc(id).update({
+      ...data,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   Future<void> deleteSong(String id) async {
-    await _db.collection(_collection).doc(id).delete();
+    final moderatedBy = _auth.currentUser?.email ?? '';
+    await _db.collection(_collection).doc(id).update({
+      'status': SongStatuses.archived,
+      'moderationReason': 'Archived from admin action',
+      'moderatedBy': moderatedBy,
+      'moderatedAt': FieldValue.serverTimestamp(),
+      'deletedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 }

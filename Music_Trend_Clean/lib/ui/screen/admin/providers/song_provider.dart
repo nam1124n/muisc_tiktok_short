@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_flutter/data/datasource/remote/song_remote_data_source.dart';
 import 'package:login_flutter/data/repositories/song_repository_impl.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
+import 'package:login_flutter/domain/entities/trending_song_entity.dart';
 import 'package:login_flutter/domain/repositories/song_repository.dart';
 import 'package:login_flutter/domain/usecases/add_song_usecase.dart';
 import 'package:login_flutter/domain/usecases/delete_song_usecase.dart';
+import 'package:login_flutter/domain/usecases/get_admin_songs_usecase.dart';
 import 'package:login_flutter/domain/usecases/get_songs_page_usecase.dart';
 import 'package:login_flutter/domain/usecases/get_songs_usecase.dart';
 import 'package:login_flutter/domain/usecases/get_weekly_trending_songs_usecase.dart';
@@ -26,6 +28,10 @@ final songRepositoryProvider = Provider<SongRepository>((ref) {
 
 final getSongsUseCaseProvider = Provider<GetSongsUseCase>((ref) {
   return GetSongsUseCase(ref.read(songRepositoryProvider));
+});
+
+final getAdminSongsUseCaseProvider = Provider<GetAdminSongsUseCase>((ref) {
+  return GetAdminSongsUseCase(ref.read(songRepositoryProvider));
 });
 
 final getSongsPageUseCaseProvider = Provider<GetSongsPageUseCase>((ref) {
@@ -53,26 +59,41 @@ final trackSongListenUseCaseProvider = Provider<TrackSongListenUseCase>((ref) {
   return TrackSongListenUseCase(ref.read(songRepositoryProvider));
 });
 
+final adminWeeklyTrendingProvider =
+    StreamProvider.autoDispose<List<TrendingSongEntity>>((ref) {
+      return ref.read(getWeeklyTrendingSongsUseCaseProvider)(limit: 5);
+    });
+
 final songNotifierProvider = StateNotifierProvider<SongNotifier, SongState>((
   ref,
 ) {
   return SongNotifier(
-    getSongsUseCase: ref.read(getSongsUseCaseProvider),
+    watchSongs: ref.read(getSongsUseCaseProvider).call,
     addSongUseCase: ref.read(addSongUseCaseProvider),
     updateSongUseCase: ref.read(updateSongUseCaseProvider),
     deleteSongUseCase: ref.read(deleteSongUseCaseProvider),
   );
 });
 
+final adminSongNotifierProvider =
+    StateNotifierProvider<SongNotifier, SongState>((ref) {
+      return SongNotifier(
+        watchSongs: ref.read(getAdminSongsUseCaseProvider).call,
+        addSongUseCase: ref.read(addSongUseCaseProvider),
+        updateSongUseCase: ref.read(updateSongUseCaseProvider),
+        deleteSongUseCase: ref.read(deleteSongUseCaseProvider),
+      );
+    });
+
 class SongNotifier extends StateNotifier<SongState> {
-  final GetSongsUseCase getSongsUseCase;
+  final Stream<List<SongEntity>> Function() watchSongs;
   final AddSongUseCase addSongUseCase;
   final UpdateSongUseCase updateSongUseCase;
   final DeleteSongUseCase deleteSongUseCase;
   StreamSubscription<List<SongEntity>>? _songsSubscription;
 
   SongNotifier({
-    required this.getSongsUseCase,
+    required this.watchSongs,
     required this.addSongUseCase,
     required this.updateSongUseCase,
     required this.deleteSongUseCase,
@@ -83,7 +104,7 @@ class SongNotifier extends StateNotifier<SongState> {
   Future<void> loadSongs() async {
     await _songsSubscription?.cancel();
     state = SongLoading();
-    _songsSubscription = getSongsUseCase().listen(
+    _songsSubscription = watchSongs().listen(
       (songs) => state = SongLoaded(songs),
       onError: (Object error, StackTrace _) {
         state = SongError(ErrorMessageMapper.map(error));
@@ -119,6 +140,83 @@ class SongNotifier extends StateNotifier<SongState> {
     } catch (e) {
       state = SongError(ErrorMessageMapper.map(e));
     }
+  }
+
+  Future<void> updateSongModeration(
+    SongEntity song, {
+    required String status,
+    String moderationReason = '',
+    String moderatedBy = '',
+  }) async {
+    state = SongLoading();
+
+    try {
+      await _saveModeratedSong(
+        song,
+        status: status,
+        moderationReason: moderationReason,
+        moderatedBy: moderatedBy,
+      );
+      state = SongActionSuccess();
+    } catch (e) {
+      state = SongError(ErrorMessageMapper.map(e));
+    }
+  }
+
+  Future<void> updateSongsModerationBatch(
+    List<SongEntity> songs, {
+    required String status,
+    String moderationReason = '',
+    String moderatedBy = '',
+  }) async {
+    state = SongLoading();
+
+    try {
+      for (final song in songs) {
+        await _saveModeratedSong(
+          song,
+          status: status,
+          moderationReason: moderationReason,
+          moderatedBy: moderatedBy,
+        );
+      }
+      state = SongActionSuccess();
+    } catch (e) {
+      state = SongError(ErrorMessageMapper.map(e));
+    }
+  }
+
+  Future<void> archiveSongsById(Iterable<String> songIds) async {
+    state = SongLoading();
+
+    try {
+      for (final songId in songIds) {
+        await deleteSongUseCase(songId);
+      }
+      state = SongActionSuccess();
+    } catch (e) {
+      state = SongError(ErrorMessageMapper.map(e));
+    }
+  }
+
+  Future<void> _saveModeratedSong(
+    SongEntity song, {
+    required String status,
+    required String moderationReason,
+    required String moderatedBy,
+  }) {
+    final now = DateTime.now();
+    return updateSongUseCase(
+      song.copyWith(
+        status: status,
+        moderationReason: moderationReason,
+        moderatedBy: moderatedBy,
+        moderatedAt: now,
+        publishedAt: status == SongStatuses.published ? now : song.publishedAt,
+        updatedAt: now,
+        deletedAt: status == SongStatuses.archived ? now : null,
+      ),
+    );
   }
 
   Future<void> deleteSong(String id) async {

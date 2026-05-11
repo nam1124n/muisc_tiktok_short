@@ -78,6 +78,34 @@
   "profileSignInRequiredTitle": "Chưa đăng nhập",
   "profileSignInRequiredSubtitle": "Vui lòng đăng nhập để xem và tùy chỉnh hồ sơ cá nhân của bạn.",
   "profileSignInRequiredAction": "Đăng nhập ngay",
+  "adminWorkspaceTitle": "Không gian quản trị",
+  "adminSongsSectionLabel": "Bài hát",
+  "adminYearSongsSectionLabel": "Nhạc theo năm",
+  "adminAnalyticsSectionLabel": "Phân tích",
+  "adminOpenAppLabel": "Mở ứng dụng",
+  "adminWebOnlyTitle": "Trang quản trị chỉ dùng trên web",
+  "adminWebOnlyMessage": "Hãy dùng bản web để quản lý nội dung bằng giao diện admin mới.",
+  "adminAnalyticsTitle": "Phân tích quản trị",
+  "adminAnalyticsOverviewTitle": "Tổng quan kho nhạc",
+  "adminTotalSongsLabel": "Tổng số bài",
+  "adminPublishedSongsLabel": "Bài đang hiển thị",
+  "adminPendingSongsLabel": "Bài chờ duyệt",
+  "adminHiddenSongsLabel": "Bài đã ẩn",
+  "adminArchivedSongsLabel": "Bài đã lưu kho",
+  "adminAnalyticsControlsTitle": "Bộ lọc phân tích",
+  "adminRecentlyUpdatedTitle": "Cập nhật gần đây",
+  "adminRecentlyUpdatedSubtitle": "Những bài được chỉnh sửa hoặc duyệt gần nhất.",
+  "adminNoRecentlyUpdatedMessage": "Chưa có dữ liệu cập nhật gần đây theo bộ lọc hiện tại.",
+  "adminPendingOldestTitle": "Bài chờ duyệt lâu nhất",
+  "adminPendingOldestSubtitle": "Ưu tiên xử lý các bài đã chờ lâu để tránh tồn đọng.",
+  "adminNoPendingOldestMessage": "Không có bài chờ duyệt theo bộ lọc hiện tại.",
+  "adminYearSongsRecentlyUpdatedTitle": "Nhạc theo năm cập nhật gần đây",
+  "adminYearSongsRecentlyUpdatedSubtitle": "Theo dõi nhanh nội dung nhạc theo năm mới được chỉnh sửa.",
+  "adminNoYearSongsRecentlyUpdatedMessage": "Chưa có bản cập nhật nhạc theo năm theo bộ lọc hiện tại.",
+  "adminYearSongsAnalyticsTitle": "Ghi chú về nhạc theo năm",
+  "adminYearSongsAnalyticsSubtitle": "Nhạc theo năm hiện chưa có weekly trending riêng. Dashboard đang ưu tiên hiển thị cập nhật mới nhất để admin vẫn theo dõi được nhánh nội dung này.",
+  "adminWeeklyTrendingTitle": "Top thịnh hành tuần",
+  "adminWeeklyTrendingSubtitle": "Dựa trên số người nghe duy nhất và tổng lượt phát trong tuần hiện tại.",
   "errorLabel": "Lỗi",
   "createNewPlaylist": "Tạo playlist mới",
   "playlistNameLabel": "Tên playlist",
@@ -416,6 +444,88 @@
   "accessDeniedMessage": "Bạn không có quyền truy cập vào trang này.",
   "goBack": "Quay lại",
   "retry": "Thử lại",
+  "adminFilterAll": "Tất cả",
+  "adminFilterPublished": "Đang hiển thị",
+  "adminFilterPending": "Chờ duyệt",
+  "adminFilterHidden": "Đã ẩn",
+  "adminFilterArchived": "Đã lưu kho",
+  "adminNoSongsForFilterTitle": "Không có bài hát trong bộ lọc này",
+  "adminNoSongsForFilterSubtitle": "Hãy đổi bộ lọc trạng thái hoặc khôi phục nội dung đã lưu kho.",
+  "songStatusPublished": "Đang hiển thị",
+  "songStatusPending": "Chờ duyệt",
+  "songStatusHidden": "Đã ẩn",
+  "songStatusArchived": "Đã lưu kho",
+  "adminBatchActionsTitle": "Thao tác hàng loạt",
+  "adminSelectAllVisibleAction": "Chọn tất cả đang hiển thị",
+  "adminClearSelectionAction": "Bỏ chọn",
+  "adminSelectedItemsSummary": "{count} mục đã chọn",
+  "@adminSelectedItemsSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminModerationReasonLabel": "Lý do moderation",
+  "adminModerationReasonHint": "Ví dụ: Nội dung chưa đạt chất lượng phát hành hoặc cần chỉnh metadata.",
+  "adminArchiveReasonHint": "Ví dụ: Nội dung không còn phù hợp để hiển thị công khai hoặc cần lưu kho để rà soát lại.",
+  "adminModerationReasonRequiredMessage": "Vui lòng nhập lý do moderation.",
+  "adminModeratedByLabel": "Duyệt bởi: {value}",
+  "@adminModeratedByLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "adminModeratedAtLabel": "Lúc: {value}",
+  "@adminModeratedAtLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "adminModerationPresetMetadata": "Metadata cần chỉnh sửa trước khi phát hành",
+  "adminModerationPresetQuality": "Chất lượng audio chưa đạt yêu cầu",
+  "adminModerationPresetDuplicate": "Nội dung trùng hoặc gần trùng với bài khác",
+  "adminModerationPresetArchivedReview": "Đưa vào kho để rà soát lại trước khi dùng tiếp",
+  "adminModerationPresetOutdated": "Nội dung đã cũ và không còn phù hợp để hiển thị",
+  "adminSearchHint": "Tìm theo tên bài, nghệ sĩ, trạng thái hoặc lý do moderation",
+  "adminSortLabel": "Sắp xếp",
+  "adminSortUpdatedNewest": "Cập nhật mới nhất",
+  "adminSortUpdatedOldest": "Cập nhật cũ nhất",
+  "adminSortTitleAsc": "Tên bài A-Z",
+  "adminUpdatedAtLabel": "Cập nhật: {value}",
+  "@adminUpdatedAtLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "adminArchiveSelectedItemsMessage": "Lưu kho {count} mục đã chọn để người nghe không còn nhìn thấy nữa?",
+  "@adminArchiveSelectedItemsMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminPendingSubmissionNotice": "Nội dung mới sẽ được lưu ở trạng thái chờ duyệt. Sau khi kiểm tra xong, bạn có thể publish trực tiếp từ dashboard admin.",
+  "hideSongAction": "Ẩn khỏi ứng dụng",
+  "publishSongAction": "Hiển thị lại",
+  "archiveSongAction": "Lưu kho",
+  "restoreSongAction": "Khôi phục",
+  "archiveSongTitle": "Lưu kho bài hát",
+  "archiveSongConfirmMessage": "Lưu kho \"{title}\" để bài hát không còn xuất hiện trong ứng dụng?",
+  "@archiveSongConfirmMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "noSongsYetTitle": "Chưa có bài hát nào",
   "noSongsYetSubtitle": "Nhấn + để thêm bài hát đầu tiên",
   "deleteConfirmTitle": "Xác nhận xoá",
@@ -456,6 +566,14 @@
   "yearSongEmptySubtitle": "Nhấn nút thêm để đưa bài hát vào kho nhạc theo năm từ 2018 đến 2026.",
   "deleteYearSongConfirmMessage": "Bạn có chắc muốn xoá bài theo năm \"{title}\" không?",
   "@deleteYearSongConfirmMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "archiveYearSongConfirmMessage": "Lưu kho bài theo năm \"{title}\" để người nghe không còn nhìn thấy nữa?",
+  "@archiveYearSongConfirmMessage": {
     "placeholders": {
       "title": {
         "type": "String"

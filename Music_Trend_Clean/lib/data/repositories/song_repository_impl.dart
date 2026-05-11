@@ -13,6 +13,21 @@ class SongRepositoryImpl implements SongRepository {
   @override
   Stream<List<SongEntity>> getSongs() {
     return remoteDataSource.getSongsStream().map((snapshot) {
+      return snapshot.docs
+          .map((doc) {
+            return SongModel.fromFirestore(
+              doc.data() as Map<String, dynamic>,
+              doc.id,
+            );
+          })
+          .where((song) => song.isVisibleToListeners)
+          .toList();
+    });
+  }
+
+  @override
+  Stream<List<SongEntity>> getAdminSongs() {
+    return remoteDataSource.getSongsStream().map((snapshot) {
       return snapshot.docs.map((doc) {
         return SongModel.fromFirestore(
           doc.data() as Map<String, dynamic>,
@@ -26,10 +41,16 @@ class SongRepositoryImpl implements SongRepository {
   Future<SongPageEntity> fetchSongsPage({
     int limit = 20,
     SongPageCursor? startAfter,
-  }) {
-    return remoteDataSource.fetchSongsPage(
+  }) async {
+    final page = await remoteDataSource.fetchSongsPage(
       limit: limit,
       startAfter: startAfter,
+    );
+
+    return SongPageEntity(
+      songs: page.songs.where((song) => song.isVisibleToListeners).toList(),
+      nextCursor: page.nextCursor,
+      hasMore: page.hasMore,
     );
   }
 
@@ -37,24 +58,34 @@ class SongRepositoryImpl implements SongRepository {
   Stream<List<TrendingSongEntity>> getWeeklyTrendingSongs({int limit = 4}) {
     return remoteDataSource.getWeeklyTrendingSongsStream().map((snapshot) {
       final rankedSongs =
-          snapshot.docs.map((doc) {
-            final data = doc.data();
+          snapshot.docs
+              .map((doc) {
+                final data = doc.data();
+                final song = SongModel.fromFirestore(data, doc.id);
+                if (!song.isVisibleToListeners) {
+                  return null;
+                }
 
-            return TrendingSongEntity(
-              song: SongModel.fromFirestore(data, doc.id),
-              uniqueUserCount: (data['uniqueUserCount'] as num?)?.toInt() ?? 0,
-              totalPlayCount: (data['totalPlayCount'] as num?)?.toInt() ?? 0,
-            );
-          }).toList()..sort((a, b) {
-            final uniqueCompare = b.uniqueUserCount.compareTo(
-              a.uniqueUserCount,
-            );
-            if (uniqueCompare != 0) {
-              return uniqueCompare;
-            }
+                return TrendingSongEntity(
+                  song: song,
+                  uniqueUserCount:
+                      (data['uniqueUserCount'] as num?)?.toInt() ?? 0,
+                  totalPlayCount:
+                      (data['totalPlayCount'] as num?)?.toInt() ?? 0,
+                );
+              })
+              .whereType<TrendingSongEntity>()
+              .toList()
+            ..sort((a, b) {
+              final uniqueCompare = b.uniqueUserCount.compareTo(
+                a.uniqueUserCount,
+              );
+              if (uniqueCompare != 0) {
+                return uniqueCompare;
+              }
 
-            return b.totalPlayCount.compareTo(a.totalPlayCount);
-          });
+              return b.totalPlayCount.compareTo(a.totalPlayCount);
+            });
 
       return rankedSongs.take(limit).toList();
     });

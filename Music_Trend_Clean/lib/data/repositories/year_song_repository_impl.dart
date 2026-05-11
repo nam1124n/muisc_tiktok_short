@@ -14,6 +14,29 @@ class YearSongRepositoryImpl implements YearSongRepository {
   Stream<List<SongEntity>> getSongs() {
     return remoteDataSource.getSongsStream().map((snapshot) {
       final songs =
+          snapshot.docs
+              .map((doc) => _mapSong(doc.data(), doc.id))
+              .where((song) => song.isVisibleToListeners)
+              .toList()
+            ..sort((a, b) {
+              final yearCompare = (b.savedAt?.year ?? 0).compareTo(
+                a.savedAt?.year ?? 0,
+              );
+              if (yearCompare != 0) {
+                return yearCompare;
+              }
+
+              return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+            });
+
+      return songs;
+    });
+  }
+
+  @override
+  Stream<List<SongEntity>> getAdminSongs() {
+    return remoteDataSource.getSongsStream().map((snapshot) {
+      final songs =
           snapshot.docs.map((doc) => _mapSong(doc.data(), doc.id)).toList()
             ..sort((a, b) {
               final yearCompare = (b.savedAt?.year ?? 0).compareTo(
@@ -108,6 +131,13 @@ class YearSongRepositoryImpl implements YearSongRepository {
       'savedAt': savedAt.toIso8601String(),
       'year': savedAt.year,
       'trackInWeeklyStats': false,
+      'status': song.status,
+      'moderationReason': song.moderationReason,
+      'moderatedBy': song.moderatedBy,
+      'moderatedAt': song.moderatedAt?.toIso8601String(),
+      'publishedAt': song.publishedAt?.toIso8601String(),
+      'updatedAt': song.updatedAt?.toIso8601String(),
+      'deletedAt': song.deletedAt?.toIso8601String(),
     };
   }
 

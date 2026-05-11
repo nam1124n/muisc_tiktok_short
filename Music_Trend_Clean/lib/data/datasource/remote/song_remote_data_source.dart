@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:login_flutter/app/config/app_config.dart';
 import 'package:login_flutter/data/dto/admin/song_model.dart';
+import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/domain/entities/song_page_entity.dart';
 import 'package:login_flutter/domain/entities/user_entity.dart';
 
@@ -87,20 +88,32 @@ class SongRemoteDataSource {
 
   // ── Firestore: thêm bài hát ──
   Future<void> addSong(Map<String, dynamic> data) async {
-    await _db.collection(_songsCollection).add(data);
+    await _db.collection(_songsCollection).add({
+      ...data,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   // ── Firestore: cập nhật bài hát ──
   Future<void> updateSong(String id, Map<String, dynamic> data) async {
     await _db.collection(_songsCollection).doc(id).update({
       ...data,
+      'updatedAt': FieldValue.serverTimestamp(),
       ..._legacySearchMetadataCleanup(),
     });
   }
 
   // ── Firestore: xoá bài hát ──
   Future<void> deleteSong(String id) async {
-    await _db.collection(_songsCollection).doc(id).delete();
+    final moderatedBy = _auth.currentUser?.email ?? '';
+    await _db.collection(_songsCollection).doc(id).update({
+      'status': SongStatuses.archived,
+      'moderationReason': 'Archived from admin action',
+      'moderatedBy': moderatedBy,
+      'moderatedAt': FieldValue.serverTimestamp(),
+      'deletedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   // ── Firestore: lắng nghe danh sách realtime ──

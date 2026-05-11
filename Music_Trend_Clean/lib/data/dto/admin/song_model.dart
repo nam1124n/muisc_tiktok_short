@@ -9,6 +9,13 @@ class SongModel extends SongEntity {
     required super.imageUrl,
     super.savedAt,
     super.trackInWeeklyStats = true,
+    super.status = SongStatuses.published,
+    super.moderationReason = '',
+    super.moderatedBy = '',
+    super.moderatedAt,
+    super.publishedAt,
+    super.updatedAt,
+    super.deletedAt,
   });
 
   factory SongModel.fromFirestore(Map<String, dynamic> map, String id) {
@@ -22,6 +29,13 @@ class SongModel extends SongEntity {
     'imageUrl': imageUrl,
     if (savedAt != null) 'savedAt': savedAt!.toIso8601String(),
     'trackInWeeklyStats': trackInWeeklyStats,
+    'status': status,
+    'moderationReason': moderationReason,
+    'moderatedBy': moderatedBy,
+    'moderatedAt': moderatedAt?.toIso8601String(),
+    'publishedAt': publishedAt?.toIso8601String(),
+    'updatedAt': updatedAt?.toIso8601String(),
+    'deletedAt': deletedAt?.toIso8601String(),
   };
 
   factory SongModel.fromEntity(SongEntity entity) => SongModel(
@@ -32,5 +46,12 @@ class SongModel extends SongEntity {
     imageUrl: entity.imageUrl,
     savedAt: entity.savedAt,
     trackInWeeklyStats: entity.trackInWeeklyStats,
+    status: entity.status,
+    moderationReason: entity.moderationReason,
+    moderatedBy: entity.moderatedBy,
+    moderatedAt: entity.moderatedAt,
+    publishedAt: entity.publishedAt,
+    updatedAt: entity.updatedAt,
+    deletedAt: entity.deletedAt,
   );
 }

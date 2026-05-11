@@ -121,6 +121,9 @@ class FakeSongRepository implements SongRepository {
   Stream<List<SongEntity>> getSongs() => const Stream.empty();
 
   @override
+  Stream<List<SongEntity>> getAdminSongs() => const Stream.empty();
+
+  @override
   Stream<List<TrendingSongEntity>> getWeeklyTrendingSongs({int limit = 4}) {
     return const Stream.empty();
   }

@@ -177,6 +177,90 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileSignInRequiredAction => 'Sign in now';
 
   @override
+  String get adminWorkspaceTitle => 'Admin Workspace';
+
+  @override
+  String get adminSongsSectionLabel => 'Songs';
+
+  @override
+  String get adminYearSongsSectionLabel => 'By year music';
+
+  @override
+  String get adminAnalyticsSectionLabel => 'Analytics';
+
+  @override
+  String get adminOpenAppLabel => 'Open app';
+
+  @override
+  String get adminWebOnlyTitle => 'Admin is available on web';
+
+  @override
+  String get adminWebOnlyMessage => 'Use the web build to manage content with the new admin workspace.';
+
+  @override
+  String get adminAnalyticsTitle => 'Admin Analytics';
+
+  @override
+  String get adminAnalyticsOverviewTitle => 'Catalog overview';
+
+  @override
+  String get adminTotalSongsLabel => 'Total songs';
+
+  @override
+  String get adminPublishedSongsLabel => 'Published songs';
+
+  @override
+  String get adminPendingSongsLabel => 'Pending songs';
+
+  @override
+  String get adminHiddenSongsLabel => 'Hidden songs';
+
+  @override
+  String get adminArchivedSongsLabel => 'Archived songs';
+
+  @override
+  String get adminAnalyticsControlsTitle => 'Analytics filters';
+
+  @override
+  String get adminRecentlyUpdatedTitle => 'Recently updated';
+
+  @override
+  String get adminRecentlyUpdatedSubtitle => 'Songs that were edited or moderated most recently.';
+
+  @override
+  String get adminNoRecentlyUpdatedMessage => 'No recent updates match the current filters.';
+
+  @override
+  String get adminPendingOldestTitle => 'Oldest pending songs';
+
+  @override
+  String get adminPendingOldestSubtitle => 'Use this list to clear long-waiting review items first.';
+
+  @override
+  String get adminNoPendingOldestMessage => 'No pending songs match the current filters.';
+
+  @override
+  String get adminYearSongsRecentlyUpdatedTitle => 'Recently updated by-year songs';
+
+  @override
+  String get adminYearSongsRecentlyUpdatedSubtitle => 'Quickly track by-year content that changed most recently.';
+
+  @override
+  String get adminNoYearSongsRecentlyUpdatedMessage => 'No by-year updates match the current filters.';
+
+  @override
+  String get adminYearSongsAnalyticsTitle => 'By-year note';
+
+  @override
+  String get adminYearSongsAnalyticsSubtitle => 'By-year songs do not have a separate weekly trending feed yet. For now, the dashboard highlights the most recent updates so admins can still monitor that catalog slice.';
+
+  @override
+  String get adminWeeklyTrendingTitle => 'Top weekly trending';
+
+  @override
+  String get adminWeeklyTrendingSubtitle => 'Based on unique listeners and total plays from the current week.';
+
+  @override
   String get errorLabel => 'Error';
 
   @override
@@ -690,6 +774,138 @@ class AppLocalizationsEn extends AppLocalizations {
   String get retry => 'Retry';
 
   @override
+  String get adminFilterAll => 'All';
+
+  @override
+  String get adminFilterPublished => 'Published';
+
+  @override
+  String get adminFilterPending => 'Pending';
+
+  @override
+  String get adminFilterHidden => 'Hidden';
+
+  @override
+  String get adminFilterArchived => 'Archived';
+
+  @override
+  String get adminNoSongsForFilterTitle => 'No songs in this filter';
+
+  @override
+  String get adminNoSongsForFilterSubtitle => 'Try switching the status filter or restore archived content.';
+
+  @override
+  String get songStatusPublished => 'Published';
+
+  @override
+  String get songStatusPending => 'Pending';
+
+  @override
+  String get songStatusHidden => 'Hidden';
+
+  @override
+  String get songStatusArchived => 'Archived';
+
+  @override
+  String get adminBatchActionsTitle => 'Batch actions';
+
+  @override
+  String get adminSelectAllVisibleAction => 'Select all visible';
+
+  @override
+  String get adminClearSelectionAction => 'Clear selection';
+
+  @override
+  String adminSelectedItemsSummary(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get adminModerationReasonLabel => 'Moderation reason';
+
+  @override
+  String get adminModerationReasonHint => 'Example: Content is not ready for publishing yet or metadata still needs cleanup.';
+
+  @override
+  String get adminArchiveReasonHint => 'Example: Content should be taken out of circulation for review or no longer fits the public catalog.';
+
+  @override
+  String get adminModerationReasonRequiredMessage => 'Please enter a moderation reason.';
+
+  @override
+  String adminModeratedByLabel(String value) {
+    return 'Moderated by: $value';
+  }
+
+  @override
+  String adminModeratedAtLabel(String value) {
+    return 'At: $value';
+  }
+
+  @override
+  String get adminModerationPresetMetadata => 'Metadata still needs cleanup before publishing';
+
+  @override
+  String get adminModerationPresetQuality => 'Audio quality is not ready for release';
+
+  @override
+  String get adminModerationPresetDuplicate => 'Content duplicates or closely overlaps another track';
+
+  @override
+  String get adminModerationPresetArchivedReview => 'Archive for further review before reuse';
+
+  @override
+  String get adminModerationPresetOutdated => 'Content is outdated and no longer fits the public catalog';
+
+  @override
+  String get adminSearchHint => 'Search by title, artist, status, or moderation reason';
+
+  @override
+  String get adminSortLabel => 'Sort by';
+
+  @override
+  String get adminSortUpdatedNewest => 'Newest updated';
+
+  @override
+  String get adminSortUpdatedOldest => 'Oldest updated';
+
+  @override
+  String get adminSortTitleAsc => 'Title A-Z';
+
+  @override
+  String adminUpdatedAtLabel(String value) {
+    return 'Updated: $value';
+  }
+
+  @override
+  String adminArchiveSelectedItemsMessage(int count) {
+    return 'Archive $count selected items so listeners can no longer see them?';
+  }
+
+  @override
+  String get adminPendingSubmissionNotice => 'New content will be saved as pending first. After review, you can publish it directly from the admin dashboard.';
+
+  @override
+  String get hideSongAction => 'Hide from app';
+
+  @override
+  String get publishSongAction => 'Publish to app';
+
+  @override
+  String get archiveSongAction => 'Archive';
+
+  @override
+  String get restoreSongAction => 'Restore';
+
+  @override
+  String get archiveSongTitle => 'Archive song';
+
+  @override
+  String archiveSongConfirmMessage(String title) {
+    return 'Archive \"$title\" so it no longer appears in the app?';
+  }
+
+  @override
   String get noSongsYetTitle => 'No songs yet';
 
   @override
@@ -787,6 +1003,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String deleteYearSongConfirmMessage(String title) {
     return 'Are you sure you want to delete the by-year song \"$title\"?';
+  }
+
+  @override
+  String archiveYearSongConfirmMessage(String title) {
+    return 'Archive the by-year song \"$title\" so listeners can no longer see it?';
   }
 
   @override

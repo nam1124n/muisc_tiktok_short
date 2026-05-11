@@ -419,6 +419,174 @@ abstract class AppLocalizations {
   /// **'Sign in now'**
   String get profileSignInRequiredAction;
 
+  /// No description provided for @adminWorkspaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Workspace'**
+  String get adminWorkspaceTitle;
+
+  /// No description provided for @adminSongsSectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs'**
+  String get adminSongsSectionLabel;
+
+  /// No description provided for @adminYearSongsSectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'By year music'**
+  String get adminYearSongsSectionLabel;
+
+  /// No description provided for @adminAnalyticsSectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics'**
+  String get adminAnalyticsSectionLabel;
+
+  /// No description provided for @adminOpenAppLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Open app'**
+  String get adminOpenAppLabel;
+
+  /// No description provided for @adminWebOnlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin is available on web'**
+  String get adminWebOnlyTitle;
+
+  /// No description provided for @adminWebOnlyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the web build to manage content with the new admin workspace.'**
+  String get adminWebOnlyMessage;
+
+  /// No description provided for @adminAnalyticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Analytics'**
+  String get adminAnalyticsTitle;
+
+  /// No description provided for @adminAnalyticsOverviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog overview'**
+  String get adminAnalyticsOverviewTitle;
+
+  /// No description provided for @adminTotalSongsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total songs'**
+  String get adminTotalSongsLabel;
+
+  /// No description provided for @adminPublishedSongsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Published songs'**
+  String get adminPublishedSongsLabel;
+
+  /// No description provided for @adminPendingSongsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending songs'**
+  String get adminPendingSongsLabel;
+
+  /// No description provided for @adminHiddenSongsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden songs'**
+  String get adminHiddenSongsLabel;
+
+  /// No description provided for @adminArchivedSongsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived songs'**
+  String get adminArchivedSongsLabel;
+
+  /// No description provided for @adminAnalyticsControlsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics filters'**
+  String get adminAnalyticsControlsTitle;
+
+  /// No description provided for @adminRecentlyUpdatedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently updated'**
+  String get adminRecentlyUpdatedTitle;
+
+  /// No description provided for @adminRecentlyUpdatedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs that were edited or moderated most recently.'**
+  String get adminRecentlyUpdatedSubtitle;
+
+  /// No description provided for @adminNoRecentlyUpdatedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent updates match the current filters.'**
+  String get adminNoRecentlyUpdatedMessage;
+
+  /// No description provided for @adminPendingOldestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest pending songs'**
+  String get adminPendingOldestTitle;
+
+  /// No description provided for @adminPendingOldestSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this list to clear long-waiting review items first.'**
+  String get adminPendingOldestSubtitle;
+
+  /// No description provided for @adminNoPendingOldestMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending songs match the current filters.'**
+  String get adminNoPendingOldestMessage;
+
+  /// No description provided for @adminYearSongsRecentlyUpdatedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently updated by-year songs'**
+  String get adminYearSongsRecentlyUpdatedTitle;
+
+  /// No description provided for @adminYearSongsRecentlyUpdatedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quickly track by-year content that changed most recently.'**
+  String get adminYearSongsRecentlyUpdatedSubtitle;
+
+  /// No description provided for @adminNoYearSongsRecentlyUpdatedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No by-year updates match the current filters.'**
+  String get adminNoYearSongsRecentlyUpdatedMessage;
+
+  /// No description provided for @adminYearSongsAnalyticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'By-year note'**
+  String get adminYearSongsAnalyticsTitle;
+
+  /// No description provided for @adminYearSongsAnalyticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'By-year songs do not have a separate weekly trending feed yet. For now, the dashboard highlights the most recent updates so admins can still monitor that catalog slice.'**
+  String get adminYearSongsAnalyticsSubtitle;
+
+  /// No description provided for @adminWeeklyTrendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Top weekly trending'**
+  String get adminWeeklyTrendingTitle;
+
+  /// No description provided for @adminWeeklyTrendingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on unique listeners and total plays from the current week.'**
+  String get adminWeeklyTrendingSubtitle;
+
   /// No description provided for @errorLabel.
   ///
   /// In en, this message translates to:
@@ -1349,6 +1517,246 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get retry;
 
+  /// No description provided for @adminFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get adminFilterAll;
+
+  /// No description provided for @adminFilterPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get adminFilterPublished;
+
+  /// No description provided for @adminFilterPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get adminFilterPending;
+
+  /// No description provided for @adminFilterHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get adminFilterHidden;
+
+  /// No description provided for @adminFilterArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get adminFilterArchived;
+
+  /// No description provided for @adminNoSongsForFilterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No songs in this filter'**
+  String get adminNoSongsForFilterTitle;
+
+  /// No description provided for @adminNoSongsForFilterSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Try switching the status filter or restore archived content.'**
+  String get adminNoSongsForFilterSubtitle;
+
+  /// No description provided for @songStatusPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get songStatusPublished;
+
+  /// No description provided for @songStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get songStatusPending;
+
+  /// No description provided for @songStatusHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get songStatusHidden;
+
+  /// No description provided for @songStatusArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get songStatusArchived;
+
+  /// No description provided for @adminBatchActionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch actions'**
+  String get adminBatchActionsTitle;
+
+  /// No description provided for @adminSelectAllVisibleAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all visible'**
+  String get adminSelectAllVisibleAction;
+
+  /// No description provided for @adminClearSelectionAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear selection'**
+  String get adminClearSelectionAction;
+
+  /// No description provided for @adminSelectedItemsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String adminSelectedItemsSummary(int count);
+
+  /// No description provided for @adminModerationReasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderation reason'**
+  String get adminModerationReasonLabel;
+
+  /// No description provided for @adminModerationReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Example: Content is not ready for publishing yet or metadata still needs cleanup.'**
+  String get adminModerationReasonHint;
+
+  /// No description provided for @adminArchiveReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Example: Content should be taken out of circulation for review or no longer fits the public catalog.'**
+  String get adminArchiveReasonHint;
+
+  /// No description provided for @adminModerationReasonRequiredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a moderation reason.'**
+  String get adminModerationReasonRequiredMessage;
+
+  /// No description provided for @adminModeratedByLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderated by: {value}'**
+  String adminModeratedByLabel(String value);
+
+  /// No description provided for @adminModeratedAtLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'At: {value}'**
+  String adminModeratedAtLabel(String value);
+
+  /// No description provided for @adminModerationPresetMetadata.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata still needs cleanup before publishing'**
+  String get adminModerationPresetMetadata;
+
+  /// No description provided for @adminModerationPresetQuality.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio quality is not ready for release'**
+  String get adminModerationPresetQuality;
+
+  /// No description provided for @adminModerationPresetDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Content duplicates or closely overlaps another track'**
+  String get adminModerationPresetDuplicate;
+
+  /// No description provided for @adminModerationPresetArchivedReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive for further review before reuse'**
+  String get adminModerationPresetArchivedReview;
+
+  /// No description provided for @adminModerationPresetOutdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Content is outdated and no longer fits the public catalog'**
+  String get adminModerationPresetOutdated;
+
+  /// No description provided for @adminSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by title, artist, status, or moderation reason'**
+  String get adminSearchHint;
+
+  /// No description provided for @adminSortLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get adminSortLabel;
+
+  /// No description provided for @adminSortUpdatedNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest updated'**
+  String get adminSortUpdatedNewest;
+
+  /// No description provided for @adminSortUpdatedOldest.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest updated'**
+  String get adminSortUpdatedOldest;
+
+  /// No description provided for @adminSortTitleAsc.
+  ///
+  /// In en, this message translates to:
+  /// **'Title A-Z'**
+  String get adminSortTitleAsc;
+
+  /// No description provided for @adminUpdatedAtLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated: {value}'**
+  String adminUpdatedAtLabel(String value);
+
+  /// No description provided for @adminArchiveSelectedItemsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive {count} selected items so listeners can no longer see them?'**
+  String adminArchiveSelectedItemsMessage(int count);
+
+  /// No description provided for @adminPendingSubmissionNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'New content will be saved as pending first. After review, you can publish it directly from the admin dashboard.'**
+  String get adminPendingSubmissionNotice;
+
+  /// No description provided for @hideSongAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide from app'**
+  String get hideSongAction;
+
+  /// No description provided for @publishSongAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish to app'**
+  String get publishSongAction;
+
+  /// No description provided for @archiveSongAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get archiveSongAction;
+
+  /// No description provided for @restoreSongAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restoreSongAction;
+
+  /// No description provided for @archiveSongTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive song'**
+  String get archiveSongTitle;
+
+  /// No description provided for @archiveSongConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive \"{title}\" so it no longer appears in the app?'**
+  String archiveSongConfirmMessage(String title);
+
   /// No description provided for @noSongsYetTitle.
   ///
   /// In en, this message translates to:
@@ -1540,6 +1948,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete the by-year song \"{title}\"?'**
   String deleteYearSongConfirmMessage(String title);
+
+  /// No description provided for @archiveYearSongConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive the by-year song \"{title}\" so listeners can no longer see it?'**
+  String archiveYearSongConfirmMessage(String title);
 
   /// No description provided for @currentAudioWillBeKept.
   ///

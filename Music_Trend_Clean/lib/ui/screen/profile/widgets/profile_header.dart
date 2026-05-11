@@ -106,6 +106,7 @@ class ProfileHeader extends ConsumerWidget {
                 ref.invalidate(recentNotifierProvider);
                 ref.invalidate(searchNotifierProvider);
                 ref.invalidate(songNotifierProvider);
+                ref.invalidate(adminSongNotifierProvider);
                 ref.invalidate(profileNotifierProvider);
                 ref.invalidate(playlistNotifierProvider);
                 ref.read(authNotifierProvider.notifier).reset();

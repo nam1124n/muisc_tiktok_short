@@ -132,7 +132,14 @@ class _AdminYearSongFormScreenState
       audioUrl: widget.initialSong?.audioUrl ?? '',
       imageUrl: widget.initialSong?.imageUrl ?? '',
       savedAt: DateTime(_selectedYear!, 1, 1),
-      trackInWeeklyStats: false,
+      trackInWeeklyStats: widget.initialSong?.trackInWeeklyStats ?? false,
+      status: widget.initialSong?.status ?? SongStatuses.pending,
+      moderationReason: widget.initialSong?.moderationReason ?? '',
+      moderatedBy: widget.initialSong?.moderatedBy ?? '',
+      moderatedAt: widget.initialSong?.moderatedAt,
+      publishedAt: widget.initialSong?.publishedAt,
+      updatedAt: widget.initialSong?.updatedAt,
+      deletedAt: widget.initialSong?.deletedAt,
     );
 
     if (_isEditing) {
@@ -150,7 +157,7 @@ class _AdminYearSongFormScreenState
     }
 
     final state = ref.read(yearSongNotifierProvider);
-    if (state is SongActionSuccess) {
+    if (state is! SongError) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.actionSuccessMessage),
@@ -160,7 +167,7 @@ class _AdminYearSongFormScreenState
       );
       ref.read(yearSongNotifierProvider.notifier).loadSongs();
       Navigator.pop(context);
-    } else if (state is SongError) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${l10n.errorLabel}: ${state.message}'),
@@ -190,189 +197,324 @@ class _AdminYearSongFormScreenState
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              LabelText(l10n.coverImageLabel),
-              const SizedBox(height: 8),
-              GestureDetector(
-                onTap: isLoading ? null : _pickImage,
-                child: Container(
-                  height: 180,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: _pickedImage != null || _hasExistingImage
-                          ? const Color(0xFF8C52FF)
-                          : Colors.grey.shade300,
-                      width: 2,
-                    ),
-                  ),
-                  child: _pickedImageBytes != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(14),
-                          child: Image.memory(
-                            _pickedImageBytes!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                          ),
-                        )
-                      : _hasExistingImage
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(14),
-                          child: Image.network(
-                            widget.initialSong!.imageUrl,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            errorBuilder: (_, _, _) =>
-                                _buildImagePlaceholder(l10n),
-                          ),
-                        )
-                      : _buildImagePlaceholder(l10n),
-                ),
-              ),
-              const SizedBox(height: 24),
-              LabelText(l10n.audioFilePickerLabel),
-              const SizedBox(height: 8),
-              GestureDetector(
-                onTap: isLoading ? null : _pickAudio,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 20,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: _pickedAudio != null || _hasExistingAudio
-                          ? const Color(0xFF8C52FF)
-                          : Colors.grey.shade300,
-                      width: 2,
-                    ),
-                  ),
-                  child: Row(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 960;
+
+          return SingleChildScrollView(
+            padding: EdgeInsets.all(isWide ? 32 : 24),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: isWide ? 1180 : 720),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Icon(
-                        _pickedAudio != null || _hasExistingAudio
-                            ? Icons.audio_file
-                            : Icons.upload_file,
-                        color: _pickedAudio != null || _hasExistingAudio
-                            ? const Color(0xFF8C52FF)
-                            : Colors.grey[400],
-                        size: 32,
+                      _buildIntroCard(
+                        title: _isEditing
+                            ? l10n.editYearSongTitle
+                            : l10n.newYearSongTitle,
+                        subtitle: _isEditing
+                            ? l10n.saveSongChanges
+                            : l10n.addYearSongLabel,
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          _audioDisplayLabel(l10n),
-                          style: TextStyle(
-                            color: _pickedAudio != null || _hasExistingAudio
-                                ? Colors.black87
-                                : Colors.grey[500],
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
+                      if (!_isEditing) ...[
+                        const SizedBox(height: 16),
+                        _buildPendingNotice(l10n),
+                      ],
+                      const SizedBox(height: 24),
+                      if (isWide)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: _buildMediaPanel(l10n, isLoading)),
+                            const SizedBox(width: 24),
+                            Expanded(
+                              child: _buildDetailsPanel(l10n, isLoading),
+                            ),
+                          ],
+                        )
+                      else ...[
+                        _buildMediaPanel(l10n, isLoading),
+                        const SizedBox(height: 24),
+                        _buildDetailsPanel(l10n, isLoading),
+                      ],
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              LabelText(l10n.songTitleLabel),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _titleController,
-                enabled: !isLoading,
-                decoration: _inputDeco(l10n.songTitleHint),
-                validator: (value) => value == null || value.trim().isEmpty
-                    ? l10n.songTitleRequiredMessage
-                    : null,
-              ),
-              const SizedBox(height: 20),
-              LabelText(l10n.artistNameLabel),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _artistController,
-                enabled: !isLoading,
-                decoration: _inputDeco(l10n.artistNameHint),
-                validator: (value) => value == null || value.trim().isEmpty
-                    ? l10n.artistNameRequiredMessage
-                    : null,
-              ),
-              const SizedBox(height: 20),
-              LabelText(l10n.yearLabel),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<int>(
-                initialValue: _selectedYear,
-                decoration: _inputDeco(l10n.selectYearHint),
-                items: _availableYears
-                    .map(
-                      (year) => DropdownMenuItem<int>(
-                        value: year,
-                        child: Text('$year'),
-                      ),
-                    )
-                    .toList(),
-                onChanged: isLoading
-                    ? null
-                    : (value) => setState(() => _selectedYear = value),
-                validator: (value) =>
-                    value == null ? l10n.yearRequiredMessage : null,
-              ),
-              const SizedBox(height: 36),
-              SizedBox(
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: isLoading ? null : _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8C52FF),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: isLoading
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              _isEditing
-                                  ? l10n.savingSongChanges
-                                  : l10n.uploadingSong,
-                            ),
-                          ],
-                        )
-                      : Text(
-                          _isEditing
-                              ? l10n.saveSongChanges
-                              : l10n.addYearSongLabel,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                ),
-              ),
-            ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildIntroCard({required String title, required String subtitle}) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF8C52FF), Color(0xFFB985FF)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF8C52FF).withValues(alpha: 0.16),
+            blurRadius: 24,
+            offset: const Offset(0, 14),
           ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.88),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPendingNotice(AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
         ),
       ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 2),
+            child: Icon(Icons.hourglass_top_rounded, color: Color(0xFFD97706)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              l10n.adminPendingSubmissionNotice,
+              style: const TextStyle(
+                color: Color(0xFF9A6700),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMediaPanel(AppLocalizations l10n, bool isLoading) {
+    return _buildPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          LabelText(l10n.coverImageLabel),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: isLoading ? null : _pickImage,
+            child: Container(
+              height: 220,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: _pickedImage != null || _hasExistingImage
+                      ? const Color(0xFF8C52FF)
+                      : Colors.grey.shade300,
+                  width: 2,
+                ),
+              ),
+              child: _pickedImageBytes != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.memory(
+                        _pickedImageBytes!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                      ),
+                    )
+                  : _hasExistingImage
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.network(
+                        widget.initialSong!.imageUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        errorBuilder: (_, _, _) => _buildImagePlaceholder(l10n),
+                      ),
+                    )
+                  : _buildImagePlaceholder(l10n),
+            ),
+          ),
+          const SizedBox(height: 24),
+          LabelText(l10n.audioFilePickerLabel),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: isLoading ? null : _pickAudio,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: _pickedAudio != null || _hasExistingAudio
+                      ? const Color(0xFF8C52FF)
+                      : Colors.grey.shade300,
+                  width: 2,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _pickedAudio != null || _hasExistingAudio
+                        ? Icons.audio_file
+                        : Icons.upload_file,
+                    color: _pickedAudio != null || _hasExistingAudio
+                        ? const Color(0xFF8C52FF)
+                        : Colors.grey[400],
+                    size: 32,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      _audioDisplayLabel(l10n),
+                      style: TextStyle(
+                        color: _pickedAudio != null || _hasExistingAudio
+                            ? Colors.black87
+                            : Colors.grey[500],
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailsPanel(AppLocalizations l10n, bool isLoading) {
+    return _buildPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          LabelText(l10n.songTitleLabel),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _titleController,
+            enabled: !isLoading,
+            decoration: _inputDeco(l10n.songTitleHint),
+            validator: (value) => value == null || value.trim().isEmpty
+                ? l10n.songTitleRequiredMessage
+                : null,
+          ),
+          const SizedBox(height: 20),
+          LabelText(l10n.artistNameLabel),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _artistController,
+            enabled: !isLoading,
+            decoration: _inputDeco(l10n.artistNameHint),
+            validator: (value) => value == null || value.trim().isEmpty
+                ? l10n.artistNameRequiredMessage
+                : null,
+          ),
+          const SizedBox(height: 20),
+          LabelText(l10n.yearLabel),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<int>(
+            initialValue: _selectedYear,
+            decoration: _inputDeco(l10n.selectYearHint),
+            items: _availableYears
+                .map(
+                  (year) =>
+                      DropdownMenuItem<int>(value: year, child: Text('$year')),
+                )
+                .toList(),
+            onChanged: isLoading
+                ? null
+                : (value) => setState(() => _selectedYear = value),
+            validator: (value) =>
+                value == null ? l10n.yearRequiredMessage : null,
+          ),
+          const SizedBox(height: 36),
+          SizedBox(height: 56, child: _buildSubmitButton(l10n, isLoading)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPanel({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildSubmitButton(AppLocalizations l10n, bool isLoading) {
+    return ElevatedButton(
+      onPressed: isLoading ? null : _submit,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF8C52FF),
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 0,
+      ),
+      child: isLoading
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(_isEditing ? l10n.savingSongChanges : l10n.uploadingSong),
+              ],
+            )
+          : Text(
+              _isEditing ? l10n.saveSongChanges : l10n.addYearSongLabel,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
     );
   }
 

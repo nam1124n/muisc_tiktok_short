@@ -6,6 +6,7 @@ import 'package:login_flutter/domain/entities/trending_song_entity.dart';
 
 abstract class SongRepository {
   Stream<List<SongEntity>> getSongs();
+  Stream<List<SongEntity>> getAdminSongs();
   Future<SongPageEntity> fetchSongsPage({
     int limit = 20,
     SongPageCursor? startAfter,

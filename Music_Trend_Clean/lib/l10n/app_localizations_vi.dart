@@ -177,6 +177,90 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileSignInRequiredAction => 'Đăng nhập ngay';
 
   @override
+  String get adminWorkspaceTitle => 'Không gian quản trị';
+
+  @override
+  String get adminSongsSectionLabel => 'Bài hát';
+
+  @override
+  String get adminYearSongsSectionLabel => 'Nhạc theo năm';
+
+  @override
+  String get adminAnalyticsSectionLabel => 'Phân tích';
+
+  @override
+  String get adminOpenAppLabel => 'Mở ứng dụng';
+
+  @override
+  String get adminWebOnlyTitle => 'Trang quản trị chỉ dùng trên web';
+
+  @override
+  String get adminWebOnlyMessage => 'Hãy dùng bản web để quản lý nội dung bằng giao diện admin mới.';
+
+  @override
+  String get adminAnalyticsTitle => 'Phân tích quản trị';
+
+  @override
+  String get adminAnalyticsOverviewTitle => 'Tổng quan kho nhạc';
+
+  @override
+  String get adminTotalSongsLabel => 'Tổng số bài';
+
+  @override
+  String get adminPublishedSongsLabel => 'Bài đang hiển thị';
+
+  @override
+  String get adminPendingSongsLabel => 'Bài chờ duyệt';
+
+  @override
+  String get adminHiddenSongsLabel => 'Bài đã ẩn';
+
+  @override
+  String get adminArchivedSongsLabel => 'Bài đã lưu kho';
+
+  @override
+  String get adminAnalyticsControlsTitle => 'Bộ lọc phân tích';
+
+  @override
+  String get adminRecentlyUpdatedTitle => 'Cập nhật gần đây';
+
+  @override
+  String get adminRecentlyUpdatedSubtitle => 'Những bài được chỉnh sửa hoặc duyệt gần nhất.';
+
+  @override
+  String get adminNoRecentlyUpdatedMessage => 'Chưa có dữ liệu cập nhật gần đây theo bộ lọc hiện tại.';
+
+  @override
+  String get adminPendingOldestTitle => 'Bài chờ duyệt lâu nhất';
+
+  @override
+  String get adminPendingOldestSubtitle => 'Ưu tiên xử lý các bài đã chờ lâu để tránh tồn đọng.';
+
+  @override
+  String get adminNoPendingOldestMessage => 'Không có bài chờ duyệt theo bộ lọc hiện tại.';
+
+  @override
+  String get adminYearSongsRecentlyUpdatedTitle => 'Nhạc theo năm cập nhật gần đây';
+
+  @override
+  String get adminYearSongsRecentlyUpdatedSubtitle => 'Theo dõi nhanh nội dung nhạc theo năm mới được chỉnh sửa.';
+
+  @override
+  String get adminNoYearSongsRecentlyUpdatedMessage => 'Chưa có bản cập nhật nhạc theo năm theo bộ lọc hiện tại.';
+
+  @override
+  String get adminYearSongsAnalyticsTitle => 'Ghi chú về nhạc theo năm';
+
+  @override
+  String get adminYearSongsAnalyticsSubtitle => 'Nhạc theo năm hiện chưa có weekly trending riêng. Dashboard đang ưu tiên hiển thị cập nhật mới nhất để admin vẫn theo dõi được nhánh nội dung này.';
+
+  @override
+  String get adminWeeklyTrendingTitle => 'Top thịnh hành tuần';
+
+  @override
+  String get adminWeeklyTrendingSubtitle => 'Dựa trên số người nghe duy nhất và tổng lượt phát trong tuần hiện tại.';
+
+  @override
   String get errorLabel => 'Lỗi';
 
   @override
@@ -690,6 +774,138 @@ class AppLocalizationsVi extends AppLocalizations {
   String get retry => 'Thử lại';
 
   @override
+  String get adminFilterAll => 'Tất cả';
+
+  @override
+  String get adminFilterPublished => 'Đang hiển thị';
+
+  @override
+  String get adminFilterPending => 'Chờ duyệt';
+
+  @override
+  String get adminFilterHidden => 'Đã ẩn';
+
+  @override
+  String get adminFilterArchived => 'Đã lưu kho';
+
+  @override
+  String get adminNoSongsForFilterTitle => 'Không có bài hát trong bộ lọc này';
+
+  @override
+  String get adminNoSongsForFilterSubtitle => 'Hãy đổi bộ lọc trạng thái hoặc khôi phục nội dung đã lưu kho.';
+
+  @override
+  String get songStatusPublished => 'Đang hiển thị';
+
+  @override
+  String get songStatusPending => 'Chờ duyệt';
+
+  @override
+  String get songStatusHidden => 'Đã ẩn';
+
+  @override
+  String get songStatusArchived => 'Đã lưu kho';
+
+  @override
+  String get adminBatchActionsTitle => 'Thao tác hàng loạt';
+
+  @override
+  String get adminSelectAllVisibleAction => 'Chọn tất cả đang hiển thị';
+
+  @override
+  String get adminClearSelectionAction => 'Bỏ chọn';
+
+  @override
+  String adminSelectedItemsSummary(int count) {
+    return '$count mục đã chọn';
+  }
+
+  @override
+  String get adminModerationReasonLabel => 'Lý do moderation';
+
+  @override
+  String get adminModerationReasonHint => 'Ví dụ: Nội dung chưa đạt chất lượng phát hành hoặc cần chỉnh metadata.';
+
+  @override
+  String get adminArchiveReasonHint => 'Ví dụ: Nội dung không còn phù hợp để hiển thị công khai hoặc cần lưu kho để rà soát lại.';
+
+  @override
+  String get adminModerationReasonRequiredMessage => 'Vui lòng nhập lý do moderation.';
+
+  @override
+  String adminModeratedByLabel(String value) {
+    return 'Duyệt bởi: $value';
+  }
+
+  @override
+  String adminModeratedAtLabel(String value) {
+    return 'Lúc: $value';
+  }
+
+  @override
+  String get adminModerationPresetMetadata => 'Metadata cần chỉnh sửa trước khi phát hành';
+
+  @override
+  String get adminModerationPresetQuality => 'Chất lượng audio chưa đạt yêu cầu';
+
+  @override
+  String get adminModerationPresetDuplicate => 'Nội dung trùng hoặc gần trùng với bài khác';
+
+  @override
+  String get adminModerationPresetArchivedReview => 'Đưa vào kho để rà soát lại trước khi dùng tiếp';
+
+  @override
+  String get adminModerationPresetOutdated => 'Nội dung đã cũ và không còn phù hợp để hiển thị';
+
+  @override
+  String get adminSearchHint => 'Tìm theo tên bài, nghệ sĩ, trạng thái hoặc lý do moderation';
+
+  @override
+  String get adminSortLabel => 'Sắp xếp';
+
+  @override
+  String get adminSortUpdatedNewest => 'Cập nhật mới nhất';
+
+  @override
+  String get adminSortUpdatedOldest => 'Cập nhật cũ nhất';
+
+  @override
+  String get adminSortTitleAsc => 'Tên bài A-Z';
+
+  @override
+  String adminUpdatedAtLabel(String value) {
+    return 'Cập nhật: $value';
+  }
+
+  @override
+  String adminArchiveSelectedItemsMessage(int count) {
+    return 'Lưu kho $count mục đã chọn để người nghe không còn nhìn thấy nữa?';
+  }
+
+  @override
+  String get adminPendingSubmissionNotice => 'Nội dung mới sẽ được lưu ở trạng thái chờ duyệt. Sau khi kiểm tra xong, bạn có thể publish trực tiếp từ dashboard admin.';
+
+  @override
+  String get hideSongAction => 'Ẩn khỏi ứng dụng';
+
+  @override
+  String get publishSongAction => 'Hiển thị lại';
+
+  @override
+  String get archiveSongAction => 'Lưu kho';
+
+  @override
+  String get restoreSongAction => 'Khôi phục';
+
+  @override
+  String get archiveSongTitle => 'Lưu kho bài hát';
+
+  @override
+  String archiveSongConfirmMessage(String title) {
+    return 'Lưu kho \"$title\" để bài hát không còn xuất hiện trong ứng dụng?';
+  }
+
+  @override
   String get noSongsYetTitle => 'Chưa có bài hát nào';
 
   @override
@@ -787,6 +1003,11 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String deleteYearSongConfirmMessage(String title) {
     return 'Bạn có chắc muốn xoá bài theo năm \"$title\" không?';
+  }
+
+  @override
+  String archiveYearSongConfirmMessage(String title) {
+    return 'Lưu kho bài theo năm \"$title\" để người nghe không còn nhìn thấy nữa?';
   }
 
   @override
