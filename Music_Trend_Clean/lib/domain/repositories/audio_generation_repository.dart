@@ -5,6 +5,4 @@ abstract class AudioGenerationRepository {
     required String userId,
     required String prompt,
   });
-
-  Future<List<GeneratedAudioTaskEntity>> getMySongs({required String userId});
 }

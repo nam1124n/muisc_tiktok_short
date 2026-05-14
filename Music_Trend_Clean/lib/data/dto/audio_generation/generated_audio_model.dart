@@ -42,7 +42,7 @@ class GeneratedAudioModel extends GeneratedAudioEntity {
           (json['duration_seconds'] as num?)?.toInt() ??
           (json['duration_sec'] as num?)?.toInt() ??
           0,
-      provider: json['provider']?.toString() ?? 'phoenix-backend',
+      provider: json['provider']?.toString() ?? 'flutter-local',
       modelName:
           json['modelName']?.toString() ?? json['model_name']?.toString() ?? '',
       tags: _readStringList(json['tags']),

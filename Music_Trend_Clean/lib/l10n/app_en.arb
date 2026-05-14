@@ -359,25 +359,9 @@
       }
     }
   },
-  "mockApiMessage": "Using mock API with URL: {baseUrl}\nWhen the real API is ready, just change the URL in config.",
-  "@mockApiMessage": {
-    "placeholders": {
-      "baseUrl": {
-        "type": "String"
-      }
-    }
-  },
   "generatingAudio": "Generating audio...",
   "createShortAudio": "Create short audio",
   "createTwoVersions": "Create 2 versions",
-  "createAudioApiNotice": "Each generation request returns 2 versions under one task. The provider decides the actual duration, so it is not locked to 15/30/45/60 seconds.\nCurrent backend: {baseUrl}",
-  "@createAudioApiNotice": {
-    "placeholders": {
-      "baseUrl": {
-        "type": "String"
-      }
-    }
-  },
   "aiAudioStudio": "AI Audio Studio",
   "generatedAudioMeta": "{seconds} sec • {provider}",
   "@generatedAudioMeta": {

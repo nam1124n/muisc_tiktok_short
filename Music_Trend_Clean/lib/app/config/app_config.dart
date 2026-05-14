@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class AppConfig {
   static const String _appEnvironmentEnvKey = 'APP_ENVIRONMENT';
   static const String _adminEmailEnvKey = 'ADMIN_EMAIL';
@@ -5,6 +7,8 @@ class AppConfig {
   static const String _cloudinaryUploadPresetEnvKey =
       'CLOUDINARY_UPLOAD_PRESET';
   static const String _profileShareBaseUrlEnvKey = 'PROFILE_SHARE_BASE_URL';
+  static const String _audioGenerationWorkerUrlEnvKey =
+      'AUDIO_GENERATION_WORKER_URL';
 
   static const String _defaultEnvironment = 'development';
   static const String _defaultAdminEmail = 'admin@gmail.com';
@@ -12,6 +16,12 @@ class AppConfig {
   static const String _defaultCloudinaryUploadPreset = 'musicapp';
   static const String _defaultProfileShareBaseUrl =
       'https://musictrend.app/profile';
+  static const String _localhostAudioGenerationWorkerUrl =
+      'http://127.0.0.1:8787';
+  static const String _androidAudioGenerationWorkerUrl = 'http://10.0.2.2:8787';
+
+  static const int audioGenerationRequestTimeoutSeconds = 30;
+  static const int audioGenerationPendingRefreshIntervalSeconds = 10;
 
   static String get environment {
     const configuredEnvironment = String.fromEnvironment(_appEnvironmentEnvKey);
@@ -79,9 +89,56 @@ class AppConfig {
     return configuredBaseUrl.trim();
   }
 
+  static String get audioGenerationWorkerBaseUrl {
+    const configuredUrl = String.fromEnvironment(
+      _audioGenerationWorkerUrlEnvKey,
+    );
+
+    if (configuredUrl.isNotEmpty) {
+      return _normalizeBaseUrl(configuredUrl);
+    }
+
+    if (kIsWeb) {
+      return _localhostAudioGenerationWorkerUrl;
+    }
+
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.android => _androidAudioGenerationWorkerUrl,
+      _ => _localhostAudioGenerationWorkerUrl,
+    };
+  }
+
+  static String buildAudioGenerationTimeoutMessage(String baseUrl) {
+    final normalizedBaseUrl = _normalizeBaseUrl(baseUrl);
+
+    return 'Kết nối Worker bị timeout sau '
+        '${audioGenerationRequestTimeoutSeconds}s. '
+        'Kiểm tra Worker đang chạy và thiết bị truy cập được '
+        '$normalizedBaseUrl.';
+  }
+
+  static String buildAudioGenerationConnectionErrorMessage(
+    String baseUrl, {
+    String? details,
+  }) {
+    final normalizedBaseUrl = _normalizeBaseUrl(baseUrl);
+    final detailMessage = details == null || details.trim().isEmpty
+        ? ''
+        : ' Chi tiết: $details';
+
+    return 'Không kết nối được tới Worker $normalizedBaseUrl. '
+        'Nếu chạy trên điện thoại thật, truyền '
+        '--dart-define=$_audioGenerationWorkerUrlEnvKey=<WORKER_URL>.'
+        '$detailMessage';
+  }
+
   static String buildPublicProfileUrl(String profileId) {
-    final trimmedBaseUrl = profileShareBaseUrl.replaceAll(RegExp(r'/$'), '');
+    final trimmedBaseUrl = _normalizeBaseUrl(profileShareBaseUrl);
     final trimmedProfileId = profileId.trim();
     return '$trimmedBaseUrl/$trimmedProfileId';
+  }
+
+  static String _normalizeBaseUrl(String value) {
+    return value.trim().replaceFirst(RegExp(r'/+$'), '');
   }
 }

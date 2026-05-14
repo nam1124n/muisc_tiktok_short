@@ -34,7 +34,7 @@ class GeneratedAudioTaskModel extends GeneratedAudioTaskEntity {
           (json['requestedDurationSeconds'] as num?)?.toInt() ??
           (json['requested_duration_sec'] as num?)?.toInt(),
       status: json['status']?.toString() ?? 'processing',
-      provider: json['provider']?.toString() ?? 'phoenix-backend',
+      provider: json['provider']?.toString() ?? 'flutter-local',
       outputCount:
           (json['outputCount'] as num?)?.toInt() ??
           (json['output_count'] as num?)?.toInt() ??

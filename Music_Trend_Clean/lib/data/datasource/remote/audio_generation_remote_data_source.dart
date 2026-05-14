@@ -1,228 +1,94 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
-import 'package:login_flutter/app/config/audio_generation_config.dart';
-import 'package:login_flutter/data/dto/audio_generation/generated_audio_model.dart';
+import 'package:login_flutter/app/config/app_config.dart';
 import 'package:login_flutter/data/dto/audio_generation/generated_audio_task_model.dart';
 
 class AudioGenerationRemoteDataSource {
-  static const String _mockSampleAudioUrlA =
-      'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
-  static const String _mockSampleAudioUrlB =
-      'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3';
+  AudioGenerationRemoteDataSource({http.Client? client, String? baseUrl})
+    : _client = client ?? http.Client(),
+      _baseUrl = _normalizeBaseUrl(
+        baseUrl ?? AppConfig.audioGenerationWorkerBaseUrl,
+      );
 
-  Future<Map<String, dynamic>> createGeneration({
-    required String baseUrl,
+  final http.Client _client;
+  final String _baseUrl;
+
+  Future<GeneratedAudioTaskModel> generateAudioTask({
     required String userId,
     required String prompt,
   }) async {
-    final headers = await _authorizationHeaders();
     final response = await _runRequest(
-      () => http.post(
-        Uri.parse(
-          '${_normalizeBaseUrl(baseUrl)}${AudioGenerationConfig.generatePath}',
-        ),
-        headers: headers,
-        body: jsonEncode({'user_id': userId, 'prompt': prompt}),
+      () => _client.post(
+        _uri('/api/generate'),
+        headers: const {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'userId': userId,
+          'user_id': userId,
+          'prompt': prompt,
+        }),
       ),
-      baseUrl: baseUrl,
-    );
-
-    _throwIfRequestFailed(
-      response,
-      defaultMessage: 'Không thể tạo generation audio',
     );
 
     final body = _decodeBodyAsMap(response.body);
-    final generationId =
-        body['taskId']?.toString() ?? body['task_id']?.toString() ?? '';
+    _throwIfRequestFailed(
+      response,
+      body,
+      defaultMessage: 'Không thể tạo audio AI.',
+    );
 
-    if (generationId.isEmpty) {
-      throw Exception('Backend không trả về generation id hợp lệ.');
+    final task = GeneratedAudioTaskModel.fromJson(body);
+    if (task.id.isEmpty) {
+      throw Exception('Worker không trả về taskId hợp lệ.');
     }
 
-    return body;
+    return task;
   }
 
-  Future<Map<String, dynamic>> getGeneration({
-    required String baseUrl,
-    required String generationId,
-  }) async {
-    final headers = await _authorizationHeaders(includeJsonContentType: false);
+  Future<GeneratedAudioTaskModel> getGenerationStatus(String taskId) async {
     final response = await _runRequest(
-      () => http.get(
-        Uri.parse(
-          '${_normalizeBaseUrl(baseUrl)}${AudioGenerationConfig.generationsPath}/$generationId',
-        ),
-        headers: headers,
+      () => _client.get(
+        _uri('/api/generations/${Uri.encodeComponent(taskId)}'),
+        headers: const {'Accept': 'application/json'},
       ),
-      baseUrl: baseUrl,
-    );
-
-    _throwIfRequestFailed(
-      response,
-      defaultMessage: 'Không thể lấy thông tin generation',
-    );
-
-    return _decodeBodyAsMap(response.body);
-  }
-
-  Future<List<GeneratedAudioTaskModel>> getMySongs({
-    required String baseUrl,
-    required String userId,
-  }) async {
-    final headers = await _authorizationHeaders(includeJsonContentType: false);
-    final uri = Uri.parse(
-      '${_normalizeBaseUrl(baseUrl)}${AudioGenerationConfig.mySongsPath}',
-    ).replace(queryParameters: {'user_id': userId});
-
-    final response = await _runRequest(
-      () => http.get(uri, headers: headers),
-      baseUrl: baseUrl,
-    );
-
-    _throwIfRequestFailed(
-      response,
-      defaultMessage: 'Không thể tải danh sách audio của user',
     );
 
     final body = _decodeBodyAsMap(response.body);
-    final tasks =
-        (body['tasks'] as List<dynamic>? ??
-        body['songs'] as List<dynamic>? ??
-        []);
-
-    return tasks
-        .whereType<Map<String, dynamic>>()
-        .map(GeneratedAudioTaskModel.fromJson)
-        .toList();
-  }
-
-  Future<GeneratedAudioTaskModel> generateMockAudioTask({
-    required String userId,
-    required String prompt,
-  }) async {
-    await Future<void>.delayed(const Duration(seconds: 2));
-
-    final now = DateTime.now().toUtc();
-    final taskId = 'mock_${now.millisecondsSinceEpoch}';
-    final baseTitle = _buildTitle(prompt);
-
-    final tracks = [
-      GeneratedAudioModel(
-        id: '${taskId}_a',
-        taskId: taskId,
-        variantIndex: 0,
-        title: '$baseTitle A',
-        prompt: prompt,
-        audioUrl: _mockSampleAudioUrlA,
-        streamAudioUrl: _mockSampleAudioUrlA,
-        imageUrl: 'https://picsum.photos/seed/${taskId}_a/640/640',
-        durationSeconds: 135,
-        provider: 'mock-suno-api',
-        modelName: 'V5',
-        tags: _buildTags(prompt),
-        createdAt: now,
-      ),
-      GeneratedAudioModel(
-        id: '${taskId}_b',
-        taskId: taskId,
-        variantIndex: 1,
-        title: '$baseTitle B',
-        prompt: prompt,
-        audioUrl: _mockSampleAudioUrlB,
-        streamAudioUrl: _mockSampleAudioUrlB,
-        imageUrl: 'https://picsum.photos/seed/${taskId}_b/640/640',
-        durationSeconds: 136,
-        provider: 'mock-suno-api',
-        modelName: 'V5',
-        tags: _buildTags(prompt),
-        createdAt: now,
-      ),
-    ];
-
-    return GeneratedAudioTaskModel(
-      id: taskId,
-      userId: userId,
-      prompt: prompt,
-      status: 'success',
-      provider: 'mock-suno-api',
-      outputCount: tracks.length,
-      tracks: tracks,
-      createdAt: now,
-      updatedAt: now,
+    _throwIfRequestFailed(
+      response,
+      body,
+      defaultMessage: 'Không thể lấy trạng thái tạo audio.',
     );
-  }
 
-  String _buildTitle(String prompt) {
-    final words = prompt
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((word) => word.isNotEmpty)
-        .take(4)
-        .map(_capitalize)
-        .toList();
-
-    if (words.isEmpty) {
-      return 'AI Audio Demo';
+    final task = GeneratedAudioTaskModel.fromJson(body);
+    if (task.id.isEmpty) {
+      throw Exception('Worker không trả về taskId hợp lệ.');
     }
 
-    return words.join(' ');
+    return task;
   }
 
-  List<String> _buildTags(String prompt) {
-    return prompt
-        .split(RegExp(r'[,;\n]'))
-        .map((item) => item.trim())
-        .where((item) => item.isNotEmpty)
-        .take(6)
-        .toList();
-  }
-
-  String _capitalize(String value) {
-    if (value.isEmpty) {
-      return value;
-    }
-
-    return '${value[0].toUpperCase()}${value.substring(1)}';
-  }
-
-  String _normalizeBaseUrl(String baseUrl) {
-    return baseUrl.replaceFirst(RegExp(r'/+$'), '');
-  }
-
-  Future<Map<String, String>> _authorizationHeaders({
-    bool includeJsonContentType = true,
-  }) async {
-    final headers = <String, String>{};
-    if (includeJsonContentType) {
-      headers['Content-Type'] = 'application/json';
-    }
-
-    final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
-    if (idToken != null && idToken.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $idToken';
-    }
-
-    return headers;
+  Uri _uri(String path) {
+    return Uri.parse('$_baseUrl$path');
   }
 
   Future<http.Response> _runRequest(
-    Future<http.Response> Function() request, {
-    required String baseUrl,
-  }) async {
+    Future<http.Response> Function() request,
+  ) async {
     try {
       return await request().timeout(
-        Duration(seconds: AudioGenerationConfig.timeoutSeconds),
+        const Duration(seconds: AppConfig.audioGenerationRequestTimeoutSeconds),
       );
     } on TimeoutException {
-      throw Exception(AudioGenerationConfig.buildTimeoutMessage(baseUrl));
+      throw Exception(AppConfig.buildAudioGenerationTimeoutMessage(_baseUrl));
     } on http.ClientException catch (error) {
       throw Exception(
-        AudioGenerationConfig.buildConnectionErrorMessage(
-          baseUrl,
+        AppConfig.buildAudioGenerationConnectionErrorMessage(
+          _baseUrl,
           details: error.message,
         ),
       );
@@ -230,17 +96,25 @@ class AudioGenerationRemoteDataSource {
   }
 
   Map<String, dynamic> _decodeBodyAsMap(String body) {
-    final decoded = jsonDecode(body);
+    if (body.trim().isEmpty) {
+      return <String, dynamic>{};
+    }
 
+    final decoded = jsonDecode(body);
     if (decoded is Map<String, dynamic>) {
       return decoded;
     }
 
-    throw Exception('Backend trả về dữ liệu không đúng định dạng JSON object.');
+    if (decoded is Map) {
+      return decoded.map((key, value) => MapEntry(key.toString(), value));
+    }
+
+    throw Exception('Worker trả về dữ liệu không đúng định dạng JSON object.');
   }
 
   void _throwIfRequestFailed(
-    http.Response response, {
+    http.Response response,
+    Map<String, dynamic> body, {
     required String defaultMessage,
   }) {
     if (response.statusCode < 400) {
@@ -248,21 +122,14 @@ class AudioGenerationRemoteDataSource {
     }
 
     final message =
-        _tryReadErrorMessage(response.body) ??
+        body['error']?.toString() ??
+        body['message']?.toString() ??
         '$defaultMessage (${response.statusCode})';
 
     throw Exception(message);
   }
 
-  String? _tryReadErrorMessage(String body) {
-    try {
-      final decoded = jsonDecode(body);
-
-      if (decoded is Map<String, dynamic>) {
-        return decoded['error']?.toString();
-      }
-    } catch (_) {}
-
-    return null;
+  static String _normalizeBaseUrl(String value) {
+    return value.trim().replaceFirst(RegExp(r'/+$'), '');
   }
 }

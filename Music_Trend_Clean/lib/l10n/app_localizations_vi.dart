@@ -68,7 +68,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get likedTabTitle => 'Đã thích';
 
   @override
-  String get likedTabDescription => 'Danh sách bài hát yêu thích sẽ hiển thị tại đây.';
+  String get likedTabDescription =>
+      'Danh sách bài hát yêu thích sẽ hiển thị tại đây.';
 
   @override
   String get editProfileTitle => 'Chỉnh sửa hồ sơ';
@@ -104,7 +105,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get genreScreenTitle => 'Nhạc ngắn theo năm';
 
   @override
-  String get genreScreenSubtitle => 'Những đoạn nhạc ngắn được gom theo từng năm để bạn nghe lại đúng vibe của từng giai đoạn.';
+  String get genreScreenSubtitle =>
+      'Những đoạn nhạc ngắn được gom theo từng năm để bạn nghe lại đúng vibe của từng giai đoạn.';
 
   @override
   String get playlistsLabel => 'Danh sách phát';
@@ -152,7 +154,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get publicPlaylistsTitle => 'Playlist công khai';
 
   @override
-  String get publicPlaylistsSubtitle => 'Các playlist đang được chia sẻ từ hồ sơ này.';
+  String get publicPlaylistsSubtitle =>
+      'Các playlist đang được chia sẻ từ hồ sơ này.';
 
   @override
   String get publicPlaylistsEmpty => 'Chưa có playlist công khai nào';
@@ -171,7 +174,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileSignInRequiredTitle => 'Chưa đăng nhập';
 
   @override
-  String get profileSignInRequiredSubtitle => 'Vui lòng đăng nhập để xem và tùy chỉnh hồ sơ cá nhân của bạn.';
+  String get profileSignInRequiredSubtitle =>
+      'Vui lòng đăng nhập để xem và tùy chỉnh hồ sơ cá nhân của bạn.';
 
   @override
   String get profileSignInRequiredAction => 'Đăng nhập ngay';
@@ -195,7 +199,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get adminWebOnlyTitle => 'Trang quản trị chỉ dùng trên web';
 
   @override
-  String get adminWebOnlyMessage => 'Hãy dùng bản web để quản lý nội dung bằng giao diện admin mới.';
+  String get adminWebOnlyMessage =>
+      'Hãy dùng bản web để quản lý nội dung bằng giao diện admin mới.';
 
   @override
   String get adminAnalyticsTitle => 'Phân tích quản trị';
@@ -225,40 +230,49 @@ class AppLocalizationsVi extends AppLocalizations {
   String get adminRecentlyUpdatedTitle => 'Cập nhật gần đây';
 
   @override
-  String get adminRecentlyUpdatedSubtitle => 'Những bài được chỉnh sửa hoặc duyệt gần nhất.';
+  String get adminRecentlyUpdatedSubtitle =>
+      'Những bài được chỉnh sửa hoặc duyệt gần nhất.';
 
   @override
-  String get adminNoRecentlyUpdatedMessage => 'Chưa có dữ liệu cập nhật gần đây theo bộ lọc hiện tại.';
+  String get adminNoRecentlyUpdatedMessage =>
+      'Chưa có dữ liệu cập nhật gần đây theo bộ lọc hiện tại.';
 
   @override
   String get adminPendingOldestTitle => 'Bài chờ duyệt lâu nhất';
 
   @override
-  String get adminPendingOldestSubtitle => 'Ưu tiên xử lý các bài đã chờ lâu để tránh tồn đọng.';
+  String get adminPendingOldestSubtitle =>
+      'Ưu tiên xử lý các bài đã chờ lâu để tránh tồn đọng.';
 
   @override
-  String get adminNoPendingOldestMessage => 'Không có bài chờ duyệt theo bộ lọc hiện tại.';
+  String get adminNoPendingOldestMessage =>
+      'Không có bài chờ duyệt theo bộ lọc hiện tại.';
 
   @override
-  String get adminYearSongsRecentlyUpdatedTitle => 'Nhạc theo năm cập nhật gần đây';
+  String get adminYearSongsRecentlyUpdatedTitle =>
+      'Nhạc theo năm cập nhật gần đây';
 
   @override
-  String get adminYearSongsRecentlyUpdatedSubtitle => 'Theo dõi nhanh nội dung nhạc theo năm mới được chỉnh sửa.';
+  String get adminYearSongsRecentlyUpdatedSubtitle =>
+      'Theo dõi nhanh nội dung nhạc theo năm mới được chỉnh sửa.';
 
   @override
-  String get adminNoYearSongsRecentlyUpdatedMessage => 'Chưa có bản cập nhật nhạc theo năm theo bộ lọc hiện tại.';
+  String get adminNoYearSongsRecentlyUpdatedMessage =>
+      'Chưa có bản cập nhật nhạc theo năm theo bộ lọc hiện tại.';
 
   @override
   String get adminYearSongsAnalyticsTitle => 'Ghi chú về nhạc theo năm';
 
   @override
-  String get adminYearSongsAnalyticsSubtitle => 'Nhạc theo năm hiện chưa có weekly trending riêng. Dashboard đang ưu tiên hiển thị cập nhật mới nhất để admin vẫn theo dõi được nhánh nội dung này.';
+  String get adminYearSongsAnalyticsSubtitle =>
+      'Nhạc theo năm hiện chưa có weekly trending riêng. Dashboard đang ưu tiên hiển thị cập nhật mới nhất để admin vẫn theo dõi được nhánh nội dung này.';
 
   @override
   String get adminWeeklyTrendingTitle => 'Top thịnh hành tuần';
 
   @override
-  String get adminWeeklyTrendingSubtitle => 'Dựa trên số người nghe duy nhất và tổng lượt phát trong tuần hiện tại.';
+  String get adminWeeklyTrendingSubtitle =>
+      'Dựa trên số người nghe duy nhất và tổng lượt phát trong tuần hiện tại.';
 
   @override
   String get errorLabel => 'Lỗi';
@@ -273,13 +287,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playlistDescriptionLabel => 'Mô tả';
 
   @override
-  String get playlistDescriptionHint => 'Thêm cảm hứng hoặc mục đích cho playlist này.';
+  String get playlistDescriptionHint =>
+      'Thêm cảm hứng hoặc mục đích cho playlist này.';
 
   @override
   String get playlistLoadingTitle => 'Đang tải playlist';
 
   @override
-  String get playlistLoadingSubtitle => 'Thư viện cá nhân của bạn đang được đồng bộ.';
+  String get playlistLoadingSubtitle =>
+      'Thư viện cá nhân của bạn đang được đồng bộ.';
 
   @override
   String get playlistLoadErrorTitle => 'Không thể tải playlist';
@@ -288,7 +304,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playlistEmptyTitle => 'Chưa có playlist nào';
 
   @override
-  String get playlistEmptySubtitle => 'Tạo playlist đầu tiên để bắt đầu lưu thư viện cá nhân.';
+  String get playlistEmptySubtitle =>
+      'Tạo playlist đầu tiên để bắt đầu lưu thư viện cá nhân.';
 
   @override
   String get playlistErrorEmptyName => 'Vui lòng nhập tên playlist.';
@@ -297,13 +314,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playlistErrorNotFound => 'Không tìm thấy playlist.';
 
   @override
-  String get playlistErrorAuthenticationRequiredForCreate => 'Vui lòng đăng nhập trước khi tạo playlist.';
+  String get playlistErrorAuthenticationRequiredForCreate =>
+      'Vui lòng đăng nhập trước khi tạo playlist.';
 
   @override
-  String get playlistErrorAuthenticationRequiredForUpdate => 'Vui lòng đăng nhập trước khi cập nhật playlist.';
+  String get playlistErrorAuthenticationRequiredForUpdate =>
+      'Vui lòng đăng nhập trước khi cập nhật playlist.';
 
   @override
-  String get playlistErrorAuthenticationRequiredForDelete => 'Vui lòng đăng nhập trước khi xóa playlist.';
+  String get playlistErrorAuthenticationRequiredForDelete =>
+      'Vui lòng đăng nhập trước khi xóa playlist.';
 
   @override
   String get addSongsToPlaylistTitle => 'Thêm bài hát';
@@ -350,7 +370,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get removeSongFromPlaylistTitle => 'Xóa bài hát';
 
   @override
-  String removeSongFromPlaylistConfirmation(String songTitle, String playlistName) {
+  String removeSongFromPlaylistConfirmation(
+    String songTitle,
+    String playlistName,
+  ) {
     return 'Xóa \"$songTitle\" khỏi playlist \"$playlistName\"?';
   }
 
@@ -360,7 +383,8 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get songListNotReadyMessage => 'Danh sách bài hát chưa sẵn sàng. Vui lòng thử lại sau.';
+  String get songListNotReadyMessage =>
+      'Danh sách bài hát chưa sẵn sàng. Vui lòng thử lại sau.';
 
   @override
   String get playPlaylistAction => 'Phát playlist';
@@ -369,7 +393,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playlistSongsLoadingTitle => 'Đang tải bài hát';
 
   @override
-  String get playlistSongsLoadingSubtitle => 'Danh sách bài hát trong playlist đang được chuẩn bị.';
+  String get playlistSongsLoadingSubtitle =>
+      'Danh sách bài hát trong playlist đang được chuẩn bị.';
 
   @override
   String get playlistSongsLoadErrorTitle => 'Không thể tải bài hát';
@@ -378,7 +403,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playlistSongsEmptyTitle => 'Playlist này chưa có bài hát nào';
 
   @override
-  String get playlistSongsEmptySubtitle => 'Thêm bài hát để bắt đầu phát và quản lý danh sách này.';
+  String get playlistSongsEmptySubtitle =>
+      'Thêm bài hát để bắt đầu phát và quản lý danh sách này.';
 
   @override
   String get removeFromPlaylistTooltip => 'Xóa khỏi playlist';
@@ -398,13 +424,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get importAudioFromVideo => 'Nhập âm thanh từ video';
 
   @override
-  String get importAudioFromVideoSubtitle => 'Tự động trích xuất âm thanh từ clip của bạn';
+  String get importAudioFromVideoSubtitle =>
+      'Tự động trích xuất âm thanh từ clip của bạn';
 
   @override
   String get importAudioFromDevice => 'Nhập âm thanh từ thiết bị';
 
   @override
-  String get importAudioFromDeviceSubtitle => 'Chọn âm thanh chất lượng cao từ máy của bạn';
+  String get importAudioFromDeviceSubtitle =>
+      'Chọn âm thanh chất lượng cao từ máy của bạn';
 
   @override
   String get importButtonLabel => '+ Nhập';
@@ -416,7 +444,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get yourAudioEmptyTitle => 'Chưa có âm thanh nào';
 
   @override
-  String get yourAudioEmptySubtitle => 'Mỗi lần tạo nhạc AI sẽ sinh ra 2 phiên bản. Các phiên bản đó sẽ xuất hiện tại đây theo từng lượt tạo.';
+  String get yourAudioEmptySubtitle =>
+      'Mỗi lần tạo nhạc AI sẽ sinh ra 2 phiên bản. Các phiên bản đó sẽ xuất hiện tại đây theo từng lượt tạo.';
 
   @override
   String get getStartedNow => 'Bắt đầu ngay';
@@ -425,7 +454,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get favoriteSongsLoadingTitle => 'Đang tải bài hát yêu thích';
 
   @override
-  String get favoriteSongsLoadingSubtitle => 'Danh sách bài hát bạn đã thích đang được đồng bộ.';
+  String get favoriteSongsLoadingSubtitle =>
+      'Danh sách bài hát bạn đã thích đang được đồng bộ.';
 
   @override
   String get favoriteSongsLoadErrorTitle => 'Không thể tải bài hát yêu thích';
@@ -457,7 +487,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get historyLoadingTitle => 'Đang tải lịch sử nghe';
 
   @override
-  String get historyLoadingSubtitle => 'Các bài hát bạn đã nghe gần đây đang được đồng bộ.';
+  String get historyLoadingSubtitle =>
+      'Các bài hát bạn đã nghe gần đây đang được đồng bộ.';
 
   @override
   String get historyLoadErrorTitle => 'Không thể tải lịch sử nghe';
@@ -529,7 +560,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get trendingEmptyTitle => 'Chưa có đủ lượt nghe để xếp hạng tuần này';
 
   @override
-  String get trendingEmptySubtitle => 'Top 4 sẽ tự cập nhật khi người dùng nghe đủ thời lượng.';
+  String get trendingEmptySubtitle =>
+      'Top 4 sẽ tự cập nhật khi người dùng nghe đủ thời lượng.';
 
   @override
   String listenersCount(String count) {
@@ -548,7 +580,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get noSongDataTitle => 'Chưa có dữ liệu bài hát';
 
   @override
-  String get noSongDataSubtitle => 'Thêm bài hát trong Firestore hoặc từ trang admin để giao diện này hiển thị dữ liệu thật.';
+  String get noSongDataSubtitle =>
+      'Thêm bài hát trong Firestore hoặc từ trang admin để giao diện này hiển thị dữ liệu thật.';
 
   @override
   String get searchHint => 'Tìm bài hát, ca sĩ, mood, trend...';
@@ -557,7 +590,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get noMatchingSongs => 'Không tìm thấy bài hát phù hợp';
 
   @override
-  String get enterSearchPrompt => 'Nhập câu tìm kiếm để khám phá âm nhạc mới... ';
+  String get enterSearchPrompt =>
+      'Nhập câu tìm kiếm để khám phá âm nhạc mới... ';
 
   @override
   String searchSourceLabel(String provider) {
@@ -583,7 +617,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get passwordTooShortMessage => 'Mật khẩu phải có ít nhất 8 ký tự.';
 
   @override
-  String get passwordWeakMessage => 'Mật khẩu cần có chữ hoa, chữ thường, số và ký tự đặc biệt.';
+  String get passwordWeakMessage =>
+      'Mật khẩu cần có chữ hoa, chữ thường, số và ký tự đặc biệt.';
 
   @override
   String get resetPasswordSentMessage => 'Email đặt lại mật khẩu đã được gửi.';
@@ -607,7 +642,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get passwordsDoNotMatch => 'Mật khẩu không khớp';
 
   @override
-  String get passwordRequirementHint => 'Mật khẩu nên có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.';
+  String get passwordRequirementHint =>
+      'Mật khẩu nên có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.';
 
   @override
   String get ageGroupLabel => 'Nhóm tuổi';
@@ -636,10 +672,12 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get verificationEmailSentMessage => 'Đã gửi email xác thực. Vui lòng kiểm tra hộp thư của bạn.';
+  String get verificationEmailSentMessage =>
+      'Đã gửi email xác thực. Vui lòng kiểm tra hộp thư của bạn.';
 
   @override
-  String get emailVerificationRequiredMessage => 'Tài khoản của bạn chưa xác thực email.';
+  String get emailVerificationRequiredMessage =>
+      'Tài khoản của bạn chưa xác thực email.';
 
   @override
   String get emailVerificationTitle => 'Xác thực email của bạn';
@@ -656,7 +694,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get checkVerificationStatus => 'Tôi đã xác thực xong';
 
   @override
-  String get genericVerificationErrorMessage => 'Không thể gửi email xác thực lúc này.';
+  String get genericVerificationErrorMessage =>
+      'Không thể gửi email xác thực lúc này.';
 
   @override
   String get alreadyHaveAccount => 'Đã có tài khoản?';
@@ -665,7 +704,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get backToLogin => 'Quay lại đăng nhập';
 
   @override
-  String get createAudioSuccessMessage => 'Đã gửi yêu cầu tạo audio AI. Các phiên bản sẽ sớm xuất hiện trong My Audios.';
+  String get createAudioSuccessMessage =>
+      'Đã gửi yêu cầu tạo audio AI. Các phiên bản sẽ sớm xuất hiện trong My Audios.';
 
   @override
   String get createAudioTitle => 'Tạo Audio AI';
@@ -674,10 +714,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get promptLabel => 'Prompt mô tả';
 
   @override
-  String get promptHint => 'Ví dụ: Tạo một đoạn nhạc chill lofi, piano nhẹ, mưa đêm thành phố, cảm giác thư giãn.';
+  String get promptHint =>
+      'Ví dụ: Tạo một đoạn nhạc chill lofi, piano nhẹ, mưa đêm thành phố, cảm giác thư giãn.';
 
   @override
-  String get promptHelpText => 'Prompt càng rõ về mood, nhạc cụ và vibe thì 2 phiên bản trả về càng dễ dùng. API Suno-style sẽ tự quyết định thời lượng thực tế.';
+  String get promptHelpText =>
+      'Prompt càng rõ về mood, nhạc cụ và vibe thì 2 phiên bản trả về càng dễ dùng. API Suno-style sẽ tự quyết định thời lượng thực tế.';
 
   @override
   String get durationLabel => 'Thời lượng';
@@ -688,11 +730,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String mockApiMessage(String baseUrl) {
-    return 'Đang dùng API giả lập với URL: $baseUrl\nKhi có API thật, chỉ cần đổi URL trong config.';
-  }
-
-  @override
   String get generatingAudio => 'Đang tạo audio...';
 
   @override
@@ -700,11 +737,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get createTwoVersions => 'Tạo 2 phiên bản';
-
-  @override
-  String createAudioApiNotice(String baseUrl) {
-    return 'Mỗi lần tạo sẽ nhận 2 phiên bản từ một task. Thời lượng thực tế do provider quyết định, không bị khóa ở 15/30/45/60 giây.\nBackend hiện dùng: $baseUrl';
-  }
 
   @override
   String get aiAudioStudio => 'AI Audio Studio';
@@ -725,7 +757,8 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get generationQueuedHint => 'Task đang được xử lý. Mở My Audios để theo dõi cập nhật.';
+  String get generationQueuedHint =>
+      'Task đang được xử lý. Mở My Audios để theo dõi cập nhật.';
 
   @override
   String generatedVersionLabel(String label) {
@@ -742,10 +775,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get promptRequiredMessage => 'Vui lòng nhập prompt để tạo audio.';
 
   @override
-  String get promptTooShortMessage => 'Prompt nên có ít nhất 10 ký tự để AI hiểu tốt hơn.';
+  String get promptTooShortMessage =>
+      'Prompt nên có ít nhất 10 ký tự để AI hiểu tốt hơn.';
 
   @override
-  String get audioDurationRangeMessage => 'Thời lượng audio phải từ 5 đến 60 giây.';
+  String get audioDurationRangeMessage =>
+      'Thời lượng audio phải từ 5 đến 60 giây.';
 
   @override
   String get deleteGeneratedTaskTitle => 'Xóa lượt tạo nhạc';
@@ -765,7 +800,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get accessDeniedTitle => 'Truy cập bị từ chối';
 
   @override
-  String get accessDeniedMessage => 'Bạn không có quyền truy cập vào trang này.';
+  String get accessDeniedMessage =>
+      'Bạn không có quyền truy cập vào trang này.';
 
   @override
   String get goBack => 'Quay lại';
@@ -792,7 +828,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get adminNoSongsForFilterTitle => 'Không có bài hát trong bộ lọc này';
 
   @override
-  String get adminNoSongsForFilterSubtitle => 'Hãy đổi bộ lọc trạng thái hoặc khôi phục nội dung đã lưu kho.';
+  String get adminNoSongsForFilterSubtitle =>
+      'Hãy đổi bộ lọc trạng thái hoặc khôi phục nội dung đã lưu kho.';
 
   @override
   String get songStatusPublished => 'Đang hiển thị';
@@ -824,13 +861,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get adminModerationReasonLabel => 'Lý do moderation';
 
   @override
-  String get adminModerationReasonHint => 'Ví dụ: Nội dung chưa đạt chất lượng phát hành hoặc cần chỉnh metadata.';
+  String get adminModerationReasonHint =>
+      'Ví dụ: Nội dung chưa đạt chất lượng phát hành hoặc cần chỉnh metadata.';
 
   @override
-  String get adminArchiveReasonHint => 'Ví dụ: Nội dung không còn phù hợp để hiển thị công khai hoặc cần lưu kho để rà soát lại.';
+  String get adminArchiveReasonHint =>
+      'Ví dụ: Nội dung không còn phù hợp để hiển thị công khai hoặc cần lưu kho để rà soát lại.';
 
   @override
-  String get adminModerationReasonRequiredMessage => 'Vui lòng nhập lý do moderation.';
+  String get adminModerationReasonRequiredMessage =>
+      'Vui lòng nhập lý do moderation.';
 
   @override
   String adminModeratedByLabel(String value) {
@@ -843,22 +883,28 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get adminModerationPresetMetadata => 'Metadata cần chỉnh sửa trước khi phát hành';
+  String get adminModerationPresetMetadata =>
+      'Metadata cần chỉnh sửa trước khi phát hành';
 
   @override
-  String get adminModerationPresetQuality => 'Chất lượng audio chưa đạt yêu cầu';
+  String get adminModerationPresetQuality =>
+      'Chất lượng audio chưa đạt yêu cầu';
 
   @override
-  String get adminModerationPresetDuplicate => 'Nội dung trùng hoặc gần trùng với bài khác';
+  String get adminModerationPresetDuplicate =>
+      'Nội dung trùng hoặc gần trùng với bài khác';
 
   @override
-  String get adminModerationPresetArchivedReview => 'Đưa vào kho để rà soát lại trước khi dùng tiếp';
+  String get adminModerationPresetArchivedReview =>
+      'Đưa vào kho để rà soát lại trước khi dùng tiếp';
 
   @override
-  String get adminModerationPresetOutdated => 'Nội dung đã cũ và không còn phù hợp để hiển thị';
+  String get adminModerationPresetOutdated =>
+      'Nội dung đã cũ và không còn phù hợp để hiển thị';
 
   @override
-  String get adminSearchHint => 'Tìm theo tên bài, nghệ sĩ, trạng thái hoặc lý do moderation';
+  String get adminSearchHint =>
+      'Tìm theo tên bài, nghệ sĩ, trạng thái hoặc lý do moderation';
 
   @override
   String get adminSortLabel => 'Sắp xếp';
@@ -883,7 +929,8 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get adminPendingSubmissionNotice => 'Nội dung mới sẽ được lưu ở trạng thái chờ duyệt. Sau khi kiểm tra xong, bạn có thể publish trực tiếp từ dashboard admin.';
+  String get adminPendingSubmissionNotice =>
+      'Nội dung mới sẽ được lưu ở trạng thái chờ duyệt. Sau khi kiểm tra xong, bạn có thể publish trực tiếp từ dashboard admin.';
 
   @override
   String get hideSongAction => 'Ẩn khỏi ứng dụng';
@@ -998,7 +1045,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get yearSongEmptyTitle => 'Chưa có bài nào theo năm';
 
   @override
-  String get yearSongEmptySubtitle => 'Nhấn nút thêm để đưa bài hát vào kho nhạc theo năm từ 2018 đến 2026.';
+  String get yearSongEmptySubtitle =>
+      'Nhấn nút thêm để đưa bài hát vào kho nhạc theo năm từ 2018 đến 2026.';
 
   @override
   String deleteYearSongConfirmMessage(String title) {

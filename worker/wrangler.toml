@@ -1,0 +1,8 @@
+name = "music-trend-suno-worker"
+main = "src/index.js"
+compatibility_date = "2026-05-13"
+
+[vars]
+SUNO_API_BASE_URL = "https://api.sunoapi.org"
+SUNO_MODEL = "V5"
+CORS_ORIGIN = "*"

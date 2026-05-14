@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:math' as math;
-
 import 'package:login_flutter/domain/entities/generated_audio_task_entity.dart';
 
 class MyAudiosSyncHelper {
@@ -78,66 +75,5 @@ class MyAudiosSyncHelper {
       default:
         return 0;
     }
-  }
-
-  bool isPendingTask(GeneratedAudioTaskEntity task) {
-    final normalized = task.status.trim().toLowerCase();
-    return normalized == 'processing' || normalized == 'first_success';
-  }
-
-  bool shouldPollPending(List<GeneratedAudioTaskEntity> tasks) {
-    return tasks.any(isPendingTask);
-  }
-
-  bool hasTaskChanged(
-    GeneratedAudioTaskEntity? current,
-    GeneratedAudioTaskEntity incoming,
-  ) {
-    if (current == null) {
-      return true;
-    }
-
-    return jsonEncode(current.toJson()) != jsonEncode(incoming.toJson());
-  }
-
-  bool hasTaskListChanged(
-    List<GeneratedAudioTaskEntity> current,
-    List<GeneratedAudioTaskEntity> next,
-  ) {
-    if (current.length != next.length) {
-      return true;
-    }
-
-    for (var index = 0; index < current.length; index++) {
-      if (jsonEncode(current[index].toJson()) !=
-          jsonEncode(next[index].toJson())) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  int nextPollingAttempt({
-    required int previousAttempt,
-    required bool hadProgress,
-    required int maxAttempt,
-  }) {
-    if (hadProgress) {
-      return 0;
-    }
-
-    return math.min(previousAttempt + 1, maxAttempt);
-  }
-
-  Duration pollingDelayForAttempt({
-    required int attempt,
-    required int baseSeconds,
-    required int maxSeconds,
-  }) {
-    final safeAttempt = attempt.clamp(0, 30);
-    final multiplier = 1 << safeAttempt;
-    final seconds = math.min(baseSeconds * multiplier, maxSeconds);
-    return Duration(seconds: seconds);
   }
 }

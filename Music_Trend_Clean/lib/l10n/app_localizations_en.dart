@@ -104,7 +104,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get genreScreenTitle => 'Short Tracks by Year';
 
   @override
-  String get genreScreenSubtitle => 'Short tracks are grouped by year so you can revisit the vibe of each period.';
+  String get genreScreenSubtitle =>
+      'Short tracks are grouped by year so you can revisit the vibe of each period.';
 
   @override
   String get playlistsLabel => 'Playlists';
@@ -171,7 +172,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileSignInRequiredTitle => 'Not signed in';
 
   @override
-  String get profileSignInRequiredSubtitle => 'Please sign in to view and customize your profile.';
+  String get profileSignInRequiredSubtitle =>
+      'Please sign in to view and customize your profile.';
 
   @override
   String get profileSignInRequiredAction => 'Sign in now';
@@ -195,7 +197,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminWebOnlyTitle => 'Admin is available on web';
 
   @override
-  String get adminWebOnlyMessage => 'Use the web build to manage content with the new admin workspace.';
+  String get adminWebOnlyMessage =>
+      'Use the web build to manage content with the new admin workspace.';
 
   @override
   String get adminAnalyticsTitle => 'Admin Analytics';
@@ -225,40 +228,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminRecentlyUpdatedTitle => 'Recently updated';
 
   @override
-  String get adminRecentlyUpdatedSubtitle => 'Songs that were edited or moderated most recently.';
+  String get adminRecentlyUpdatedSubtitle =>
+      'Songs that were edited or moderated most recently.';
 
   @override
-  String get adminNoRecentlyUpdatedMessage => 'No recent updates match the current filters.';
+  String get adminNoRecentlyUpdatedMessage =>
+      'No recent updates match the current filters.';
 
   @override
   String get adminPendingOldestTitle => 'Oldest pending songs';
 
   @override
-  String get adminPendingOldestSubtitle => 'Use this list to clear long-waiting review items first.';
+  String get adminPendingOldestSubtitle =>
+      'Use this list to clear long-waiting review items first.';
 
   @override
-  String get adminNoPendingOldestMessage => 'No pending songs match the current filters.';
+  String get adminNoPendingOldestMessage =>
+      'No pending songs match the current filters.';
 
   @override
-  String get adminYearSongsRecentlyUpdatedTitle => 'Recently updated by-year songs';
+  String get adminYearSongsRecentlyUpdatedTitle =>
+      'Recently updated by-year songs';
 
   @override
-  String get adminYearSongsRecentlyUpdatedSubtitle => 'Quickly track by-year content that changed most recently.';
+  String get adminYearSongsRecentlyUpdatedSubtitle =>
+      'Quickly track by-year content that changed most recently.';
 
   @override
-  String get adminNoYearSongsRecentlyUpdatedMessage => 'No by-year updates match the current filters.';
+  String get adminNoYearSongsRecentlyUpdatedMessage =>
+      'No by-year updates match the current filters.';
 
   @override
   String get adminYearSongsAnalyticsTitle => 'By-year note';
 
   @override
-  String get adminYearSongsAnalyticsSubtitle => 'By-year songs do not have a separate weekly trending feed yet. For now, the dashboard highlights the most recent updates so admins can still monitor that catalog slice.';
+  String get adminYearSongsAnalyticsSubtitle =>
+      'By-year songs do not have a separate weekly trending feed yet. For now, the dashboard highlights the most recent updates so admins can still monitor that catalog slice.';
 
   @override
   String get adminWeeklyTrendingTitle => 'Top weekly trending';
 
   @override
-  String get adminWeeklyTrendingSubtitle => 'Based on unique listeners and total plays from the current week.';
+  String get adminWeeklyTrendingSubtitle =>
+      'Based on unique listeners and total plays from the current week.';
 
   @override
   String get errorLabel => 'Error';
@@ -273,13 +285,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistDescriptionLabel => 'Description';
 
   @override
-  String get playlistDescriptionHint => 'Set the mood or purpose of this playlist.';
+  String get playlistDescriptionHint =>
+      'Set the mood or purpose of this playlist.';
 
   @override
   String get playlistLoadingTitle => 'Loading playlists';
 
   @override
-  String get playlistLoadingSubtitle => 'Your personal library is being synchronized.';
+  String get playlistLoadingSubtitle =>
+      'Your personal library is being synchronized.';
 
   @override
   String get playlistLoadErrorTitle => 'Unable to load playlists';
@@ -288,7 +302,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistEmptyTitle => 'No playlists yet';
 
   @override
-  String get playlistEmptySubtitle => 'Create your first playlist to start building your personal library.';
+  String get playlistEmptySubtitle =>
+      'Create your first playlist to start building your personal library.';
 
   @override
   String get playlistErrorEmptyName => 'Please enter a playlist name.';
@@ -297,13 +312,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistErrorNotFound => 'Playlist not found.';
 
   @override
-  String get playlistErrorAuthenticationRequiredForCreate => 'Please sign in before creating a playlist.';
+  String get playlistErrorAuthenticationRequiredForCreate =>
+      'Please sign in before creating a playlist.';
 
   @override
-  String get playlistErrorAuthenticationRequiredForUpdate => 'Please sign in before updating a playlist.';
+  String get playlistErrorAuthenticationRequiredForUpdate =>
+      'Please sign in before updating a playlist.';
 
   @override
-  String get playlistErrorAuthenticationRequiredForDelete => 'Please sign in before deleting a playlist.';
+  String get playlistErrorAuthenticationRequiredForDelete =>
+      'Please sign in before deleting a playlist.';
 
   @override
   String get addSongsToPlaylistTitle => 'Add songs';
@@ -350,7 +368,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeSongFromPlaylistTitle => 'Remove song';
 
   @override
-  String removeSongFromPlaylistConfirmation(String songTitle, String playlistName) {
+  String removeSongFromPlaylistConfirmation(
+    String songTitle,
+    String playlistName,
+  ) {
     return 'Remove \"$songTitle\" from playlist \"$playlistName\"?';
   }
 
@@ -360,7 +381,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get songListNotReadyMessage => 'The song list is not ready yet. Please try again later.';
+  String get songListNotReadyMessage =>
+      'The song list is not ready yet. Please try again later.';
 
   @override
   String get playPlaylistAction => 'Play playlist';
@@ -369,7 +391,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistSongsLoadingTitle => 'Loading songs';
 
   @override
-  String get playlistSongsLoadingSubtitle => 'The songs in this playlist are being prepared.';
+  String get playlistSongsLoadingSubtitle =>
+      'The songs in this playlist are being prepared.';
 
   @override
   String get playlistSongsLoadErrorTitle => 'Unable to load songs';
@@ -378,7 +401,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistSongsEmptyTitle => 'This playlist has no songs yet';
 
   @override
-  String get playlistSongsEmptySubtitle => 'Add songs to start playing and managing this playlist.';
+  String get playlistSongsEmptySubtitle =>
+      'Add songs to start playing and managing this playlist.';
 
   @override
   String get removeFromPlaylistTooltip => 'Remove from playlist';
@@ -398,13 +422,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importAudioFromVideo => 'Import audio from video';
 
   @override
-  String get importAudioFromVideoSubtitle => 'Automatically extract audio from your clips';
+  String get importAudioFromVideoSubtitle =>
+      'Automatically extract audio from your clips';
 
   @override
   String get importAudioFromDevice => 'Import audio from device';
 
   @override
-  String get importAudioFromDeviceSubtitle => 'Choose high-quality audio from your device';
+  String get importAudioFromDeviceSubtitle =>
+      'Choose high-quality audio from your device';
 
   @override
   String get importButtonLabel => '+ Import';
@@ -416,7 +442,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yourAudioEmptyTitle => 'No audio yet';
 
   @override
-  String get yourAudioEmptySubtitle => 'Each AI music generation creates 2 versions. Those versions will appear here grouped by generation task.';
+  String get yourAudioEmptySubtitle =>
+      'Each AI music generation creates 2 versions. Those versions will appear here grouped by generation task.';
 
   @override
   String get getStartedNow => 'Get started now';
@@ -425,7 +452,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get favoriteSongsLoadingTitle => 'Loading favorite songs';
 
   @override
-  String get favoriteSongsLoadingSubtitle => 'Your liked songs are being synchronized.';
+  String get favoriteSongsLoadingSubtitle =>
+      'Your liked songs are being synchronized.';
 
   @override
   String get favoriteSongsLoadErrorTitle => 'Unable to load favorite songs';
@@ -445,7 +473,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get allFavoritesClearedMessage => 'All favorite songs have been removed.';
+  String get allFavoritesClearedMessage =>
+      'All favorite songs have been removed.';
 
   @override
   String get removeFromFavoritesTooltip => 'Remove from favorites';
@@ -457,7 +486,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get historyLoadingTitle => 'Loading listening history';
 
   @override
-  String get historyLoadingSubtitle => 'Your recently played songs are being synchronized.';
+  String get historyLoadingSubtitle =>
+      'Your recently played songs are being synchronized.';
 
   @override
   String get historyLoadErrorTitle => 'Unable to load listening history';
@@ -529,7 +559,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trendingEmptyTitle => 'Not enough listens to rank this week';
 
   @override
-  String get trendingEmptySubtitle => 'The top 4 will update automatically when users listen long enough.';
+  String get trendingEmptySubtitle =>
+      'The top 4 will update automatically when users listen long enough.';
 
   @override
   String listenersCount(String count) {
@@ -548,7 +579,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noSongDataTitle => 'No song data available';
 
   @override
-  String get noSongDataSubtitle => 'Add songs in Firestore or from the admin page to show real data here.';
+  String get noSongDataSubtitle =>
+      'Add songs in Firestore or from the admin page to show real data here.';
 
   @override
   String get searchHint => 'Search songs, artists, mood, trends...';
@@ -580,19 +612,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordRequiredMessage => 'Please enter your password.';
 
   @override
-  String get passwordTooShortMessage => 'Password must be at least 8 characters long.';
+  String get passwordTooShortMessage =>
+      'Password must be at least 8 characters long.';
 
   @override
-  String get passwordWeakMessage => 'Password must include uppercase, lowercase, number, and special character.';
+  String get passwordWeakMessage =>
+      'Password must include uppercase, lowercase, number, and special character.';
 
   @override
-  String get resetPasswordSentMessage => 'The password reset email has been sent.';
+  String get resetPasswordSentMessage =>
+      'The password reset email has been sent.';
 
   @override
   String get createAccountTitle => 'Create Account';
 
   @override
-  String get createAccountSubtitle => 'Join us to get started with your journey.';
+  String get createAccountSubtitle =>
+      'Join us to get started with your journey.';
 
   @override
   String get fullNameLabel => 'Full Name';
@@ -607,7 +643,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordsDoNotMatch => 'Passwords do not match';
 
   @override
-  String get passwordRequirementHint => 'Use at least 8 characters including uppercase, lowercase, number, and special character.';
+  String get passwordRequirementHint =>
+      'Use at least 8 characters including uppercase, lowercase, number, and special character.';
 
   @override
   String get ageGroupLabel => 'Age Group';
@@ -636,10 +673,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get verificationEmailSentMessage => 'Verification email sent. Please check your inbox.';
+  String get verificationEmailSentMessage =>
+      'Verification email sent. Please check your inbox.';
 
   @override
-  String get emailVerificationRequiredMessage => 'Your account is not verified yet.';
+  String get emailVerificationRequiredMessage =>
+      'Your account is not verified yet.';
 
   @override
   String get emailVerificationTitle => 'Verify Your Email';
@@ -656,7 +695,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkVerificationStatus => 'I have verified it';
 
   @override
-  String get genericVerificationErrorMessage => 'Unable to send a verification email right now.';
+  String get genericVerificationErrorMessage =>
+      'Unable to send a verification email right now.';
 
   @override
   String get alreadyHaveAccount => 'Already have an account?';
@@ -665,7 +705,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backToLogin => 'Back to Login';
 
   @override
-  String get createAudioSuccessMessage => 'Generation started. Your versions will appear in My Audios shortly.';
+  String get createAudioSuccessMessage =>
+      'Generation started. Your versions will appear in My Audios shortly.';
 
   @override
   String get createAudioTitle => 'Create AI Audio';
@@ -674,10 +715,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get promptLabel => 'Description Prompt';
 
   @override
-  String get promptHint => 'Example: Create a chill lofi music piece with soft piano, city-night rain, and a relaxing mood.';
+  String get promptHint =>
+      'Example: Create a chill lofi music piece with soft piano, city-night rain, and a relaxing mood.';
 
   @override
-  String get promptHelpText => 'The clearer the prompt is about mood, instruments, and vibe, the more usable both returned versions will be. The provider decides the actual duration.';
+  String get promptHelpText =>
+      'The clearer the prompt is about mood, instruments, and vibe, the more usable both returned versions will be. The provider decides the actual duration.';
 
   @override
   String get durationLabel => 'Duration';
@@ -688,11 +731,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String mockApiMessage(String baseUrl) {
-    return 'Using mock API with URL: $baseUrl\nWhen the real API is ready, just change the URL in config.';
-  }
-
-  @override
   String get generatingAudio => 'Generating audio...';
 
   @override
@@ -700,11 +738,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createTwoVersions => 'Create 2 versions';
-
-  @override
-  String createAudioApiNotice(String baseUrl) {
-    return 'Each generation request returns 2 versions under one task. The provider decides the actual duration, so it is not locked to 15/30/45/60 seconds.\nCurrent backend: $baseUrl';
-  }
 
   @override
   String get aiAudioStudio => 'AI Audio Studio';
@@ -725,7 +758,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get generationQueuedHint => 'Generation is processing. Open My Audios to follow updates.';
+  String get generationQueuedHint =>
+      'Generation is processing. Open My Audios to follow updates.';
 
   @override
   String generatedVersionLabel(String label) {
@@ -739,13 +773,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get previewAudio => 'Preview';
 
   @override
-  String get promptRequiredMessage => 'Please enter a prompt to generate audio.';
+  String get promptRequiredMessage =>
+      'Please enter a prompt to generate audio.';
 
   @override
-  String get promptTooShortMessage => 'The prompt should be at least 10 characters so the AI can understand it better.';
+  String get promptTooShortMessage =>
+      'The prompt should be at least 10 characters so the AI can understand it better.';
 
   @override
-  String get audioDurationRangeMessage => 'Audio duration must be between 5 and 60 seconds.';
+  String get audioDurationRangeMessage =>
+      'Audio duration must be between 5 and 60 seconds.';
 
   @override
   String get deleteGeneratedTaskTitle => 'Delete generation';
@@ -765,7 +802,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accessDeniedTitle => 'Access denied';
 
   @override
-  String get accessDeniedMessage => 'You do not have permission to access this page.';
+  String get accessDeniedMessage =>
+      'You do not have permission to access this page.';
 
   @override
   String get goBack => 'Go back';
@@ -792,7 +830,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminNoSongsForFilterTitle => 'No songs in this filter';
 
   @override
-  String get adminNoSongsForFilterSubtitle => 'Try switching the status filter or restore archived content.';
+  String get adminNoSongsForFilterSubtitle =>
+      'Try switching the status filter or restore archived content.';
 
   @override
   String get songStatusPublished => 'Published';
@@ -824,13 +863,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminModerationReasonLabel => 'Moderation reason';
 
   @override
-  String get adminModerationReasonHint => 'Example: Content is not ready for publishing yet or metadata still needs cleanup.';
+  String get adminModerationReasonHint =>
+      'Example: Content is not ready for publishing yet or metadata still needs cleanup.';
 
   @override
-  String get adminArchiveReasonHint => 'Example: Content should be taken out of circulation for review or no longer fits the public catalog.';
+  String get adminArchiveReasonHint =>
+      'Example: Content should be taken out of circulation for review or no longer fits the public catalog.';
 
   @override
-  String get adminModerationReasonRequiredMessage => 'Please enter a moderation reason.';
+  String get adminModerationReasonRequiredMessage =>
+      'Please enter a moderation reason.';
 
   @override
   String adminModeratedByLabel(String value) {
@@ -843,22 +885,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get adminModerationPresetMetadata => 'Metadata still needs cleanup before publishing';
+  String get adminModerationPresetMetadata =>
+      'Metadata still needs cleanup before publishing';
 
   @override
-  String get adminModerationPresetQuality => 'Audio quality is not ready for release';
+  String get adminModerationPresetQuality =>
+      'Audio quality is not ready for release';
 
   @override
-  String get adminModerationPresetDuplicate => 'Content duplicates or closely overlaps another track';
+  String get adminModerationPresetDuplicate =>
+      'Content duplicates or closely overlaps another track';
 
   @override
-  String get adminModerationPresetArchivedReview => 'Archive for further review before reuse';
+  String get adminModerationPresetArchivedReview =>
+      'Archive for further review before reuse';
 
   @override
-  String get adminModerationPresetOutdated => 'Content is outdated and no longer fits the public catalog';
+  String get adminModerationPresetOutdated =>
+      'Content is outdated and no longer fits the public catalog';
 
   @override
-  String get adminSearchHint => 'Search by title, artist, status, or moderation reason';
+  String get adminSearchHint =>
+      'Search by title, artist, status, or moderation reason';
 
   @override
   String get adminSortLabel => 'Sort by';
@@ -883,7 +931,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get adminPendingSubmissionNotice => 'New content will be saved as pending first. After review, you can publish it directly from the admin dashboard.';
+  String get adminPendingSubmissionNotice =>
+      'New content will be saved as pending first. After review, you can publish it directly from the admin dashboard.';
 
   @override
   String get hideSongAction => 'Hide from app';
@@ -998,7 +1047,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yearSongEmptyTitle => 'No by-year songs yet';
 
   @override
-  String get yearSongEmptySubtitle => 'Tap add to place songs into the by-year archive from 2018 to 2026.';
+  String get yearSongEmptySubtitle =>
+      'Tap add to place songs into the by-year archive from 2018 to 2026.';
 
   @override
   String deleteYearSongConfirmMessage(String title) {

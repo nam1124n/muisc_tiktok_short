@@ -15,8 +15,55 @@ service cloud.firestore {
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
+    function userProfileCreateIsSafe(userId) {
+      return isOwner(userId) &&
+          request.resource.data.keys().hasOnly([
+            'email',
+            'fullName',
+            'username',
+            'role',
+            'ageGroup',
+            'emailVerified',
+            'avatarUrl',
+            'followers',
+            'following',
+            'likes',
+            'createdAt',
+            'updatedAt'
+          ]) &&
+          request.resource.data.role == 'user' &&
+          request.resource.data.followers == 0 &&
+          request.resource.data.following == 0 &&
+          request.resource.data.likes == 0;
+    }
+
+    function userProfileUpdateIsSafe(userId) {
+      return isOwner(userId) &&
+          request.resource.data.keys().hasOnly([
+            'email',
+            'fullName',
+            'username',
+            'role',
+            'ageGroup',
+            'emailVerified',
+            'avatarUrl',
+            'followers',
+            'following',
+            'likes',
+            'createdAt',
+            'updatedAt'
+          ]) &&
+          request.resource.data.role == resource.data.role &&
+          request.resource.data.followers == resource.data.followers &&
+          request.resource.data.following == resource.data.following &&
+          request.resource.data.likes == resource.data.likes &&
+          request.resource.data.createdAt == resource.data.createdAt;
+    }
+
     match /users/{userId} {
-      allow read, create, update: if isOwner(userId);
+      allow read: if isOwner(userId);
+      allow create: if userProfileCreateIsSafe(userId);
+      allow update: if userProfileUpdateIsSafe(userId);
       allow delete: if false;
 
       match /favorites/{favoriteId} {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:login_flutter/app/config/audio_generation_config.dart';
 import 'package:login_flutter/domain/entities/generated_audio_entity.dart';
 import 'package:login_flutter/domain/entities/generated_audio_task_entity.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
@@ -28,9 +27,6 @@ class _CreateAudioScreenState extends ConsumerState<CreateAudioScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final androidDeviceSetupHint = AudioGenerationConfig.androidDeviceSetupHint;
 
     ref.listen<CreateAudioState>(createAudioNotifierProvider, (previous, next) {
       if (previous?.status == next.status) {
@@ -147,43 +143,6 @@ class _CreateAudioScreenState extends ConsumerState<CreateAudioScreen> {
                         height: 1.45,
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF3E8FF),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        l10n.createAudioApiNotice(
-                          AudioGenerationConfig.baseUrl,
-                        ),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          height: 1.45,
-                          color: Color(0xFF6D28D9),
-                        ),
-                      ),
-                    ),
-                    if (androidDeviceSetupHint != null) ...[
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: colorScheme.errorContainer.withValues(
-                            alpha: 0.75,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          androidDeviceSetupHint,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onErrorContainer,
-                            height: 1.45,
-                          ),
-                        ),
-                      ),
-                    ],
                     const SizedBox(height: 24),
                     SizedBox(
                       height: 54,

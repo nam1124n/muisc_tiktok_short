@@ -359,25 +359,9 @@
       }
     }
   },
-  "mockApiMessage": "Đang dùng API giả lập với URL: {baseUrl}\nKhi có API thật, chỉ cần đổi URL trong config.",
-  "@mockApiMessage": {
-    "placeholders": {
-      "baseUrl": {
-        "type": "String"
-      }
-    }
-  },
   "generatingAudio": "Đang tạo audio...",
   "createShortAudio": "Tạo audio ngắn",
   "createTwoVersions": "Tạo 2 phiên bản",
-  "createAudioApiNotice": "Mỗi lần tạo sẽ nhận 2 phiên bản từ một task. Thời lượng thực tế do provider quyết định, không bị khóa ở 15/30/45/60 giây.\nBackend hiện dùng: {baseUrl}",
-  "@createAudioApiNotice": {
-    "placeholders": {
-      "baseUrl": {
-        "type": "String"
-      }
-    }
-  },
   "aiAudioStudio": "AI Audio Studio",
   "generatedAudioMeta": "{seconds} giây • {provider}",
   "@generatedAudioMeta": {
