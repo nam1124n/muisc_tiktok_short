@@ -96,4 +96,23 @@ class GeneratedAudioLibraryRemoteDataSource {
 
     await batch.commit();
   }
+
+  Future<List<Map<String, dynamic>>> getAllGeneratedTracksForAdmin() async {
+    final snapshot = await _db
+        .collectionGroup('generated_tracks')
+        .orderBy('createdAt', descending: true)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      return {
+        ...doc.data(),
+        'id': doc.id,
+      };
+    }).toList();
+  }
+
+  Future<void> deleteGeneratedTrackByAdmin(String trackId, String userId) async {
+    final trackRef = _trackCollection(userId).doc(trackId);
+    await trackRef.delete();
+  }
 }

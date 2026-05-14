@@ -87,6 +87,14 @@ service cloud.firestore {
       }
     }
 
+    match /{path=**}/generated_tracks/{trackId} {
+      allow read, delete: if currentUserIsAdmin();
+    }
+
+    match /{path=**}/generation_tasks/{taskId} {
+      allow read, delete: if currentUserIsAdmin();
+    }
+
     match /songs/{songId} {
       allow read: if isSignedIn();
       allow create, update, delete: if currentUserIsAdmin();

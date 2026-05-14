@@ -10,6 +10,7 @@ class GeneratedAudioEntity {
   final int durationSeconds;
   final String provider;
   final String modelName;
+  final String userId;
   final List<String> tags;
   final DateTime? createdAt;
 
@@ -25,6 +26,7 @@ class GeneratedAudioEntity {
     required this.durationSeconds,
     required this.provider,
     required this.modelName,
+    this.userId = '',
     this.tags = const [],
     this.createdAt,
   });
@@ -65,6 +67,7 @@ class GeneratedAudioEntity {
       provider: json['provider']?.toString() ?? 'Suno',
       modelName:
           json['modelName']?.toString() ?? json['model_name']?.toString() ?? '',
+      userId: json['userId']?.toString() ?? json['user_id']?.toString() ?? '',
       tags: _readStringList(json['tags']),
       createdAt: _readDateTime(json['createdAt'] ?? json['created_at']),
     );
@@ -83,6 +86,7 @@ class GeneratedAudioEntity {
       'durationSeconds': durationSeconds,
       'provider': provider,
       'modelName': modelName,
+      'userId': userId,
       'tags': tags,
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
     };

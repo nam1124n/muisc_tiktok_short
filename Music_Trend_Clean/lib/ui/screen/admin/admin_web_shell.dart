@@ -5,8 +5,9 @@ import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/admin/admin_analytics_screen.dart';
 import 'package:login_flutter/ui/screen/admin/admin_dashboard_screen.dart';
 import 'package:login_flutter/ui/screen/admin/admin_year_song_dashboard_screen.dart';
+import 'package:login_flutter/ui/screen/admin/admin_generated_audio_dashboard_screen.dart';
 
-enum AdminWebSection { songs, yearSongs, analytics }
+enum AdminWebSection { songs, yearSongs, analytics, aiAudio }
 
 const _homeRouteName = '/';
 
@@ -28,6 +29,7 @@ class _AdminWebShellState extends ConsumerState<AdminWebShell> {
       AdminWebSection.songs => l10n.adminPanelTitle,
       AdminWebSection.yearSongs => l10n.yearSongAdminTitle,
       AdminWebSection.analytics => l10n.adminAnalyticsTitle,
+      AdminWebSection.aiAudio => 'Quản lý Nhạc AI (Suno)',
     };
 
     return Scaffold(
@@ -89,6 +91,10 @@ class _AdminWebShellState extends ConsumerState<AdminWebShell> {
                               ),
                             AdminWebSection.analytics =>
                               const AdminAnalyticsScreen(),
+                            AdminWebSection.aiAudio =>
+                              const AdminGeneratedAudioDashboardScreen(
+                                embedded: true,
+                              ),
                           },
                         ),
                       ),
@@ -183,6 +189,13 @@ class _AdminSidebar extends StatelessWidget {
             icon: Icons.bar_chart_rounded,
             selected: currentSection == AdminWebSection.analytics,
             onTap: () => onSectionSelected(AdminWebSection.analytics),
+          ),
+          const SizedBox(height: 10),
+          _AdminSidebarItem(
+            label: 'Nhạc AI',
+            icon: Icons.smart_toy_outlined,
+            selected: currentSection == AdminWebSection.aiAudio,
+            onTap: () => onSectionSelected(AdminWebSection.aiAudio),
           ),
           const Spacer(),
           Text(
