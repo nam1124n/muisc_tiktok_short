@@ -1,40 +1,29 @@
-import 'dart:async';
 import 'dart:convert';
 
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:login_flutter/app/config/app_config.dart';
 import 'package:login_flutter/data/dto/audio_generation/generated_audio_task_model.dart';
 
 class AudioGenerationRemoteDataSource {
-  AudioGenerationRemoteDataSource({http.Client? client, String? baseUrl})
-    : _client = client ?? http.Client(),
-      _baseUrl = _normalizeBaseUrl(
-        baseUrl ?? AppConfig.audioGenerationWorkerBaseUrl,
-      );
+  AudioGenerationRemoteDataSource({required Dio dio}) : _dio = dio;
 
-  final http.Client _client;
-  final String _baseUrl;
+  final Dio _dio;
 
   Future<GeneratedAudioTaskModel> generateAudioTask({
     required String userId,
     required String prompt,
   }) async {
-    final response = await _runRequest(
-      () => _client.post(
-        _uri('/api/generate'),
-        headers: const {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'userId': userId,
-          'user_id': userId,
-          'prompt': prompt,
-        }),
-      ),
-    );
+    final response = await _runRequest(() {
+      return _dio.post<dynamic>(
+        '/api/generate',
+        data: {'userId': userId, 'user_id': userId, 'prompt': prompt},
+      );
+    });
 
-    final body = _decodeBodyAsMap(response.body);
+    final body = _decodeBodyAsMap(
+      response.data,
+      fallbackBody: response.data is String ? response.data as String : null,
+    );
     _throwIfRequestFailed(
       response,
       body,
@@ -50,14 +39,16 @@ class AudioGenerationRemoteDataSource {
   }
 
   Future<GeneratedAudioTaskModel> getGenerationStatus(String taskId) async {
-    final response = await _runRequest(
-      () => _client.get(
-        _uri('/api/generations/${Uri.encodeComponent(taskId)}'),
-        headers: const {'Accept': 'application/json'},
-      ),
-    );
+    final response = await _runRequest(() {
+      return _dio.get<dynamic>(
+        '/api/generations/${Uri.encodeComponent(taskId)}',
+      );
+    });
 
-    final body = _decodeBodyAsMap(response.body);
+    final body = _decodeBodyAsMap(
+      response.data,
+      fallbackBody: response.data is String ? response.data as String : null,
+    );
     _throwIfRequestFailed(
       response,
       body,
@@ -72,30 +63,56 @@ class AudioGenerationRemoteDataSource {
     return task;
   }
 
-  Uri _uri(String path) {
-    return Uri.parse('$_baseUrl$path');
-  }
-
-  Future<http.Response> _runRequest(
-    Future<http.Response> Function() request,
+  Future<Response<dynamic>> _runRequest(
+    Future<Response<dynamic>> Function() request,
   ) async {
     try {
-      return await request().timeout(
-        const Duration(seconds: AppConfig.audioGenerationRequestTimeoutSeconds),
+      return await request();
+    } on DioException catch (error) {
+      final baseUrl = _normalizeBaseUrl(_dio.options.baseUrl);
+      if (_isTimeout(error)) {
+        throw Exception(AppConfig.buildAudioGenerationTimeoutMessage(baseUrl));
+      }
+
+      if (_isConnectionError(error)) {
+        throw Exception(
+          AppConfig.buildAudioGenerationConnectionErrorMessage(
+            baseUrl,
+            details: error.message,
+          ),
+        );
+      }
+
+      final body = _decodeBodyAsMap(
+        error.response?.data,
+        fallbackBody: error.response?.data is String
+            ? error.response?.data as String
+            : null,
       );
-    } on TimeoutException {
-      throw Exception(AppConfig.buildAudioGenerationTimeoutMessage(_baseUrl));
-    } on http.ClientException catch (error) {
-      throw Exception(
-        AppConfig.buildAudioGenerationConnectionErrorMessage(
-          _baseUrl,
-          details: error.message,
-        ),
-      );
+      final statusCode = error.response?.statusCode ?? 500;
+      final message =
+          body['error']?.toString() ??
+          body['message']?.toString() ??
+          'Worker request failed ($statusCode)';
+
+      throw Exception(message);
     }
   }
 
-  Map<String, dynamic> _decodeBodyAsMap(String body) {
+  Map<String, dynamic> _decodeBodyAsMap(Object? data, {String? fallbackBody}) {
+    if (data == null) {
+      return <String, dynamic>{};
+    }
+
+    if (data is Map<String, dynamic>) {
+      return data;
+    }
+
+    if (data is Map) {
+      return data.map((key, value) => MapEntry(key.toString(), value));
+    }
+
+    final body = fallbackBody ?? data.toString();
     if (body.trim().isEmpty) {
       return <String, dynamic>{};
     }
@@ -113,20 +130,32 @@ class AudioGenerationRemoteDataSource {
   }
 
   void _throwIfRequestFailed(
-    http.Response response,
+    Response<dynamic> response,
     Map<String, dynamic> body, {
     required String defaultMessage,
   }) {
-    if (response.statusCode < 400) {
+    final statusCode = response.statusCode ?? 200;
+    if (statusCode < 400) {
       return;
     }
 
     final message =
         body['error']?.toString() ??
         body['message']?.toString() ??
-        '$defaultMessage (${response.statusCode})';
+        '$defaultMessage ($statusCode)';
 
     throw Exception(message);
+  }
+
+  bool _isTimeout(DioException error) {
+    return error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        error.type == DioExceptionType.receiveTimeout;
+  }
+
+  bool _isConnectionError(DioException error) {
+    return error.type == DioExceptionType.connectionError ||
+        error.type == DioExceptionType.unknown;
   }
 
   static String _normalizeBaseUrl(String value) {

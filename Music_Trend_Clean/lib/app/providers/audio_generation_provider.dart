@@ -1,13 +1,38 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_flutter/app/config/app_config.dart';
 import 'package:login_flutter/data/datasource/remote/audio_generation_remote_data_source.dart';
 import 'package:login_flutter/data/datasource/remote/generated_audio_library_remote_data_source.dart';
 import 'package:login_flutter/data/repositories/audio_generation_repository_impl.dart';
 import 'package:login_flutter/domain/repositories/audio_generation_repository.dart';
 import 'package:login_flutter/domain/usecases/generate_audio_usecase.dart';
 
+final audioGenerationDioProvider = Provider<Dio>((ref) {
+  return Dio(
+    BaseOptions(
+      baseUrl: AppConfig.audioGenerationWorkerBaseUrl,
+      connectTimeout: const Duration(
+        seconds: AppConfig.audioGenerationRequestTimeoutSeconds,
+      ),
+      receiveTimeout: const Duration(
+        seconds: AppConfig.audioGenerationRequestTimeoutSeconds,
+      ),
+      sendTimeout: const Duration(
+        seconds: AppConfig.audioGenerationRequestTimeoutSeconds,
+      ),
+      headers: const {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    ),
+  );
+});
+
 final audioGenerationRemoteDataSourceProvider =
     Provider<AudioGenerationRemoteDataSource>((ref) {
-      return AudioGenerationRemoteDataSource();
+      return AudioGenerationRemoteDataSource(
+        dio: ref.read(audioGenerationDioProvider),
+      );
     });
 
 final generatedAudioLibraryRemoteDataSourceProvider =
