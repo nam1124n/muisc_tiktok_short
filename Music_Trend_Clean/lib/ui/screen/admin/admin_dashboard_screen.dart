@@ -4,7 +4,6 @@ import 'package:login_flutter/app/providers/session_provider.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/admin/admin_song_form_screen.dart';
-import 'package:login_flutter/ui/screen/admin/admin_year_song_dashboard_screen.dart';
 import 'package:login_flutter/ui/screen/admin/admin_generated_audio_dashboard_screen.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_provider.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_state.dart';
@@ -84,22 +83,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       floatingActionButton: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          FloatingActionButton.extended(
-            heroTag: 'admin-year-song-dashboard',
-            backgroundColor: Colors.white,
-            foregroundColor: const Color(0xFF8C52FF),
-            icon: const Icon(Icons.calendar_month_outlined),
-            label: Text(l10n.genreLabel),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const AdminYearSongDashboardScreen(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 12),
           FloatingActionButton.extended(
             heroTag: 'admin-ai-audio-dashboard',
             backgroundColor: Colors.white,

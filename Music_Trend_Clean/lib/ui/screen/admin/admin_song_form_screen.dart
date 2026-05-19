@@ -24,11 +24,13 @@ class _AdminSongFormScreenState extends ConsumerState<AdminSongFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _artistController = TextEditingController();
+  final _releaseYearController = TextEditingController();
 
   XFile? _pickedImage;
   Uint8List? _pickedImageBytes;
   XFile? _pickedAudio;
   final _picker = ImagePicker();
+  String _selectedAudioType = SongAudioTypes.short;
 
   bool get _isEditing => widget.initialSong != null;
   bool get _hasExistingImage => (widget.initialSong?.imageUrl ?? '').isNotEmpty;
@@ -45,12 +47,18 @@ class _AdminSongFormScreenState extends ConsumerState<AdminSongFormScreen> {
 
     _titleController.text = initialSong.title;
     _artistController.text = initialSong.artist;
+    _selectedAudioType = initialSong.audioType;
+    final releaseYear = initialSong.releaseYear ?? initialSong.savedAt?.year;
+    if (releaseYear != null) {
+      _releaseYearController.text = '$releaseYear';
+    }
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _artistController.dispose();
+    _releaseYearController.dispose();
     super.dispose();
   }
 
@@ -97,6 +105,23 @@ class _AdminSongFormScreenState extends ConsumerState<AdminSongFormScreen> {
       return;
     }
 
+    final releaseYearText = _releaseYearController.text.trim();
+    final releaseYear = releaseYearText.isEmpty
+        ? null
+        : int.tryParse(releaseYearText);
+    if (releaseYearText.isNotEmpty &&
+        (releaseYear == null || releaseYear < 1900 || releaseYear > 2100)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _isVi ? 'Năm phát hành không hợp lệ.' : 'Invalid year.',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     final song = SongEntity(
       id: widget.initialSong?.id ?? '',
       title: _titleController.text.trim(),
@@ -104,6 +129,8 @@ class _AdminSongFormScreenState extends ConsumerState<AdminSongFormScreen> {
       audioUrl: widget.initialSong?.audioUrl ?? '',
       imageUrl: widget.initialSong?.imageUrl ?? '',
       savedAt: widget.initialSong?.savedAt,
+      audioType: _selectedAudioType,
+      releaseYear: releaseYear,
       trackInWeeklyStats: widget.initialSong?.trackInWeeklyStats ?? true,
       status: widget.initialSong?.status ?? SongStatuses.pending,
       moderationReason: widget.initialSong?.moderationReason ?? '',
@@ -147,6 +174,11 @@ class _AdminSongFormScreenState extends ConsumerState<AdminSongFormScreen> {
         ),
       );
     }
+  }
+
+  bool get _isVi {
+    final context = this.context;
+    return Localizations.localeOf(context).languageCode == 'vi';
   }
 
   @override
@@ -412,6 +444,38 @@ class _AdminSongFormScreenState extends ConsumerState<AdminSongFormScreen> {
             validator: (v) => v == null || v.trim().isEmpty
                 ? l10n.artistNameRequiredMessage
                 : null,
+          ),
+          const SizedBox(height: 20),
+          LabelText(_isVi ? 'Loại nhạc' : 'Audio type'),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: _selectedAudioType,
+            decoration: _inputDeco(_isVi ? 'Chọn loại nhạc' : 'Select type'),
+            items: const [
+              DropdownMenuItem(
+                value: SongAudioTypes.short,
+                child: Text('Nhạc ngắn / Short'),
+              ),
+              DropdownMenuItem(
+                value: SongAudioTypes.full,
+                child: Text('Bản đầy đủ / Full'),
+              ),
+            ],
+            onChanged: isLoading
+                ? null
+                : (value) {
+                    if (value == null) return;
+                    setState(() => _selectedAudioType = value);
+                  },
+          ),
+          const SizedBox(height: 20),
+          LabelText(_isVi ? 'Năm phát hành' : 'Release year'),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _releaseYearController,
+            enabled: !isLoading,
+            keyboardType: TextInputType.number,
+            decoration: _inputDeco(_isVi ? 'Có thể bỏ trống' : 'Optional'),
           ),
           const SizedBox(height: 36),
           SizedBox(height: 56, child: _buildSubmitButton(l10n, isLoading)),

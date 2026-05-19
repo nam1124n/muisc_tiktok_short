@@ -89,7 +89,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchLabel => 'Search';
 
   @override
-  String get genreLabel => 'By Year';
+  String get genreLabel => 'Library';
 
   @override
   String get discoverLabel => 'Discover';
@@ -101,11 +101,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discoverSearchHint => 'Search songs, artists or albums';
 
   @override
-  String get genreScreenTitle => 'Short Tracks by Year';
+  String get genreScreenTitle => 'Music Library';
 
   @override
   String get genreScreenSubtitle =>
-      'Short tracks are grouped by year so you can revisit the vibe of each period.';
+      'Filter the catalog by short clips, full tracks, and release year.';
 
   @override
   String get playlistsLabel => 'Playlists';
@@ -185,7 +185,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminSongsSectionLabel => 'Songs';
 
   @override
-  String get adminYearSongsSectionLabel => 'By year music';
+  String get adminYearSongsSectionLabel => 'Library by year';
 
   @override
   String get adminAnalyticsSectionLabel => 'Analytics';

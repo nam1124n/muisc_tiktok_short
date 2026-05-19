@@ -16,6 +16,20 @@ class SongStatuses {
   }
 }
 
+class SongAudioTypes {
+  static const String short = 'short';
+  static const String full = 'full';
+
+  static String normalize(Object? value) {
+    final normalized = value?.toString().trim().toLowerCase();
+
+    return switch (normalized) {
+      full => full,
+      _ => short,
+    };
+  }
+}
+
 class SongEntity {
   final String id;
   final String title;
@@ -23,6 +37,8 @@ class SongEntity {
   final String audioUrl;
   final String imageUrl;
   final DateTime? savedAt;
+  final String audioType;
+  final int? releaseYear;
   final bool trackInWeeklyStats;
   final String status;
   final String moderationReason;
@@ -39,6 +55,8 @@ class SongEntity {
     required this.audioUrl,
     required this.imageUrl,
     this.savedAt,
+    this.audioType = SongAudioTypes.short,
+    this.releaseYear,
     this.trackInWeeklyStats = true,
     this.status = SongStatuses.published,
     this.moderationReason = '',
@@ -57,6 +75,8 @@ class SongEntity {
       audioUrl: json['audioUrl']?.toString() ?? '',
       imageUrl: json['imageUrl']?.toString() ?? '',
       savedAt: _readDateTime(json['timestamp'] ?? json['savedAt']),
+      audioType: SongAudioTypes.normalize(json['audioType']),
+      releaseYear: _readYear(json['releaseYear'] ?? json['year']),
       trackInWeeklyStats: _readTrackInWeeklyStats(json['trackInWeeklyStats']),
       status: SongStatuses.normalize(json['status']),
       moderationReason: json['moderationReason']?.toString() ?? '',
@@ -76,6 +96,8 @@ class SongEntity {
       'audioUrl': audioUrl,
       'imageUrl': imageUrl,
       if (savedAt != null) 'timestamp': savedAt!.toIso8601String(),
+      'audioType': audioType,
+      if (releaseYear != null) 'releaseYear': releaseYear,
       'trackInWeeklyStats': trackInWeeklyStats,
       'status': status,
       'moderationReason': moderationReason,
@@ -94,6 +116,8 @@ class SongEntity {
     String? audioUrl,
     String? imageUrl,
     DateTime? savedAt,
+    String? audioType,
+    Object? releaseYear = _songEntityNoChange,
     bool? trackInWeeklyStats,
     String? status,
     String? moderationReason,
@@ -110,6 +134,10 @@ class SongEntity {
       audioUrl: audioUrl ?? this.audioUrl,
       imageUrl: imageUrl ?? this.imageUrl,
       savedAt: savedAt ?? this.savedAt,
+      audioType: SongAudioTypes.normalize(audioType ?? this.audioType),
+      releaseYear: releaseYear == _songEntityNoChange
+          ? this.releaseYear
+          : releaseYear as int?,
       trackInWeeklyStats: trackInWeeklyStats ?? this.trackInWeeklyStats,
       status: SongStatuses.normalize(status ?? this.status),
       moderationReason: moderationReason ?? this.moderationReason,
@@ -134,6 +162,10 @@ class SongEntity {
   bool get isArchived => status == SongStatuses.archived;
 
   bool get isVisibleToListeners => isPublished && !isArchived;
+
+  bool get isShortAudio => audioType == SongAudioTypes.short;
+
+  bool get isFullAudio => audioType == SongAudioTypes.full;
 
   static bool _readTrackInWeeklyStats(Object? value) {
     return switch (value) {
@@ -171,6 +203,15 @@ class SongEntity {
     }
 
     return null;
+  }
+
+  static int? _readYear(Object? value) {
+    return switch (value) {
+      int v => v,
+      num v => v.toInt(),
+      String v => int.tryParse(v),
+      _ => null,
+    };
   }
 }
 

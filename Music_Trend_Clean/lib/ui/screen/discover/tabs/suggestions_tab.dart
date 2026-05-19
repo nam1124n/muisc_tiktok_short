@@ -18,6 +18,7 @@ class SuggestionsTab extends ConsumerStatefulWidget {
 
 class _SuggestionsTabState extends ConsumerState<SuggestionsTab> {
   static const double _loadMoreThreshold = 320;
+  String _selectedAudioType = 'all';
 
   static const List<List<Color>> _trendingPalettes = [
     [Color(0xFF0F172A), Color(0xFF8C52FF), Color(0xFFF43F5E)],
@@ -81,7 +82,7 @@ class _SuggestionsTabState extends ConsumerState<SuggestionsTab> {
     DiscoverSongsPaginationState state,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    final songs = state.songs;
+    final songs = _filterSongsByAudioType(state.songs);
 
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -126,6 +127,7 @@ class _SuggestionsTabState extends ConsumerState<SuggestionsTab> {
             ),
           ),
         ),
+        SliverToBoxAdapter(child: _buildAudioTypeFilter(context)),
         if (state.hasInitialError)
           SliverToBoxAdapter(
             child: _buildInitialErrorState(
@@ -135,6 +137,8 @@ class _SuggestionsTabState extends ConsumerState<SuggestionsTab> {
           )
         else if (state.isInitialLoading && songs.isEmpty)
           _buildLoadingSkeletonSliver()
+        else if (state.songs.isNotEmpty && songs.isEmpty)
+          SliverToBoxAdapter(child: _buildFilteredEmptyState(context))
         else if (songs.isEmpty)
           SliverToBoxAdapter(child: _buildEmptyState())
         else
@@ -142,6 +146,64 @@ class _SuggestionsTabState extends ConsumerState<SuggestionsTab> {
         SliverToBoxAdapter(child: _buildFooter(context, state)),
       ],
     );
+  }
+
+  Widget _buildAudioTypeFilter(BuildContext context) {
+    final isVietnamese = Localizations.localeOf(context).languageCode == 'vi';
+    final options = [
+      _AudioTypeFilterOption(
+        value: 'all',
+        label: isVietnamese ? 'Tất cả' : 'All',
+      ),
+      _AudioTypeFilterOption(
+        value: SongAudioTypes.short,
+        label: isVietnamese ? 'Nhạc ngắn' : 'Shorts',
+      ),
+      _AudioTypeFilterOption(
+        value: SongAudioTypes.full,
+        label: isVietnamese ? 'Bản đầy đủ' : 'Full',
+      ),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: options.map((option) {
+          final isSelected = option.value == _selectedAudioType;
+
+          return ChoiceChip(
+            label: Text(option.label),
+            selected: isSelected,
+            onSelected: (_) =>
+                setState(() => _selectedAudioType = option.value),
+            selectedColor: const Color(0xFF8C52FF),
+            backgroundColor: Colors.white,
+            side: BorderSide(
+              color: isSelected
+                  ? const Color(0xFF8C52FF)
+                  : const Color(0xFFE5E7EB),
+            ),
+            labelStyle: TextStyle(
+              color: isSelected ? Colors.white : const Color(0xFF4B5563),
+              fontWeight: FontWeight.w700,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  List<SongEntity> _filterSongsByAudioType(List<SongEntity> songs) {
+    if (_selectedAudioType == 'all') {
+      return songs;
+    }
+
+    return songs.where((song) => song.audioType == _selectedAudioType).toList();
   }
 
   Widget _buildTrendingSection(WidgetRef ref) {
@@ -479,12 +541,24 @@ class _SuggestionsTabState extends ConsumerState<SuggestionsTab> {
                             ],
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            AppLocalizations.of(context)!.firestoreAudioLabel,
-                            style: TextStyle(
-                              color: Colors.grey.shade400,
-                              fontSize: 12,
-                            ),
+                          Row(
+                            children: [
+                              _AudioTypeBadge(audioType: song.audioType),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.firestoreAudioLabel,
+                                  style: TextStyle(
+                                    color: Colors.grey.shade400,
+                                    fontSize: 12,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -741,6 +815,39 @@ class _SuggestionsTabState extends ConsumerState<SuggestionsTab> {
     return const SizedBox(height: 24);
   }
 
+  Widget _buildFilteredEmptyState(BuildContext context) {
+    final isVietnamese = Localizations.localeOf(context).languageCode == 'vi';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.filter_alt_off_outlined, color: Color(0xFF8C52FF)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                isVietnamese
+                    ? 'Chưa có bài phù hợp với bộ lọc này.'
+                    : 'No tracks match this filter yet.',
+                style: const TextStyle(
+                  color: Color(0xFF4B5563),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmptyState() {
     return Builder(
       builder: (context) {
@@ -784,6 +891,44 @@ class _SuggestionsTabState extends ConsumerState<SuggestionsTab> {
           ),
         );
       },
+    );
+  }
+}
+
+class _AudioTypeFilterOption {
+  const _AudioTypeFilterOption({required this.value, required this.label});
+
+  final String value;
+  final String label;
+}
+
+class _AudioTypeBadge extends StatelessWidget {
+  const _AudioTypeBadge({required this.audioType});
+
+  final String audioType;
+
+  @override
+  Widget build(BuildContext context) {
+    final isFull = audioType == SongAudioTypes.full;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: isFull ? const Color(0xFFEFF6FF) : const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(
+          color: isFull ? const Color(0xFF93C5FD) : const Color(0xFFFDBA74),
+        ),
+      ),
+      child: Text(
+        isFull ? 'FULL' : 'SHORT',
+        style: TextStyle(
+          color: isFull ? const Color(0xFF1D4ED8) : const Color(0xFFC2410C),
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0,
+        ),
+      ),
     );
   }
 }

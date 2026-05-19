@@ -4,10 +4,9 @@ import 'package:login_flutter/app/providers/session_provider.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/admin/admin_analytics_screen.dart';
 import 'package:login_flutter/ui/screen/admin/admin_dashboard_screen.dart';
-import 'package:login_flutter/ui/screen/admin/admin_year_song_dashboard_screen.dart';
 import 'package:login_flutter/ui/screen/admin/admin_generated_audio_dashboard_screen.dart';
 
-enum AdminWebSection { songs, yearSongs, analytics, aiAudio }
+enum AdminWebSection { songs, analytics, aiAudio }
 
 const _homeRouteName = '/';
 
@@ -27,7 +26,6 @@ class _AdminWebShellState extends ConsumerState<AdminWebShell> {
     final sessionState = ref.watch(sessionProvider);
     final currentTitle = switch (_currentSection) {
       AdminWebSection.songs => l10n.adminPanelTitle,
-      AdminWebSection.yearSongs => l10n.yearSongAdminTitle,
       AdminWebSection.analytics => l10n.adminAnalyticsTitle,
       AdminWebSection.aiAudio => 'Quản lý Nhạc AI (Suno)',
     };
@@ -85,10 +83,6 @@ class _AdminWebShellState extends ConsumerState<AdminWebShell> {
                             AdminWebSection.songs => const AdminDashboardScreen(
                               embedded: true,
                             ),
-                            AdminWebSection.yearSongs =>
-                              const AdminYearSongDashboardScreen(
-                                embedded: true,
-                              ),
                             AdminWebSection.analytics =>
                               const AdminAnalyticsScreen(),
                             AdminWebSection.aiAudio =>
@@ -175,13 +169,6 @@ class _AdminSidebar extends StatelessWidget {
             icon: Icons.library_music_outlined,
             selected: currentSection == AdminWebSection.songs,
             onTap: () => onSectionSelected(AdminWebSection.songs),
-          ),
-          const SizedBox(height: 10),
-          _AdminSidebarItem(
-            label: l10n.adminYearSongsSectionLabel,
-            icon: Icons.calendar_month_outlined,
-            selected: currentSection == AdminWebSection.yearSongs,
-            onTap: () => onSectionSelected(AdminWebSection.yearSongs),
           ),
           const SizedBox(height: 10),
           _AdminSidebarItem(

@@ -112,6 +112,7 @@ class YearSongRepositoryImpl implements YearSongRepository {
       ...map,
       'id': id,
       'savedAt': savedAt,
+      'releaseYear': map['releaseYear'] ?? year,
       'trackInWeeklyStats': false,
     });
   }
@@ -122,6 +123,7 @@ class YearSongRepositoryImpl implements YearSongRepository {
     required String audioUrl,
   }) {
     final savedAt = song.savedAt ?? DateTime.now();
+    final releaseYear = song.releaseYear ?? savedAt.year;
 
     return {
       'title': song.title,
@@ -129,7 +131,9 @@ class YearSongRepositoryImpl implements YearSongRepository {
       'imageUrl': imageUrl,
       'audioUrl': audioUrl,
       'savedAt': savedAt.toIso8601String(),
-      'year': savedAt.year,
+      'year': releaseYear,
+      'releaseYear': releaseYear,
+      'audioType': song.audioType,
       'trackInWeeklyStats': false,
       'status': song.status,
       'moderationReason': song.moderationReason,

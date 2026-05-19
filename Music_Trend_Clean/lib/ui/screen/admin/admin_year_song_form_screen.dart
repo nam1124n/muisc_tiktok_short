@@ -31,6 +31,7 @@ class _AdminYearSongFormScreenState
   Uint8List? _pickedImageBytes;
   XFile? _pickedAudio;
   int? _selectedYear;
+  String _selectedAudioType = SongAudioTypes.short;
 
   bool get _isEditing => widget.initialSong != null;
   bool get _hasExistingImage => (widget.initialSong?.imageUrl ?? '').isNotEmpty;
@@ -62,7 +63,8 @@ class _AdminYearSongFormScreenState
 
     _titleController.text = initialSong.title;
     _artistController.text = initialSong.artist;
-    _selectedYear = initialSong.savedAt?.year;
+    _selectedYear = initialSong.releaseYear ?? initialSong.savedAt?.year;
+    _selectedAudioType = initialSong.audioType;
   }
 
   @override
@@ -71,6 +73,8 @@ class _AdminYearSongFormScreenState
     _artistController.dispose();
     super.dispose();
   }
+
+  bool get _isVi => Localizations.localeOf(context).languageCode == 'vi';
 
   Future<void> _pickImage() async {
     final file = await _picker.pickImage(source: ImageSource.gallery);
@@ -132,6 +136,8 @@ class _AdminYearSongFormScreenState
       audioUrl: widget.initialSong?.audioUrl ?? '',
       imageUrl: widget.initialSong?.imageUrl ?? '',
       savedAt: DateTime(_selectedYear!, 1, 1),
+      audioType: _selectedAudioType,
+      releaseYear: _selectedYear,
       trackInWeeklyStats: widget.initialSong?.trackInWeeklyStats ?? false,
       status: widget.initialSong?.status ?? SongStatuses.pending,
       moderationReason: widget.initialSong?.moderationReason ?? '',
@@ -460,6 +466,29 @@ class _AdminYearSongFormScreenState
                 : (value) => setState(() => _selectedYear = value),
             validator: (value) =>
                 value == null ? l10n.yearRequiredMessage : null,
+          ),
+          const SizedBox(height: 20),
+          LabelText(_isVi ? 'Loại nhạc' : 'Audio type'),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: _selectedAudioType,
+            decoration: _inputDeco(_isVi ? 'Chọn loại nhạc' : 'Select type'),
+            items: const [
+              DropdownMenuItem(
+                value: SongAudioTypes.short,
+                child: Text('Nhạc ngắn / Short'),
+              ),
+              DropdownMenuItem(
+                value: SongAudioTypes.full,
+                child: Text('Bản đầy đủ / Full'),
+              ),
+            ],
+            onChanged: isLoading
+                ? null
+                : (value) {
+                    if (value == null) return;
+                    setState(() => _selectedAudioType = value);
+                  },
           ),
           const SizedBox(height: 36),
           SizedBox(height: 56, child: _buildSubmitButton(l10n, isLoading)),

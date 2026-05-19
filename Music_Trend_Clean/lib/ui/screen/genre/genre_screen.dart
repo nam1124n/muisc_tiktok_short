@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/audio/providers/audio_player_provider.dart';
-import 'package:login_flutter/ui/screen/genre/providers/year_song_provider.dart';
+import 'package:login_flutter/ui/screen/genre/providers/library_song_provider.dart';
 
 class GenreScreen extends ConsumerStatefulWidget {
   const GenreScreen({super.key});
@@ -23,12 +23,13 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
 
   int _selectedYear = _years.first;
   bool _didSelectYear = false;
+  String _selectedAudioType = 'all';
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isVietnamese = Localizations.localeOf(context).languageCode == 'vi';
-    final yearSongState = ref.watch(yearSongCatalogProvider);
+    final songState = ref.watch(librarySongCatalogProvider);
 
     return Scaffold(
       backgroundColor: _background,
@@ -80,7 +81,7 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
                 ref: ref,
                 l10n: l10n,
                 isVietnamese: isVietnamese,
-                songState: yearSongState,
+                songState: songState,
               ),
             ),
           ],
@@ -94,7 +95,7 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
     required WidgetRef ref,
     required AppLocalizations l10n,
     required bool isVietnamese,
-    required YearSongCatalogState songState,
+    required LibrarySongCatalogState songState,
   }) {
     if (songState.isLoading) {
       return const Center(
@@ -115,7 +116,7 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () =>
-                    ref.read(yearSongCatalogProvider.notifier).reload(),
+                    ref.read(librarySongCatalogProvider.notifier).reload(),
                 child: Text(l10n.retry),
               ),
             ],
@@ -124,7 +125,7 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
       );
     }
 
-    final songs = songState.songs;
+    final songs = _filterSongsByAudioType(songState.songs);
     final songsByYear = _groupSongsByYear(songs);
     final autoSelectedYear = _preferredYear(songsByYear);
     final selectedYear = _didSelectYear ? _selectedYear : autoSelectedYear;
@@ -146,6 +147,8 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
           isVietnamese: isVietnamese,
         ),
         const SizedBox(height: 22),
+        _buildAudioTypeFilter(isVietnamese),
+        const SizedBox(height: 14),
         _buildYearTabs(selectedYear),
         const SizedBox(height: 20),
         _SectionHeader(
@@ -182,6 +185,54 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildAudioTypeFilter(bool isVietnamese) {
+    final options = [
+      _AudioTypeFilterOption(
+        value: 'all',
+        label: isVietnamese ? 'Tất cả' : 'All',
+      ),
+      _AudioTypeFilterOption(
+        value: SongAudioTypes.short,
+        label: isVietnamese ? 'Nhạc ngắn' : 'Shorts',
+      ),
+      _AudioTypeFilterOption(
+        value: SongAudioTypes.full,
+        label: isVietnamese ? 'Bản đầy đủ' : 'Full',
+      ),
+    ];
+
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: options.map((option) {
+        final isSelected = option.value == _selectedAudioType;
+
+        return ChoiceChip(
+          label: Text(option.label),
+          selected: isSelected,
+          onSelected: (_) {
+            setState(() {
+              _selectedAudioType = option.value;
+              _didSelectYear = false;
+            });
+          },
+          selectedColor: _purple,
+          backgroundColor: Colors.white.withValues(alpha: 0.92),
+          side: BorderSide(
+            color: isSelected ? _purple : const Color(0xFFE8DDFB),
+          ),
+          labelStyle: TextStyle(
+            color: isSelected ? Colors.white : _purpleDark,
+            fontWeight: FontWeight.w700,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -254,6 +305,14 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
     );
   }
 
+  List<SongEntity> _filterSongsByAudioType(List<SongEntity> songs) {
+    if (_selectedAudioType == 'all') {
+      return songs;
+    }
+
+    return songs.where((song) => song.audioType == _selectedAudioType).toList();
+  }
+
   Map<int, List<SongEntity>> _groupSongsByYear(List<SongEntity> songs) {
     final grouped = {for (final year in _years) year: <SongEntity>[]};
 
@@ -276,7 +335,7 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
   }
 
   int _bucketYearFor(SongEntity song) {
-    final savedYear = song.savedAt?.year;
+    final savedYear = song.releaseYear ?? song.savedAt?.year;
     if (savedYear != null && _years.contains(savedYear)) {
       return savedYear;
     }
@@ -287,9 +346,7 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
   }
 
   String _yearListTitle(int year, bool isVietnamese) {
-    return isVietnamese
-        ? 'Những bài gợi nhớ $year'
-        : 'Tracks that bring back $year';
+    return isVietnamese ? 'Danh sách nhạc năm $year' : 'Tracks from $year';
   }
 
   String _yearListSubtitle({
@@ -300,19 +357,19 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
   }) {
     if (!hasSongs) {
       return isVietnamese
-          ? 'Kho nhạc theo năm sẽ hiện ở đây sau khi admin thêm dữ liệu.'
-          : 'The by-year archive will appear here after the admin adds songs.';
+          ? 'Thư viện sẽ hiện ở đây sau khi admin thêm dữ liệu.'
+          : 'The library will appear here after the admin adds songs.';
     }
 
     if (songCount == 0) {
       return isVietnamese
-          ? 'Chưa có bài nào được gắn với năm $selectedYear.'
-          : 'No songs are assigned to $selectedYear yet.';
+          ? 'Chưa có bài phù hợp với bộ lọc trong năm $selectedYear.'
+          : 'No tracks match the current filter in $selectedYear.';
     }
 
     return isVietnamese
-        ? '$songCount bài đang được xếp vào mốc năm $selectedYear.'
-        : '$songCount tracks are currently grouped under $selectedYear.';
+        ? '$songCount bài phù hợp với bộ lọc hiện tại.'
+        : '$songCount tracks match the current filter.';
   }
 
   String _emptyStateTitle({
@@ -321,14 +378,10 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
     required bool isVietnamese,
   }) {
     if (!hasSongs) {
-      return isVietnamese
-          ? 'Kho nhạc theo năm đang trống'
-          : 'The by-year archive is empty';
+      return isVietnamese ? 'Thư viện đang trống' : 'The library is empty';
     }
 
-    return isVietnamese
-        ? 'Năm $selectedYear chưa có bài nào'
-        : '$selectedYear does not have any songs yet';
+    return isVietnamese ? 'Không có bài phù hợp' : 'No matching tracks';
   }
 
   String _emptyStateSubtitle({
@@ -337,20 +390,27 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
   }) {
     if (!hasSongs) {
       return isVietnamese
-          ? 'Admin có thể thêm nhạc ngắn theo từng năm từ 2018 đến 2026.'
-          : 'The admin can add short tracks for each year from 2018 to 2026.';
+          ? 'Admin có thể thêm nhạc ngắn hoặc bản đầy đủ vào thư viện.'
+          : 'The admin can add short clips or full tracks to the library.';
     }
 
     return isVietnamese
-        ? 'Thử chuyển sang một năm khác để nghe lại những bài đã được lưu.'
-        : 'Try another year tab to revisit the tracks already archived.';
+        ? 'Thử đổi loại nhạc hoặc chuyển sang một năm khác.'
+        : 'Try another audio type or year filter.';
   }
 
   String _memoryNote(int selectedYear, bool isVietnamese) {
     return isVietnamese
-        ? 'Một đoạn nhạc ngắn gợi lại không khí của $selectedYear.'
-        : 'A short track that brings back the feel of $selectedYear.';
+        ? 'Bài hát được lọc theo năm $selectedYear.'
+        : 'Filtered by release year $selectedYear.';
   }
+}
+
+class _AudioTypeFilterOption {
+  const _AudioTypeFilterOption({required this.value, required this.label});
+
+  final String value;
+  final String label;
 }
 
 class _HeaderCard extends StatelessWidget {
@@ -604,6 +664,8 @@ class _SongMemoryCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
+                _AudioTypeBadge(audioType: song.audioType),
+                const SizedBox(height: 8),
                 Text(
                   note,
                   maxLines: 1,
@@ -668,6 +730,37 @@ class _SongMemoryCard extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AudioTypeBadge extends StatelessWidget {
+  const _AudioTypeBadge({required this.audioType});
+
+  final String audioType;
+
+  @override
+  Widget build(BuildContext context) {
+    final isFull = audioType == SongAudioTypes.full;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isFull ? const Color(0xFFEFF6FF) : const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isFull ? const Color(0xFF93C5FD) : const Color(0xFFFDBA74),
+        ),
+      ),
+      child: Text(
+        isFull ? 'FULL' : 'SHORT',
+        style: TextStyle(
+          color: isFull ? const Color(0xFF1D4ED8) : const Color(0xFFC2410C),
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0,
+        ),
       ),
     );
   }

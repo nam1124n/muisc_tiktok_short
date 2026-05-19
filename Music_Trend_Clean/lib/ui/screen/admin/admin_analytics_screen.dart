@@ -6,7 +6,6 @@ import 'package:login_flutter/domain/entities/trending_song_entity.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_provider.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_state.dart';
-import 'package:login_flutter/ui/screen/genre/providers/year_song_provider.dart';
 
 const _allAnalyticsStatusFilter = 'all';
 
@@ -34,7 +33,6 @@ class _AdminAnalyticsScreenState extends ConsumerState<AdminAnalyticsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final hasAdminAccess = ref.watch(sessionHasAdminAccessProvider);
     final songState = ref.watch(adminSongNotifierProvider);
-    final yearSongState = ref.watch(yearSongNotifierProvider);
     final trendingAsync = ref.watch(adminWeeklyTrendingProvider);
 
     if (!hasAdminAccess) {
@@ -55,7 +53,7 @@ class _AdminAnalyticsScreenState extends ConsumerState<AdminAnalyticsScreen> {
       );
     }
 
-    if (songState is SongLoading || yearSongState is SongLoading) {
+    if (songState is SongLoading) {
       return const Center(
         child: CircularProgressIndicator(color: Color(0xFF8C52FF)),
       );
@@ -68,26 +66,14 @@ class _AdminAnalyticsScreenState extends ConsumerState<AdminAnalyticsScreen> {
       );
     }
 
-    if (yearSongState is SongError) {
-      return _AnalyticsLoadError(
-        message: yearSongState.message,
-        onRetry: () => ref.read(yearSongNotifierProvider.notifier).loadSongs(),
-      );
-    }
-
     final songs = songState is SongLoaded
         ? songState.songs
         : const <SongEntity>[];
-    final yearSongs = yearSongState is SongLoaded
-        ? yearSongState.songs
-        : const <SongEntity>[];
 
     final filteredSongs = _applyAnalyticsFilters(songs);
-    final filteredYearSongs = _applyAnalyticsFilters(yearSongs);
     final overview = _AdminAnalyticsOverview.fromSongs(filteredSongs);
     final pendingOldestSongs = _pendingOldest(filteredSongs);
     final recentlyUpdatedSongs = _recentlyUpdated(filteredSongs);
-    final recentlyUpdatedYearSongs = _recentlyUpdated(filteredYearSongs);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(8),
@@ -111,7 +97,6 @@ class _AdminAnalyticsScreenState extends ConsumerState<AdminAnalyticsScreen> {
             context,
             recentlyUpdatedSongs: recentlyUpdatedSongs,
             pendingOldestSongs: pendingOldestSongs,
-            recentlyUpdatedYearSongs: recentlyUpdatedYearSongs,
           ),
           const SizedBox(height: 28),
           Text(
@@ -138,12 +123,6 @@ class _AdminAnalyticsScreenState extends ConsumerState<AdminAnalyticsScreen> {
               ),
             ),
             error: (error, _) => _AnalyticsErrorCard(message: error.toString()),
-          ),
-          const SizedBox(height: 16),
-          _InfoNoteCard(
-            title: l10n.adminYearSongsAnalyticsTitle,
-            message: l10n.adminYearSongsAnalyticsSubtitle,
-            icon: Icons.info_outline_rounded,
           ),
         ],
       ),
@@ -284,7 +263,6 @@ class _AdminAnalyticsScreenState extends ConsumerState<AdminAnalyticsScreen> {
     BuildContext context, {
     required List<SongEntity> recentlyUpdatedSongs,
     required List<SongEntity> pendingOldestSongs,
-    required List<SongEntity> recentlyUpdatedYearSongs,
   }) {
     final l10n = AppLocalizations.of(context)!;
 
@@ -332,18 +310,7 @@ class _AdminAnalyticsScreenState extends ConsumerState<AdminAnalyticsScreen> {
                 ],
               );
 
-        return Column(
-          children: [
-            firstRow,
-            const SizedBox(height: 16),
-            _SongInsightPanel(
-              title: l10n.adminYearSongsRecentlyUpdatedTitle,
-              subtitle: l10n.adminYearSongsRecentlyUpdatedSubtitle,
-              songs: recentlyUpdatedYearSongs,
-              emptyMessage: l10n.adminNoYearSongsRecentlyUpdatedMessage,
-            ),
-          ],
-        );
+        return firstRow;
       },
     );
   }
@@ -788,58 +755,6 @@ class _TrendingPanel extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _InfoNoteCard extends StatelessWidget {
-  const _InfoNoteCard({
-    required this.title,
-    required this.message,
-    required this.icon,
-  });
-
-  final String title;
-  final String message;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF7ED),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: const Color(0xFFD97706)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Color(0xFF9A6700),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  message,
-                  style: const TextStyle(color: Color(0xFF9A6700), height: 1.4),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

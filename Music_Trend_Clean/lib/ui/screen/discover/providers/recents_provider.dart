@@ -193,6 +193,8 @@ class RecentNotifier extends StateNotifier<RecentState> {
       audioUrl: song.audioUrl,
       imageUrl: song.imageUrl,
       savedAt: now,
+      audioType: song.audioType,
+      releaseYear: song.releaseYear,
       trackInWeeklyStats: song.trackInWeeklyStats,
     );
 
@@ -273,6 +275,8 @@ class RecentNotifier extends StateNotifier<RecentState> {
       audioUrl: song.audioUrl,
       imageUrl: song.imageUrl,
       savedAt: DateTime.now(),
+      audioType: song.audioType,
+      releaseYear: song.releaseYear,
       trackInWeeklyStats: song.trackInWeeklyStats,
     );
   }

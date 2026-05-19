@@ -90,7 +90,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get searchLabel => 'Tìm kiếm';
 
   @override
-  String get genreLabel => 'Theo năm';
+  String get genreLabel => 'Thư viện';
 
   @override
   String get discoverLabel => 'Khám phá';
@@ -102,11 +102,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get discoverSearchHint => 'Tìm kiếm bài hát, nghệ sĩ hoặc album';
 
   @override
-  String get genreScreenTitle => 'Nhạc ngắn theo năm';
+  String get genreScreenTitle => 'Thư viện nhạc';
 
   @override
   String get genreScreenSubtitle =>
-      'Những đoạn nhạc ngắn được gom theo từng năm để bạn nghe lại đúng vibe của từng giai đoạn.';
+      'Lọc kho nhạc theo nhạc ngắn, bản đầy đủ và năm phát hành.';
 
   @override
   String get playlistsLabel => 'Danh sách phát';
@@ -187,7 +187,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get adminSongsSectionLabel => 'Bài hát';
 
   @override
-  String get adminYearSongsSectionLabel => 'Nhạc theo năm';
+  String get adminYearSongsSectionLabel => 'Thư viện theo năm';
 
   @override
   String get adminAnalyticsSectionLabel => 'Phân tích';
