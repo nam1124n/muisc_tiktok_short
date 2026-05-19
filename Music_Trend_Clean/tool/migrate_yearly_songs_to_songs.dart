@@ -204,10 +204,11 @@ Future<_MigrationAction> _processDocument({
 
   final releaseYear = _readIntegerField(fields['releaseYear']);
   final audioType = _readStringField(fields['audioType']);
+  final status = _readStringField(fields['status']);
 
   stdout.writeln(
     '[PLAN] ${document.id} | "$title" | year=${releaseYear ?? 'n/a'} | '
-    'audioType=$audioType',
+    'audioType=$audioType | status=$status',
   );
 
   if (!config.apply) {
@@ -256,9 +257,13 @@ Map<String, dynamic> _buildDestinationFields(_FirestoreDocument document) {
     ),
   };
   sourceFields['trackInWeeklyStats'] = {'booleanValue': false};
-  sourceFields['status'] = {
-    'stringValue': _normalizeStatus(_readStringField(sourceFields['status'])),
-  };
+  final status = _normalizeStatus(_readStringField(sourceFields['status']));
+  sourceFields['status'] = {'stringValue': status};
+  sourceFields['createdAt'] =
+      sourceFields['createdAt'] ?? savedAt ?? {'stringValue': now};
+  if (status == 'published' && !_hasDateField(sourceFields['publishedAt'])) {
+    sourceFields['publishedAt'] = savedAt ?? {'stringValue': now};
+  }
   sourceFields['migratedFrom'] = {'stringValue': 'yearly_songs'};
   sourceFields['legacyYearSongId'] = {'stringValue': document.id};
   sourceFields['migratedAt'] = {'stringValue': now};
@@ -426,6 +431,15 @@ int? _readYearFromSavedAt(Object? value) {
   final rawValue = value['timestampValue'] ?? value['stringValue'];
   final parsed = DateTime.tryParse(rawValue?.toString() ?? '');
   return parsed?.year;
+}
+
+bool _hasDateField(Object? value) {
+  if (value is! Map<String, dynamic>) {
+    return false;
+  }
+
+  final rawValue = value['timestampValue'] ?? value['stringValue'];
+  return DateTime.tryParse(rawValue?.toString() ?? '') != null;
 }
 
 String _normalizeAudioType(String value) {

@@ -128,6 +128,8 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
         if (state.playlist.isNotEmpty &&
             state.currentIndex < state.playlist.length - 1) {
           next();
+        } else if (state.isRepeatEnabled && state.playlist.isNotEmpty) {
+          playAtIndex(0);
         } else {
           state = state.copyWith(isPlaying: false, position: Duration.zero);
           _audioPlayer.seek(Duration.zero);
@@ -226,6 +228,8 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
     if (nextIndex < state.playlist.length) {
       final nextSong = state.playlist[nextIndex];
       await playSong(nextSong, playlist: state.playlist);
+    } else if (state.isRepeatEnabled) {
+      await playAtIndex(0);
     }
   }
 
@@ -244,6 +248,86 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
         await _audioPlayer.seek(Duration.zero);
       }
     }
+  }
+
+  Future<void> playAtIndex(int index) async {
+    if (index < 0 || index >= state.playlist.length) {
+      return;
+    }
+
+    await playSong(state.playlist[index], playlist: state.playlist);
+  }
+
+  void removeFromQueue(int index) {
+    if (index < 0 || index >= state.playlist.length) {
+      return;
+    }
+
+    if (index == state.currentIndex) {
+      return;
+    }
+
+    final playlist = [...state.playlist]..removeAt(index);
+    final nextIndex = index < state.currentIndex
+        ? state.currentIndex - 1
+        : state.currentIndex;
+    state = state.copyWith(playlist: playlist, currentIndex: nextIndex);
+  }
+
+  void moveQueueItem(int oldIndex, int newIndex) {
+    if (oldIndex < 0 ||
+        oldIndex >= state.playlist.length ||
+        newIndex < 0 ||
+        newIndex > state.playlist.length ||
+        oldIndex == state.currentIndex) {
+      return;
+    }
+
+    final playlist = [...state.playlist];
+    final currentSong = state.currentSong;
+    if (newIndex > oldIndex) {
+      newIndex -= 1;
+    }
+
+    if (newIndex == state.currentIndex) {
+      newIndex = oldIndex < state.currentIndex
+          ? state.currentIndex - 1
+          : state.currentIndex + 1;
+    }
+
+    if (newIndex < 0 || newIndex >= playlist.length) {
+      return;
+    }
+
+    final item = playlist.removeAt(oldIndex);
+    playlist.insert(newIndex, item);
+    final nextCurrentIndex = currentSong == null
+        ? -1
+        : playlist.indexWhere((song) => song.id == currentSong.id);
+    state = state.copyWith(playlist: playlist, currentIndex: nextCurrentIndex);
+  }
+
+  void toggleShuffle() {
+    final enableShuffle = !state.isShuffleEnabled;
+    final currentSong = state.currentSong;
+
+    if (!enableShuffle || currentSong == null || state.playlist.length <= 2) {
+      state = state.copyWith(isShuffleEnabled: enableShuffle);
+      return;
+    }
+
+    final played = state.playlist.take(state.currentIndex + 1).toList();
+    final nextUp = state.playlist.skip(state.currentIndex + 1).toList()
+      ..shuffle();
+    state = state.copyWith(
+      playlist: [...played, ...nextUp],
+      currentIndex: played.indexWhere((song) => song.id == currentSong.id),
+      isShuffleEnabled: true,
+    );
+  }
+
+  void toggleRepeat() {
+    state = state.copyWith(isRepeatEnabled: !state.isRepeatEnabled);
   }
 
   Future<void> _trackListenIfNeeded(Duration position) async {

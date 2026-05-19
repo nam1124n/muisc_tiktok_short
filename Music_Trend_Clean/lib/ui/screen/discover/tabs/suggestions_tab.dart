@@ -5,7 +5,6 @@ import 'package:login_flutter/domain/entities/trending_song_entity.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_provider.dart';
 import 'package:login_flutter/ui/screen/audio/providers/audio_player_provider.dart';
-import 'package:login_flutter/ui/screen/discover/providers/favorites_provider.dart';
 import 'package:login_flutter/ui/screen/discover/providers/discover_songs_pagination_provider.dart';
 import 'package:login_flutter/ui/screen/discover/providers/discover_songs_pagination_state.dart';
 
@@ -441,10 +440,6 @@ class _SuggestionsTabState extends ConsumerState<SuggestionsTab> {
 
           return Consumer(
             builder: (context, ref, _) {
-              final isFavorite = ref.watch(isFavoriteSongProvider(song.id));
-              final isFavoriteBusy = ref.watch(
-                isFavoriteSongBusyProvider(song.id),
-              );
               final playback = ref.watch(audioPlaybackForSongProvider(song.id));
               final isCurrentSong = playback.isCurrentSong;
               final isPlayingThisSong = playback.isPlaying;
@@ -467,7 +462,7 @@ class _SuggestionsTabState extends ConsumerState<SuggestionsTab> {
                 child: Row(
                   children: [
                     SizedBox(
-                      width: 24,
+                      width: 36,
                       child: Text(
                         '${songIndex + 1}',
                         style: TextStyle(
@@ -564,36 +559,6 @@ class _SuggestionsTabState extends ConsumerState<SuggestionsTab> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    GestureDetector(
-                      onTap: isFavoriteBusy
-                          ? null
-                          : () {
-                              ref
-                                  .read(favoriteNotifierProvider.notifier)
-                                  .toggleFavorite(song);
-                            },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: isFavoriteBusy
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Color(0xFFF43F5E),
-                                ),
-                              )
-                            : Icon(
-                                isFavorite
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                color: isFavorite
-                                    ? const Color(0xFFF43F5E)
-                                    : Colors.grey.shade400,
-                                size: 24,
-                              ),
-                      ),
-                    ),
                     GestureDetector(
                       onTap: () {
                         if (isPlayingThisSong) {

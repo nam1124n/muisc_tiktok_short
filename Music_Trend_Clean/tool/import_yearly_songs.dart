@@ -3,6 +3,14 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+const String _songsCollection = 'songs';
+const String _shortAudioType = 'short';
+const String _fullAudioType = 'full';
+const String _pendingStatus = 'pending';
+const String _publishedStatus = 'published';
+const String _hiddenStatus = 'hidden';
+const String _archivedStatus = 'archived';
+
 Future<void> main(List<String> args) async {
   final config = _ImportConfig.parse(args);
 
@@ -39,7 +47,9 @@ Future<void> main(List<String> args) async {
         : 'Import mode: DRY RUN only. Re-run with --apply to upload and write.',
   );
   stdout.writeln(
-    'Root: ${rootDirectory.path} | Year folders: ${yearFolders.length} | Collection: ${config.collection}',
+    'Root: ${rootDirectory.path} | Year folders: ${yearFolders.length} | '
+    'Collection: ${config.collection} | Default type: ${config.defaultAudioType} | '
+    'Default status: ${config.defaultStatus} | Weekly stats: ${config.trackInWeeklyStats}',
   );
 
   final client = http.Client();
@@ -127,23 +137,24 @@ List<_YearFolder> _discoverYearFolders(Directory rootDirectory) {
     ];
   }
 
-  final yearFolders = rootDirectory
-      .listSync(followLinks: false)
-      .whereType<Directory>()
-      .map((directory) {
-        final match = folderPattern.firstMatch(_basename(directory.path));
-        if (match == null) {
-          return null;
-        }
+  final yearFolders =
+      rootDirectory
+          .listSync(followLinks: false)
+          .whereType<Directory>()
+          .map((directory) {
+            final match = folderPattern.firstMatch(_basename(directory.path));
+            if (match == null) {
+              return null;
+            }
 
-        return _YearFolder(
-          directory: directory,
-          year: int.parse(match.group(1)!),
-        );
-      })
-      .whereType<_YearFolder>()
-      .toList()
-    ..sort((left, right) => right.year.compareTo(left.year));
+            return _YearFolder(
+              directory: directory,
+              year: int.parse(match.group(1)!),
+            );
+          })
+          .whereType<_YearFolder>()
+          .toList()
+        ..sort((left, right) => right.year.compareTo(left.year));
 
   if (yearFolders.isNotEmpty) {
     return yearFolders;
@@ -155,12 +166,7 @@ List<_YearFolder> _discoverYearFolders(Directory rootDirectory) {
       .any((file) => _audioExtensions.contains(_extension(file.path)));
 
   if (hasAudioFiles) {
-    return [
-      _YearFolder(
-        directory: rootDirectory,
-        year: DateTime.now().year,
-      ),
-    ];
+    return [_YearFolder(directory: rootDirectory, year: DateTime.now().year)];
   }
 
   return [];
@@ -290,6 +296,18 @@ List<_ImportEntry> _loadManifestEntries({
     'document_id',
     'documentid',
   ]);
+  final yearIndex = _findFirstIndex(header, [
+    'release_year',
+    'releaseyear',
+    'year',
+  ]);
+  final audioTypeIndex = _findFirstIndex(header, ['audio_type', 'audiotype']);
+  final statusIndex = header.indexOf('status');
+  final trackWeeklyStatsIndex = _findFirstIndex(header, [
+    'track_weekly_stats',
+    'trackinweeklystats',
+    'weekly_stats',
+  ]);
 
   if (audioIndex == -1 || imageIndex == -1) {
     throw Exception(
@@ -340,10 +358,29 @@ List<_ImportEntry> _loadManifestEntries({
     );
     final title = _readCsvCell(row, titleIndex).trim();
     final artist = _readCsvCell(row, artistIndex).trim();
+    final year = _readManifestYear(
+      value: _readCsvCell(row, yearIndex),
+      fallback: yearFolder.year,
+      rowNumber: index + 1,
+    );
+    final audioType = _normalizeAudioType(
+      _readCsvCell(row, audioTypeIndex),
+      fallback: config.defaultAudioType,
+    );
+    final status = _normalizeStatus(
+      _readCsvCell(row, statusIndex),
+      fallback: config.defaultStatus,
+    );
+    final trackInWeeklyStats =
+        _readOptionalBool(
+          value: _readCsvCell(row, trackWeeklyStatsIndex),
+          rowNumber: index + 1,
+        ) ??
+        config.trackInWeeklyStats;
     final rawDocumentId = _readCsvCell(row, documentIdIndex).trim();
     final documentId = rawDocumentId.isEmpty
         ? _buildDocumentId(
-            year: yearFolder.year,
+            year: year,
             sourceStem: _basenameWithoutExtension(audioFile.path),
           )
         : _validateDocumentId(rawDocumentId, index + 1);
@@ -356,11 +393,14 @@ List<_ImportEntry> _loadManifestEntries({
 
     entries.add(
       _ImportEntry(
-        year: yearFolder.year,
+        year: year,
         audioFile: audioFile,
         imageFile: imageFile,
         title: title.isEmpty ? fallbackMetadata.title : title,
         artist: artist.isEmpty ? fallbackMetadata.artist : artist,
+        audioType: audioType,
+        status: status,
+        trackInWeeklyStats: trackInWeeklyStats,
         documentId: documentId,
       ),
     );
@@ -472,6 +512,9 @@ List<_ImportEntry> _loadAutoMatchedEntries(
         imageFile: imageFile,
         title: metadata.title,
         artist: metadata.artist,
+        audioType: config.defaultAudioType,
+        status: config.defaultStatus,
+        trackInWeeklyStats: config.trackInWeeklyStats,
         documentId: documentId,
       ),
     );
@@ -502,7 +545,11 @@ Future<_ImportAction> _processEntry({
   }
 
   stdout.writeln(
-    '[PLAN] ${entry.documentId} | year=${entry.year} | title="${entry.title}" | artist="${entry.artist}" | audio=${_basename(entry.audioFile.path)} | image=${_basename(entry.imageFile.path)}',
+    '[PLAN] ${entry.documentId} | year=${entry.year} | '
+    'type=${entry.audioType} | status=${entry.status} | '
+    'weeklyStats=${entry.trackInWeeklyStats} | title="${entry.title}" | '
+    'artist="${entry.artist}" | audio=${_basename(entry.audioFile.path)} | '
+    'image=${_basename(entry.imageFile.path)}',
   );
 
   if (!config.apply) {
@@ -528,16 +575,31 @@ Future<_ImportAction> _processEntry({
     ),
   ]);
 
-  final savedAt = DateTime(entry.year, 1, 1).toIso8601String();
-  final fields = {
+  final now = DateTime.now().toUtc().toIso8601String();
+  final savedAt = DateTime.utc(entry.year, 1, 1).toIso8601String();
+  final fields = <String, dynamic>{
     'title': {'stringValue': entry.title},
     'artist': {'stringValue': entry.artist},
     'imageUrl': {'stringValue': uploadResults[0]},
     'audioUrl': {'stringValue': uploadResults[1]},
     'savedAt': {'stringValue': savedAt},
+    'releaseYear': {'integerValue': entry.year.toString()},
     'year': {'integerValue': entry.year.toString()},
-    'trackInWeeklyStats': {'booleanValue': false},
+    'audioType': {'stringValue': entry.audioType},
+    'trackInWeeklyStats': {'booleanValue': entry.trackInWeeklyStats},
+    'status': {'stringValue': entry.status},
+    'updatedAt': {'stringValue': now},
+    'importedAt': {'stringValue': now},
+    'importedFrom': {'stringValue': 'tool/import_yearly_songs.dart'},
   };
+
+  if (existingDocument == null) {
+    fields['createdAt'] = {'stringValue': now};
+  }
+
+  if (entry.status == _publishedStatus) {
+    fields['publishedAt'] = {'stringValue': now};
+  }
 
   await _upsertDocument(
     client: client,
@@ -737,6 +799,69 @@ String _readCsvCell(List<String> row, int index) {
   return row[index].trim();
 }
 
+int _readManifestYear({
+  required String value,
+  required int fallback,
+  required int rowNumber,
+}) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) {
+    return fallback;
+  }
+
+  final year = int.tryParse(trimmed);
+  if (year == null || year < 1900 || year > 2100) {
+    throw Exception(
+      'Manifest row $rowNumber has an invalid release year: $trimmed',
+    );
+  }
+
+  return year;
+}
+
+String _normalizeAudioType(String value, {required String fallback}) {
+  final normalized = value.trim().toLowerCase();
+
+  return switch (normalized) {
+    'short' => _shortAudioType,
+    'full' => _fullAudioType,
+    _ => fallback,
+  };
+}
+
+String _normalizeStatus(String value, {required String fallback}) {
+  final normalized = value.trim().toLowerCase();
+
+  return switch (normalized) {
+    'pending' => _pendingStatus,
+    'published' => _publishedStatus,
+    'hidden' => _hiddenStatus,
+    'archived' => _archivedStatus,
+    _ => fallback,
+  };
+}
+
+bool? _readOptionalBool({required String value, required int rowNumber}) {
+  final normalized = value.trim().toLowerCase();
+  if (normalized.isEmpty) {
+    return null;
+  }
+
+  final parsed = switch (normalized) {
+    'true' || 'yes' || 'y' || '1' => true,
+    'false' || 'no' || 'n' || '0' => false,
+    _ => null,
+  };
+
+  if (parsed == null) {
+    throw Exception(
+      'Manifest row $rowNumber has an invalid track_weekly_stats value: $value',
+    );
+  }
+
+  return parsed;
+}
+
 File _resolveRelativeFile({
   required Directory baseDirectory,
   required String relativeOrAbsolutePath,
@@ -920,6 +1045,9 @@ class _ImportEntry {
   final File imageFile;
   final String title;
   final String artist;
+  final String audioType;
+  final String status;
+  final bool trackInWeeklyStats;
   final String documentId;
 
   const _ImportEntry({
@@ -928,6 +1056,9 @@ class _ImportEntry {
     required this.imageFile,
     required this.title,
     required this.artist,
+    required this.audioType,
+    required this.status,
+    required this.trackInWeeklyStats,
     required this.documentId,
   });
 }
@@ -961,9 +1092,9 @@ class _ImportConfig {
       '  2. Without manifest.csv, the script prefers same-name images, otherwise it auto-assigns available images and reuses them if needed\n'
       '\n'
       'Manifest example:\n'
-      '  audio,image,title,artist\n'
-      '  Em Cua Ngay Hom Qua.mp3,1.jpeg,Em Cua Ngay Hom Qua,Son Tung M-TP\n'
-      '  Hay Noi Tinh Yeu Noi Ay Bay.mp3,2.jpeg,Hay Noi Tinh Yeu Noi Ay Bay,Chua cap nhat\n'
+      '  audio,image,title,artist,release_year,audio_type,status,track_weekly_stats\n'
+      '  Em Cua Ngay Hom Qua.mp3,1.jpeg,Em Cua Ngay Hom Qua,Son Tung M-TP,2015,full,published,true\n'
+      '  Hay Noi Tinh Yeu Noi Ay Bay.mp3,2.jpeg,Hay Noi Tinh Yeu Noi Ay Bay,Chua cap nhat,2014,short,pending,false\n'
       '\n'
       'Options:\n'
       '  --root <value>           Folder containing one or more music_YYYY directories.\n'
@@ -971,11 +1102,15 @@ class _ImportConfig {
       '  --password <value>       Firebase account password.\n'
       '  --api-key <value>        Firebase Web API key. Defaults to current project config.\n'
       '  --project-id <value>     Firestore project id. Defaults to current project config.\n'
-      '  --collection <value>     Firestore collection name. Default: yearly_songs.\n'
+      '  --collection <value>     Firestore collection name. Default: songs.\n'
       '  --cloud-name <value>     Cloudinary cloud name. Default: current app value.\n'
       '  --upload-preset <value>  Cloudinary upload preset. Default: current app value.\n'
       '  --manifest-name <value>  Manifest filename. Default: manifest.csv.\n'
       '  --default-artist <value> Artist used when filename does not contain "Artist - Title".\n'
+      '  --audio-type <value>     Default audio type: short or full. Default: short.\n'
+      '  --status <value>         Default status: pending, published, hidden, archived. Default: published.\n'
+      '  --track-weekly-stats     Force imported songs to be counted in weekly stats.\n'
+      '  --no-track-weekly-stats  Force imported songs to be excluded from weekly stats.\n'
       '  --limit <value>          Process only the first N entries.\n'
       '  --require-manifest       Fail folders that do not contain a manifest file.\n'
       '  --overwrite-existing     Re-upload media and overwrite existing Firestore documents with the same document id.\n'
@@ -992,6 +1127,9 @@ class _ImportConfig {
   final String uploadPreset;
   final String manifestName;
   final String defaultArtist;
+  final String defaultAudioType;
+  final String defaultStatus;
+  final bool trackInWeeklyStats;
   final int? limit;
   final bool requireManifest;
   final bool overwriteExisting;
@@ -1009,6 +1147,9 @@ class _ImportConfig {
     required this.uploadPreset,
     required this.manifestName,
     required this.defaultArtist,
+    required this.defaultAudioType,
+    required this.defaultStatus,
+    required this.trackInWeeklyStats,
     required this.limit,
     required this.requireManifest,
     required this.overwriteExisting,
@@ -1045,6 +1186,16 @@ class _ImportConfig {
       }
     }
 
+    final collection = _readOption(
+      options: options,
+      optionKey: 'collection',
+      fallback: _songsCollection,
+    );
+    final trackInWeeklyStats = flags.contains('no-track-weekly-stats')
+        ? false
+        : flags.contains('track-weekly-stats') ||
+              collection == _songsCollection;
+
     return _ImportConfig(
       rootPath: options['root'] ?? '',
       email:
@@ -1078,11 +1229,36 @@ class _ImportConfig {
             envKeys: const ['FIREBASE_TOOL_PROJECT_ID', 'FIREBASE_PROJECT_ID'],
           ) ??
           'appmusi-4ff75',
-      collection: options['collection'] ?? 'yearly_songs',
-      cloudName: options['cloud-name'] ?? 'ddy9wgrbj',
-      uploadPreset: options['upload-preset'] ?? 'musicapp',
-      manifestName: options['manifest-name'] ?? 'manifest.csv',
-      defaultArtist: options['default-artist'] ?? 'Chua cap nhat',
+      collection: collection,
+      cloudName: _readOption(
+        options: options,
+        optionKey: 'cloud-name',
+        fallback: 'ddy9wgrbj',
+      ),
+      uploadPreset: _readOption(
+        options: options,
+        optionKey: 'upload-preset',
+        fallback: 'musicapp',
+      ),
+      manifestName: _readOption(
+        options: options,
+        optionKey: 'manifest-name',
+        fallback: 'manifest.csv',
+      ),
+      defaultArtist: _readOption(
+        options: options,
+        optionKey: 'default-artist',
+        fallback: 'Chua cap nhat',
+      ),
+      defaultAudioType: _normalizeAudioType(
+        _readOption(options: options, optionKey: 'audio-type', fallback: ''),
+        fallback: _shortAudioType,
+      ),
+      defaultStatus: _normalizeStatus(
+        _readOption(options: options, optionKey: 'status', fallback: ''),
+        fallback: _publishedStatus,
+      ),
+      trackInWeeklyStats: trackInWeeklyStats,
       limit: int.tryParse(options['limit'] ?? ''),
       requireManifest: flags.contains('require-manifest'),
       overwriteExisting: flags.contains('overwrite-existing'),
@@ -1094,7 +1270,14 @@ class _ImportConfig {
   bool get isValid =>
       rootPath.trim().isNotEmpty &&
       email.trim().isNotEmpty &&
-      password.trim().isNotEmpty;
+      password.trim().isNotEmpty &&
+      apiKey.trim().isNotEmpty &&
+      projectId.trim().isNotEmpty &&
+      collection.trim().isNotEmpty &&
+      cloudName.trim().isNotEmpty &&
+      uploadPreset.trim().isNotEmpty &&
+      manifestName.trim().isNotEmpty &&
+      defaultArtist.trim().isNotEmpty;
 
   String get validationError {
     if (rootPath.trim().isEmpty) {
@@ -1108,8 +1291,42 @@ class _ImportConfig {
       return 'Missing required argument: --password '
           '(or set FIREBASE_TOOL_PASSWORD / FIREBASE_BACKEND_PASSWORD)';
     }
+    if (apiKey.trim().isEmpty) {
+      return 'Missing required argument: --api-key';
+    }
+    if (projectId.trim().isEmpty) {
+      return 'Missing required argument: --project-id';
+    }
+    if (collection.trim().isEmpty) {
+      return 'Missing required argument: --collection';
+    }
+    if (cloudName.trim().isEmpty) {
+      return 'Missing required argument: --cloud-name';
+    }
+    if (uploadPreset.trim().isEmpty) {
+      return 'Missing required argument: --upload-preset';
+    }
+    if (manifestName.trim().isEmpty) {
+      return 'Missing required argument: --manifest-name';
+    }
+    if (defaultArtist.trim().isEmpty) {
+      return 'Missing required argument: --default-artist';
+    }
 
     return 'Invalid configuration';
+  }
+
+  static String _readOption({
+    required Map<String, String> options,
+    required String optionKey,
+    required String fallback,
+  }) {
+    final optionValue = options[optionKey]?.trim();
+    if (optionValue != null && optionValue.isNotEmpty) {
+      return optionValue;
+    }
+
+    return fallback;
   }
 
   static String? _readOptionOrEnv({

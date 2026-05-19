@@ -10,6 +10,8 @@ class AudioPlayerState extends Equatable {
   final Duration duration;
   final List<SongEntity> playlist;
   final int currentIndex;
+  final bool isShuffleEnabled;
+  final bool isRepeatEnabled;
 
   const AudioPlayerState({
     this.currentSong,
@@ -20,6 +22,8 @@ class AudioPlayerState extends Equatable {
     this.duration = Duration.zero,
     this.playlist = const [],
     this.currentIndex = -1,
+    this.isShuffleEnabled = false,
+    this.isRepeatEnabled = false,
   });
 
   AudioPlayerState copyWith({
@@ -31,6 +35,8 @@ class AudioPlayerState extends Equatable {
     Duration? duration,
     List<SongEntity>? playlist,
     int? currentIndex,
+    bool? isShuffleEnabled,
+    bool? isRepeatEnabled,
   }) {
     return AudioPlayerState(
       currentSong: currentSong ?? this.currentSong,
@@ -41,6 +47,8 @@ class AudioPlayerState extends Equatable {
       duration: duration ?? this.duration,
       playlist: playlist ?? this.playlist,
       currentIndex: currentIndex ?? this.currentIndex,
+      isShuffleEnabled: isShuffleEnabled ?? this.isShuffleEnabled,
+      isRepeatEnabled: isRepeatEnabled ?? this.isRepeatEnabled,
     );
   }
 
@@ -54,5 +62,7 @@ class AudioPlayerState extends Equatable {
     duration,
     playlist,
     currentIndex,
+    isShuffleEnabled,
+    isRepeatEnabled,
   ];
 }

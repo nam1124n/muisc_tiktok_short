@@ -17,13 +17,17 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
     9,
     (index) => 2026 - index,
   );
-  static const Color _purple = Color(0xFF7B43F3);
-  static const Color _purpleDark = Color(0xFF4C1D95);
-  static const Color _background = Color(0xFFF7F2FF);
+  static const Color _ink = Color(0xFF0F172A);
+  static const Color _muted = Color(0xFF64748B);
+  static const Color _teal = Color(0xFF0F766E);
+  static const Color _tealSoft = Color(0xFFE6F6F3);
+  static const Color _rose = Color(0xFFE11D48);
+  static const Color _background = Color(0xFFF8FAFC);
+  static const Color _border = Color(0xFFE2E8F0);
 
-  int _selectedYear = _years.first;
-  bool _didSelectYear = false;
+  int? _selectedYear;
   String _selectedAudioType = 'all';
+  _LibrarySortOption _sortOption = _LibrarySortOption.newest;
 
   @override
   Widget build(BuildContext context) {
@@ -34,73 +38,35 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
     return Scaffold(
       backgroundColor: _background,
       appBar: AppBar(
-        backgroundColor: Colors.white.withValues(alpha: 0.92),
+        backgroundColor: Colors.white,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        centerTitle: true,
+        centerTitle: false,
         title: Text(
           l10n.genreLabel,
-          style: const TextStyle(
-            color: Color(0xFF1F1147),
-            fontWeight: FontWeight.w700,
-          ),
+          style: const TextStyle(color: _ink, fontWeight: FontWeight.w800),
         ),
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFF8F4FF), Color(0xFFF4EEFF), Color(0xFFFDFBFF)],
-          ),
-        ),
-        child: Stack(
-          children: [
-            const Positioned(
-              top: -80,
-              right: -20,
-              child: _GlowOrb(
-                size: 210,
-                color: Color(0xFFD8C1FF),
-                opacity: 0.5,
-              ),
-            ),
-            const Positioned(
-              top: 160,
-              left: -50,
-              child: _GlowOrb(
-                size: 170,
-                color: Color(0xFFEADBFF),
-                opacity: 0.55,
-              ),
-            ),
-            SafeArea(
-              top: false,
-              child: _buildContent(
-                context: context,
-                ref: ref,
-                l10n: l10n,
-                isVietnamese: isVietnamese,
-                songState: songState,
-              ),
-            ),
-          ],
+      body: SafeArea(
+        top: false,
+        child: _buildContent(
+          ref: ref,
+          l10n: l10n,
+          isVietnamese: isVietnamese,
+          songState: songState,
         ),
       ),
     );
   }
 
   Widget _buildContent({
-    required BuildContext context,
     required WidgetRef ref,
     required AppLocalizations l10n,
     required bool isVietnamese,
     required LibrarySongCatalogState songState,
   }) {
     if (songState.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF7B43F3)),
-      );
+      return const Center(child: CircularProgressIndicator(color: _teal));
     }
 
     if (songState.hasError) {
@@ -110,11 +76,11 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline, size: 56, color: Colors.red),
+              const Icon(Icons.error_outline, size: 56, color: _rose),
               const SizedBox(height: 12),
               Text(songState.errorMessage!, textAlign: TextAlign.center),
               const SizedBox(height: 16),
-              ElevatedButton(
+              FilledButton(
                 onPressed: () =>
                     ref.read(librarySongCatalogProvider.notifier).reload(),
                 child: Text(l10n.retry),
@@ -125,66 +91,137 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
       );
     }
 
-    final songs = _filterSongsByAudioType(songState.songs);
-    final songsByYear = _groupSongsByYear(songs);
-    final autoSelectedYear = _preferredYear(songsByYear);
-    final selectedYear = _didSelectYear ? _selectedYear : autoSelectedYear;
-    final selectedSongs = songsByYear[selectedYear] ?? const <SongEntity>[];
-    final yearsWithSongs = _years
-        .where((year) => (songsByYear[year] ?? const []).isNotEmpty)
-        .length;
+    final audioFilteredSongs = _filterSongsByAudioType(songState.songs);
+    final visibleSongs = _sortSongs(
+      _selectedYear == null
+          ? audioFilteredSongs
+          : audioFilteredSongs
+                .where((song) => _bucketYearFor(song) == _selectedYear)
+                .toList(),
+    );
+    final groupedSongs = _groupSongsByYear(visibleSongs);
+    final yearsWithSongs = _years.where((year) {
+      return audioFilteredSongs.any((song) => _bucketYearFor(song) == year);
+    }).length;
+    final selectedScopeLabel = _selectedYear == null
+        ? (isVietnamese ? 'Tất cả năm' : 'All years')
+        : _selectedYear.toString();
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 28),
       children: [
-        _HeaderCard(
+        _LibrarySummaryPanel(
           title: l10n.genreScreenTitle,
           subtitle: l10n.genreScreenSubtitle,
-          selectedYear: selectedYear,
-          totalSongs: songs.length,
-          yearsWithMemories: yearsWithSongs,
+          selectedScopeLabel: selectedScopeLabel,
+          totalSongs: songState.songs.length,
+          visibleSongs: visibleSongs.length,
+          yearsWithSongs: yearsWithSongs,
           totalYears: _years.length,
           isVietnamese: isVietnamese,
         ),
-        const SizedBox(height: 22),
-        _buildAudioTypeFilter(isVietnamese),
-        const SizedBox(height: 14),
-        _buildYearTabs(selectedYear),
-        const SizedBox(height: 20),
-        _SectionHeader(
-          title: _yearListTitle(selectedYear, isVietnamese),
-          subtitle: _yearListSubtitle(
-            selectedYear: selectedYear,
-            songCount: selectedSongs.length,
-            hasSongs: songs.isNotEmpty,
-            isVietnamese: isVietnamese,
-          ),
-        ),
-        const SizedBox(height: 14),
-        if (selectedSongs.isEmpty)
+        const SizedBox(height: 16),
+        _buildControlPanel(isVietnamese),
+        const SizedBox(height: 18),
+        if (visibleSongs.isEmpty)
           _EmptyStateCard(
             title: _emptyStateTitle(
-              hasSongs: songs.isNotEmpty,
-              selectedYear: selectedYear,
+              hasSongs: songState.songs.isNotEmpty,
               isVietnamese: isVietnamese,
             ),
             subtitle: _emptyStateSubtitle(
-              hasSongs: songs.isNotEmpty,
+              hasSongs: songState.songs.isNotEmpty,
               isVietnamese: isVietnamese,
             ),
           )
+        else if (_selectedYear == null)
+          ..._buildGroupedLibrarySections(
+            groupedSongs: groupedSongs,
+            playlist: visibleSongs,
+            isVietnamese: isVietnamese,
+          )
         else
-          ...selectedSongs.map(
-            (song) => Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: _SongMemoryCard(
-                song: song,
-                playlist: selectedSongs,
-                note: _memoryNote(selectedYear, isVietnamese),
-              ),
-            ),
+          ..._buildSingleYearSection(
+            year: _selectedYear!,
+            songs: visibleSongs,
+            playlist: visibleSongs,
+            isVietnamese: isVietnamese,
           ),
       ],
+    );
+  }
+
+  Widget _buildControlPanel(bool isVietnamese) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.tune_rounded, color: _teal, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                isVietnamese ? 'Bộ lọc thư viện' : 'Library filters',
+                style: const TextStyle(
+                  color: _ink,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
+              const Spacer(),
+              SizedBox(
+                width: 148,
+                child: DropdownButtonFormField<_LibrarySortOption>(
+                  initialValue: _sortOption,
+                  isExpanded: true,
+                  icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 10,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: _border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: _border),
+                    ),
+                  ),
+                  items: _LibrarySortOption.values.map((option) {
+                    return DropdownMenuItem(
+                      value: option,
+                      child: Text(
+                        _sortLabel(option, isVietnamese),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value == null) {
+                      return;
+                    }
+
+                    setState(() => _sortOption = value);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _buildAudioTypeFilter(isVietnamese),
+          const SizedBox(height: 14),
+          _buildYearFilter(isVietnamese),
+        ],
+      ),
     );
   }
 
@@ -196,7 +233,7 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
       ),
       _AudioTypeFilterOption(
         value: SongAudioTypes.short,
-        label: isVietnamese ? 'Nhạc ngắn' : 'Shorts',
+        label: isVietnamese ? 'Nhạc ngắn' : 'Short',
       ),
       _AudioTypeFilterOption(
         value: SongAudioTypes.full,
@@ -205,104 +242,111 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
     ];
 
     return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+      spacing: 8,
+      runSpacing: 8,
       children: options.map((option) {
         final isSelected = option.value == _selectedAudioType;
 
-        return ChoiceChip(
-          label: Text(option.label),
+        return _FilterChipButton(
+          label: option.label,
           selected: isSelected,
-          onSelected: (_) {
-            setState(() {
-              _selectedAudioType = option.value;
-              _didSelectYear = false;
-            });
+          icon: option.value == SongAudioTypes.full
+              ? Icons.album_outlined
+              : option.value == SongAudioTypes.short
+              ? Icons.flash_on_outlined
+              : Icons.library_music_outlined,
+          onTap: () {
+            setState(() => _selectedAudioType = option.value);
           },
-          selectedColor: _purple,
-          backgroundColor: Colors.white.withValues(alpha: 0.92),
-          side: BorderSide(
-            color: isSelected ? _purple : const Color(0xFFE8DDFB),
-          ),
-          labelStyle: TextStyle(
-            color: isSelected ? Colors.white : _purpleDark,
-            fontWeight: FontWeight.w700,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
         );
       }).toList(),
     );
   }
 
-  Widget _buildYearTabs(int selectedYear) {
+  Widget _buildYearFilter(bool isVietnamese) {
     return SizedBox(
-      height: 56,
+      height: 44,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(
           parent: AlwaysScrollableScrollPhysics(),
         ),
-        itemCount: _years.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        itemCount: _years.length + 1,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
-          final year = _years[index];
-          final isSelected = year == selectedYear;
+          final year = index == 0 ? null : _years[index - 1];
+          final isSelected = year == _selectedYear;
+          final label = year == null
+              ? (isVietnamese ? 'Tất cả năm' : 'All years')
+              : '$year';
 
-          return Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(18),
-              onTap: () {
-                setState(() {
-                  _selectedYear = year;
-                  _didSelectYear = true;
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOut,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? _purple
-                      : Colors.white.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: isSelected
-                        ? Colors.transparent
-                        : const Color(0xFFE8DDFB),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isSelected
-                          ? _purple.withValues(alpha: 0.26)
-                          : const Color(0xFF2B145F).withValues(alpha: 0.04),
-                      blurRadius: isSelected ? 24 : 16,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    '$year',
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : _purpleDark,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          return _YearChip(
+            label: label,
+            selected: isSelected,
+            onTap: () => setState(() => _selectedYear = year),
           );
         },
       ),
     );
+  }
+
+  List<Widget> _buildGroupedLibrarySections({
+    required Map<int, List<SongEntity>> groupedSongs,
+    required List<SongEntity> playlist,
+    required bool isVietnamese,
+  }) {
+    final sections = <Widget>[];
+
+    for (final year in _orderedSectionYears()) {
+      final songs = groupedSongs[year] ?? const <SongEntity>[];
+      if (songs.isEmpty) {
+        continue;
+      }
+
+      if (sections.isNotEmpty) {
+        sections.add(const SizedBox(height: 18));
+      }
+      sections.add(_YearSectionHeader(year: year, count: songs.length));
+      sections.add(const SizedBox(height: 10));
+      sections.addAll(
+        songs.map(
+          (song) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _LibrarySongTile(
+              song: song,
+              playlist: playlist,
+              year: year,
+              isVietnamese: isVietnamese,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return sections;
+  }
+
+  List<Widget> _buildSingleYearSection({
+    required int year,
+    required List<SongEntity> songs,
+    required List<SongEntity> playlist,
+    required bool isVietnamese,
+  }) {
+    return [
+      _YearSectionHeader(year: year, count: songs.length),
+      const SizedBox(height: 10),
+      ...songs.map(
+        (song) => Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: _LibrarySongTile(
+            song: song,
+            playlist: playlist,
+            year: year,
+            isVietnamese: isVietnamese,
+          ),
+        ),
+      ),
+    ];
   }
 
   List<SongEntity> _filterSongsByAudioType(List<SongEntity> songs) {
@@ -317,21 +361,42 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
     final grouped = {for (final year in _years) year: <SongEntity>[]};
 
     for (final song in songs) {
-      final year = _bucketYearFor(song);
-      grouped[year]!.add(song);
+      grouped[_bucketYearFor(song)]!.add(song);
     }
 
     return grouped;
   }
 
-  int _preferredYear(Map<int, List<SongEntity>> songsByYear) {
-    for (final year in _years) {
-      if ((songsByYear[year] ?? const []).isNotEmpty) {
-        return year;
-      }
+  List<SongEntity> _sortSongs(List<SongEntity> songs) {
+    final sortedSongs = List<SongEntity>.from(songs);
+
+    sortedSongs.sort((left, right) {
+      return switch (_sortOption) {
+        _LibrarySortOption.title => left.title.toLowerCase().compareTo(
+          right.title.toLowerCase(),
+        ),
+        _LibrarySortOption.oldest => _compareByYear(left, right),
+        _LibrarySortOption.newest => _compareByYear(right, left),
+      };
+    });
+
+    return sortedSongs;
+  }
+
+  int _compareByYear(SongEntity left, SongEntity right) {
+    final yearCompare = _bucketYearFor(left).compareTo(_bucketYearFor(right));
+    if (yearCompare != 0) {
+      return yearCompare;
     }
 
-    return _years.first;
+    final dateCompare = (left.savedAt ?? DateTime(0)).compareTo(
+      right.savedAt ?? DateTime(0),
+    );
+    if (dateCompare != 0) {
+      return dateCompare;
+    }
+
+    return left.title.toLowerCase().compareTo(right.title.toLowerCase());
   }
 
   int _bucketYearFor(SongEntity song) {
@@ -340,41 +405,27 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
       return savedYear;
     }
 
-    // Keep legacy or newer records visible inside the archive even when
-    // they do not expose one of the fixed design years.
     return _years.first;
   }
 
-  String _yearListTitle(int year, bool isVietnamese) {
-    return isVietnamese ? 'Danh sách nhạc năm $year' : 'Tracks from $year';
+  List<int> _orderedSectionYears() {
+    if (_sortOption == _LibrarySortOption.oldest) {
+      return _years.reversed.toList();
+    }
+
+    return _years;
   }
 
-  String _yearListSubtitle({
-    required int selectedYear,
-    required int songCount,
-    required bool hasSongs,
-    required bool isVietnamese,
-  }) {
-    if (!hasSongs) {
-      return isVietnamese
-          ? 'Thư viện sẽ hiện ở đây sau khi admin thêm dữ liệu.'
-          : 'The library will appear here after the admin adds songs.';
-    }
-
-    if (songCount == 0) {
-      return isVietnamese
-          ? 'Chưa có bài phù hợp với bộ lọc trong năm $selectedYear.'
-          : 'No tracks match the current filter in $selectedYear.';
-    }
-
-    return isVietnamese
-        ? '$songCount bài phù hợp với bộ lọc hiện tại.'
-        : '$songCount tracks match the current filter.';
+  String _sortLabel(_LibrarySortOption option, bool isVietnamese) {
+    return switch (option) {
+      _LibrarySortOption.newest => isVietnamese ? 'Mới nhất' : 'Newest',
+      _LibrarySortOption.oldest => isVietnamese ? 'Cũ nhất' : 'Oldest',
+      _LibrarySortOption.title => 'A-Z',
+    };
   }
 
   String _emptyStateTitle({
     required bool hasSongs,
-    required int selectedYear,
     required bool isVietnamese,
   }) {
     if (!hasSongs) {
@@ -390,21 +441,17 @@ class _GenreScreenState extends ConsumerState<GenreScreen> {
   }) {
     if (!hasSongs) {
       return isVietnamese
-          ? 'Admin có thể thêm nhạc ngắn hoặc bản đầy đủ vào thư viện.'
-          : 'The admin can add short clips or full tracks to the library.';
+          ? 'Admin có thể thêm nhạc ngắn hoặc bản đầy đủ vào bộ sưu tập.'
+          : 'The admin can add short clips or full tracks to the collection.';
     }
 
     return isVietnamese
-        ? 'Thử đổi loại nhạc hoặc chuyển sang một năm khác.'
-        : 'Try another audio type or year filter.';
-  }
-
-  String _memoryNote(int selectedYear, bool isVietnamese) {
-    return isVietnamese
-        ? 'Bài hát được lọc theo năm $selectedYear.'
-        : 'Filtered by release year $selectedYear.';
+        ? 'Thử đổi loại nhạc, chọn tất cả năm hoặc đổi cách sắp xếp.'
+        : 'Try another audio type, all years, or a different sort.';
   }
 }
+
+enum _LibrarySortOption { newest, oldest, title }
 
 class _AudioTypeFilterOption {
   const _AudioTypeFilterOption({required this.value, required this.label});
@@ -413,43 +460,35 @@ class _AudioTypeFilterOption {
   final String label;
 }
 
-class _HeaderCard extends StatelessWidget {
-  const _HeaderCard({
+class _LibrarySummaryPanel extends StatelessWidget {
+  const _LibrarySummaryPanel({
     required this.title,
     required this.subtitle,
-    required this.selectedYear,
+    required this.selectedScopeLabel,
     required this.totalSongs,
-    required this.yearsWithMemories,
+    required this.visibleSongs,
+    required this.yearsWithSongs,
     required this.totalYears,
     required this.isVietnamese,
   });
 
   final String title;
   final String subtitle;
-  final int selectedYear;
+  final String selectedScopeLabel;
   final int totalSongs;
-  final int yearsWithMemories;
+  final int visibleSongs;
+  final int yearsWithSongs;
   final int totalYears;
   final bool isVietnamese;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF6F3AF2), Color(0xFF9A76FF)],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF6F3AF2).withValues(alpha: 0.24),
-            blurRadius: 34,
-            offset: const Offset(0, 20),
-          ),
-        ],
+        color: _GenreScreenState._ink,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF1E293B)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -464,60 +503,44 @@ class _HeaderCard extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
                         color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
                         height: 1.15,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 14,
-                        height: 1.5,
-                        color: Colors.white.withValues(alpha: 0.82),
+                        color: Colors.white.withValues(alpha: 0.72),
+                        fontSize: 13,
+                        height: 1.45,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.18),
-                  ),
-                ),
-                child: Text(
-                  '$selectedYear',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-              ),
+              const SizedBox(width: 12),
+              _ScopeBadge(label: selectedScopeLabel),
             ],
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 18),
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              _StatChip(
-                label: isVietnamese ? 'Bài hiện có' : 'Tracks available',
+              _SummaryMetric(
+                label: isVietnamese ? 'Đang hiển thị' : 'Visible',
+                value: '$visibleSongs',
+              ),
+              _SummaryMetric(
+                label: isVietnamese ? 'Tổng bài' : 'Total tracks',
                 value: '$totalSongs',
               ),
-              _StatChip(
+              _SummaryMetric(
                 label: isVietnamese ? 'Năm có dữ liệu' : 'Active years',
-                value: '$yearsWithMemories/$totalYears',
+                value: '$yearsWithSongs/$totalYears',
               ),
             ],
           ),
@@ -527,8 +550,33 @@ class _HeaderCard extends StatelessWidget {
   }
 }
 
-class _StatChip extends StatelessWidget {
-  const _StatChip({required this.label, required this.value});
+class _ScopeBadge extends StatelessWidget {
+  const _ScopeBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: _GenreScreenState._teal,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryMetric extends StatelessWidget {
+  const _SummaryMetric({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -536,11 +584,11 @@ class _StatChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -550,7 +598,7 @@ class _StatChip extends StatelessWidget {
             value,
             style: const TextStyle(
               color: Colors.white,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
               fontSize: 18,
             ),
           ),
@@ -558,8 +606,9 @@ class _StatChip extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.76),
-              fontSize: 12,
+              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -568,32 +617,144 @@ class _StatChip extends StatelessWidget {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, required this.subtitle});
+class _FilterChipButton extends StatelessWidget {
+  const _FilterChipButton({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
 
-  final String title;
-  final String subtitle;
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1F1147),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+          decoration: BoxDecoration(
+            color: selected ? _GenreScreenState._tealSoft : Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: selected
+                  ? _GenreScreenState._teal
+                  : _GenreScreenState._border,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: selected
+                    ? _GenreScreenState._teal
+                    : _GenreScreenState._muted,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: selected
+                      ? _GenreScreenState._teal
+                      : _GenreScreenState._ink,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 6),
+      ),
+    );
+  }
+}
+
+class _YearChip extends StatelessWidget {
+  const _YearChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? _GenreScreenState._ink : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: selected
+                  ? _GenreScreenState._ink
+                  : _GenreScreenState._border,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: selected ? Colors.white : _GenreScreenState._ink,
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _YearSectionHeader extends StatelessWidget {
+  const _YearSectionHeader({required this.year, required this.count});
+
+  final int year;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          decoration: BoxDecoration(
+            color: _GenreScreenState._ink,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            '$year',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(child: Container(height: 1, color: _GenreScreenState._border)),
+        const SizedBox(width: 10),
         Text(
-          subtitle,
+          '$count',
           style: const TextStyle(
-            fontSize: 13,
-            height: 1.5,
-            color: Color(0xFF6E5A9A),
+            color: _GenreScreenState._muted,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ],
@@ -601,16 +762,18 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _SongMemoryCard extends ConsumerWidget {
-  const _SongMemoryCard({
+class _LibrarySongTile extends ConsumerWidget {
+  const _LibrarySongTile({
     required this.song,
     required this.playlist,
-    required this.note,
+    required this.year,
+    required this.isVietnamese,
   });
 
   final SongEntity song;
   final List<SongEntity> playlist;
-  final String note;
+  final int year;
+  final bool isVietnamese;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -621,23 +784,16 @@ class _SongMemoryCard extends ConsumerWidget {
     final isLoading = playback.isLoading;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE8DDFB)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF220B52).withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _GenreScreenState._border),
       ),
       child: Row(
         children: [
           _Artwork(imageUrl: song.imageUrl),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -647,89 +803,102 @@ class _SongMemoryCard extends ConsumerWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF23124F),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: _GenreScreenState._ink,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
                   song.artist,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 13,
+                    color: _GenreScreenState._muted,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF7B43F3),
                   ),
                 ),
                 const SizedBox(height: 8),
-                _AudioTypeBadge(audioType: song.audioType),
-                const SizedBox(height: 8),
-                Text(
-                  note,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    height: 1.4,
-                    color: Color(0xFF7B6B9A),
-                  ),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    _AudioTypeBadge(audioType: song.audioType),
+                    _YearBadge(year: year),
+                  ],
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () async {
-                if (isPlaying) {
-                  playerNotifier.pause();
-                  return;
-                }
+          const SizedBox(width: 10),
+          _PlayButton(
+            isPlaying: isPlaying,
+            isLoading: isLoading,
+            onTap: () async {
+              if (isPlaying) {
+                playerNotifier.pause();
+                return;
+              }
 
-                if (isCurrentSong) {
-                  playerNotifier.resume();
-                  return;
-                }
+              if (isCurrentSong) {
+                playerNotifier.resume();
+                return;
+              }
 
-                await playerNotifier.playSong(song, playlist: playlist);
-              },
-              customBorder: const CircleBorder(),
-              child: Ink(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isPlaying
-                      ? const Color(0xFF5B21B6)
-                      : const Color(0xFFF1E8FF),
-                ),
-                child: Center(
-                  child: isLoading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Color(0xFF7B43F3),
-                          ),
-                        )
-                      : Icon(
-                          isPlaying
-                              ? Icons.pause_rounded
-                              : Icons.play_arrow_rounded,
-                          size: 26,
-                          color: isPlaying
-                              ? Colors.white
-                              : const Color(0xFF7B43F3),
-                        ),
-                ),
-              ),
-            ),
+              await playerNotifier.playSong(song, playlist: playlist);
+            },
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PlayButton extends StatelessWidget {
+  const _PlayButton({
+    required this.isPlaying,
+    required this.isLoading,
+    required this.onTap,
+  });
+
+  final bool isPlaying;
+  final bool isLoading;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Ink(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isPlaying
+                ? _GenreScreenState._teal
+                : _GenreScreenState._tealSoft,
+          ),
+          child: Center(
+            child: isLoading
+                ? const SizedBox(
+                    width: 17,
+                    height: 17,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: _GenreScreenState._teal,
+                    ),
+                  )
+                : Icon(
+                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    color: isPlaying ? Colors.white : _GenreScreenState._teal,
+                    size: 25,
+                  ),
+          ),
+        ),
       ),
     );
   }
@@ -745,21 +914,43 @@ class _AudioTypeBadge extends StatelessWidget {
     final isFull = audioType == SongAudioTypes.full;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
       decoration: BoxDecoration(
         color: isFull ? const Color(0xFFEFF6FF) : const Color(0xFFFFF7ED),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: isFull ? const Color(0xFF93C5FD) : const Color(0xFFFDBA74),
-        ),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         isFull ? 'FULL' : 'SHORT',
         style: TextStyle(
           color: isFull ? const Color(0xFF1D4ED8) : const Color(0xFFC2410C),
           fontSize: 10,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w900,
           letterSpacing: 0,
+        ),
+      ),
+    );
+  }
+}
+
+class _YearBadge extends StatelessWidget {
+  const _YearBadge({required this.year});
+
+  final int year;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        '$year',
+        style: const TextStyle(
+          color: _GenreScreenState._ink,
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
         ),
       ),
     );
@@ -774,15 +965,11 @@ class _Artwork extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 68,
-      height: 68,
+      width: 56,
+      height: 56,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF6F3AF2), Color(0xFFC4A6FF)],
-        ),
+        color: const Color(0xFFE2E8F0),
+        borderRadius: BorderRadius.circular(10),
       ),
       clipBehavior: Clip.antiAlias,
       child: imageUrl.isNotEmpty
@@ -802,7 +989,11 @@ class _ArtworkPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child: Icon(Icons.music_note_rounded, size: 28, color: Colors.white),
+      child: Icon(
+        Icons.music_note_rounded,
+        size: 24,
+        color: _GenreScreenState._muted,
+      ),
     );
   }
 }
@@ -816,77 +1007,53 @@ class _EmptyStateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE8DDFB)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _GenreScreenState._border),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
-              color: const Color(0xFFF3EAFF),
-              borderRadius: BorderRadius.circular(14),
+              color: _GenreScreenState._tealSoft,
+              borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(
-              Icons.auto_stories_rounded,
-              color: Color(0xFF7B43F3),
+              Icons.inventory_2_outlined,
+              color: _GenreScreenState._teal,
             ),
           ),
-          const SizedBox(height: 14),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF23124F),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            style: const TextStyle(
-              fontSize: 13,
-              height: 1.5,
-              color: Color(0xFF6E5A9A),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: _GenreScreenState._ink,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    height: 1.45,
+                    color: _GenreScreenState._muted,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _GlowOrb extends StatelessWidget {
-  const _GlowOrb({
-    required this.size,
-    required this.color,
-    required this.opacity,
-  });
-
-  final double size;
-  final Color color;
-  final double opacity;
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [
-              color.withValues(alpha: opacity),
-              color.withValues(alpha: 0),
-            ],
-          ),
-        ),
       ),
     );
   }
