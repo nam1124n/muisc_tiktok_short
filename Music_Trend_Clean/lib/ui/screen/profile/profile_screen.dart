@@ -1377,7 +1377,9 @@ class _ProfileContinueListeningCard extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
                       children: [
                         _ProfileMetaChip(
                           label: l10n.historyResumeFrom(
@@ -1385,7 +1387,6 @@ class _ProfileContinueListeningCard extends ConsumerWidget {
                           ),
                           color: ProfileScreen._primary,
                         ),
-                        const SizedBox(width: 8),
                         _ProfileMetaChip(
                           label: '${(progress * 100).round()}%',
                           color: ProfileScreen._secondary,
@@ -1668,12 +1669,17 @@ class _ProfileMetaChip extends StatelessWidget {
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 180),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: color,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );

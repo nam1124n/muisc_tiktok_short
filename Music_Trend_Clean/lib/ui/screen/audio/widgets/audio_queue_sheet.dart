@@ -17,9 +17,11 @@ Future<void> showAudioQueueSheet(BuildContext context) {
 class AudioQueueSheet extends ConsumerWidget {
   const AudioQueueSheet({super.key});
 
-  static const Color _surface = Color(0xFF111112);
-  static const Color _muted = Color(0xFF8E8E93);
-  static const Color _danger = Color(0xFFFF3B45);
+  static const Color _surface = Color(0xFF111111);
+  static const Color _tileSplash = Color(0xFF1B1B1D);
+  static const Color _muted = Color(0xFF8A8A8F);
+  static const Color _softMuted = Color(0xFF5F5F64);
+  static const Color _danger = Color(0xFFE5454F);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,13 +61,14 @@ class AudioQueueSheet extends ConsumerWidget {
                 ),
               ),
               if (recentlyPlayed.isNotEmpty) ...[
-                const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                const SliverToBoxAdapter(child: SizedBox(height: 6)),
                 SliverList.builder(
                   itemCount: recentlyPlayed.length,
                   itemBuilder: (context, index) {
                     final song = recentlyPlayed[index];
                     return _QueueSongTile(
                       song: song,
+                      reserveLeadingSpace: false,
                       onTap: () => playerNotifier.playSong(
                         song,
                         playlist: playerState.playlist.isEmpty
@@ -77,7 +80,7 @@ class AudioQueueSheet extends ConsumerWidget {
                 ),
               ],
               if (currentSong != null) ...[
-                const SliverToBoxAdapter(child: SizedBox(height: 18)),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
                 const SliverToBoxAdapter(
                   child: _SectionTitle('Currently playing'),
                 ),
@@ -85,19 +88,20 @@ class AudioQueueSheet extends ConsumerWidget {
                   child: _QueueSongTile(
                     song: currentSong,
                     isCurrent: true,
+                    reserveLeadingSpace: false,
                     onTap: () {},
                   ),
                 ),
               ],
-              const SliverToBoxAdapter(child: SizedBox(height: 22)),
+              const SliverToBoxAdapter(child: SizedBox(height: 26)),
               const SliverToBoxAdapter(child: _SectionTitle('Playing next')),
               if (nextSongs.isEmpty)
                 const SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.fromLTRB(24, 12, 24, 8),
+                    padding: EdgeInsets.fromLTRB(28, 12, 28, 8),
                     child: Text(
                       'No songs queued.',
-                      style: TextStyle(color: _muted, fontSize: 16),
+                      style: TextStyle(color: _muted, fontSize: 14),
                     ),
                   ),
                 )
@@ -122,11 +126,13 @@ class AudioQueueSheet extends ConsumerWidget {
                           icon: const Icon(
                             Icons.remove_rounded,
                             color: Colors.white,
+                            size: 22,
                           ),
                           style: IconButton.styleFrom(
                             backgroundColor: _danger,
-                            fixedSize: const Size(34, 34),
-                            minimumSize: const Size(34, 34),
+                            fixedSize: const Size(32, 32),
+                            minimumSize: const Size(32, 32),
+                            padding: EdgeInsets.zero,
                           ),
                           onPressed: () =>
                               playerNotifier.removeFromQueue(playlistIndex),
@@ -135,8 +141,8 @@ class AudioQueueSheet extends ConsumerWidget {
                           index: index,
                           child: const Icon(
                             Icons.drag_handle_rounded,
-                            color: Color(0xFF5F5F63),
-                            size: 34,
+                            color: _softMuted,
+                            size: 28,
                           ),
                         ),
                         onTap: () => playerNotifier.playAtIndex(playlistIndex),
@@ -170,45 +176,60 @@ class _QueueHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
+      child: Column(
         children: [
-          IconButton(
-            onPressed: onClose,
-            icon: const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: Colors.white,
-              size: 38,
+          Container(
+            width: 38,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(99),
             ),
           ),
-          const Expanded(
-            child: Text(
-              'Next Up',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              IconButton(
+                onPressed: onClose,
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: Colors.white70,
+                  size: 30,
+                ),
               ),
-            ),
-          ),
-          IconButton(
-            onPressed: onShuffle,
-            icon: Icon(
-              Icons.shuffle_rounded,
-              color: isShuffleEnabled
-                  ? FullPlayerColors.accent
-                  : Colors.white70,
-              size: 30,
-            ),
-          ),
-          IconButton(
-            onPressed: onRepeat,
-            icon: Icon(
-              Icons.repeat_rounded,
-              color: isRepeatEnabled ? FullPlayerColors.accent : Colors.white70,
-              size: 30,
-            ),
+              const Expanded(
+                child: Text(
+                  'Next Up',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: onShuffle,
+                icon: Icon(
+                  Icons.shuffle_rounded,
+                  color: isShuffleEnabled
+                      ? FullPlayerColors.accent
+                      : AudioQueueSheet._muted,
+                  size: 23,
+                ),
+              ),
+              IconButton(
+                onPressed: onRepeat,
+                icon: Icon(
+                  Icons.repeat_rounded,
+                  color: isRepeatEnabled
+                      ? FullPlayerColors.accent
+                      : AudioQueueSheet._muted,
+                  size: 23,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -224,13 +245,13 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+      padding: const EdgeInsets.fromLTRB(28, 6, 28, 10),
       child: Text(
         text,
         style: const TextStyle(
-          color: Colors.white,
-          fontSize: 21,
-          fontWeight: FontWeight.w800,
+          color: AudioQueueSheet._muted,
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -245,6 +266,7 @@ class _QueueSongTile extends StatelessWidget {
     this.leading,
     this.trailing,
     this.isCurrent = false,
+    this.reserveLeadingSpace = true,
   });
 
   final SongEntity song;
@@ -252,50 +274,59 @@ class _QueueSongTile extends StatelessWidget {
   final Widget? leading;
   final Widget? trailing;
   final bool isCurrent;
+  final bool reserveLeadingSpace;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-        child: Row(
-          children: [
-            SizedBox(width: 42, child: leading),
-            const SizedBox(width: 8),
-            _Artwork(imageUrl: song.imageUrl, isCurrent: isCurrent),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    song.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 19,
-                      fontWeight: FontWeight.w800,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        splashColor: AudioQueueSheet._tileSplash,
+        highlightColor: AudioQueueSheet._tileSplash,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 9),
+          child: Row(
+            children: [
+              if (reserveLeadingSpace) ...[
+                SizedBox(width: 38, child: leading),
+                const SizedBox(width: 10),
+              ],
+              _Artwork(imageUrl: song.imageUrl, isCurrent: isCurrent),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      song.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    song.artist,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AudioQueueSheet._muted,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(height: 5),
+                    Text(
+                      song.artist,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AudioQueueSheet._muted,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            SizedBox(width: 40, child: trailing),
-          ],
+              const SizedBox(width: 12),
+              SizedBox(width: 34, child: trailing),
+            ],
+          ),
         ),
       ),
     );
@@ -314,13 +345,13 @@ class _Artwork extends StatelessWidget {
       alignment: Alignment.center,
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(9),
+          borderRadius: BorderRadius.circular(10),
           child: SizedBox(
-            width: 58,
-            height: 58,
+            width: 52,
+            height: 52,
             child: imageUrl.isEmpty
                 ? const ColoredBox(
-                    color: Color(0xFF2A2A2D),
+                    color: Color(0xFF242426),
                     child: Icon(
                       Icons.music_note_rounded,
                       color: Colors.white54,
@@ -330,7 +361,7 @@ class _Artwork extends StatelessWidget {
                     imageUrl,
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) => const ColoredBox(
-                      color: Color(0xFF2A2A2D),
+                      color: Color(0xFF242426),
                       child: Icon(
                         Icons.music_note_rounded,
                         color: Colors.white54,
@@ -341,16 +372,16 @@ class _Artwork extends StatelessWidget {
         ),
         if (isCurrent)
           Container(
-            width: 58,
-            height: 58,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.35),
-              borderRadius: BorderRadius.circular(9),
+              color: Colors.black.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(
               Icons.graphic_eq_rounded,
               color: Colors.white,
-              size: 24,
+              size: 22,
             ),
           ),
       ],

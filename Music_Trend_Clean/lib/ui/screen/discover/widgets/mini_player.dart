@@ -22,6 +22,12 @@ class MiniPlayer extends ConsumerWidget {
     final isFavoriteBusy = ref.watch(
       isFavoriteSongBusyProvider(currentSong.id),
     );
+    final progress = ref.watch(
+      audioPlayerNotifierProvider.select(
+        (playerState) =>
+            _progressValue(playerState.position, playerState.duration),
+      ),
+    );
 
     return GestureDetector(
       onTap: () => showFullPlayerSheet(context),
@@ -47,7 +53,20 @@ class MiniPlayer extends ConsumerWidget {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
+                    SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 3,
+                        strokeCap: StrokeCap.round,
+                        backgroundColor: Colors.white.withValues(alpha: 0.24),
+                        color: const Color(0xFFFF6A00),
+                      ),
+                    ),
                     Container(
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
                         color: Colors.black87,
                         shape: BoxShape.circle,
@@ -69,8 +88,8 @@ class MiniPlayer extends ConsumerWidget {
                           : null,
                     ),
                     Container(
-                      width: 34,
-                      height: 34,
+                      width: 32,
+                      height: 32,
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
@@ -166,5 +185,13 @@ class MiniPlayer extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  static double _progressValue(Duration position, Duration duration) {
+    if (duration <= Duration.zero) {
+      return 0;
+    }
+
+    return (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);
   }
 }

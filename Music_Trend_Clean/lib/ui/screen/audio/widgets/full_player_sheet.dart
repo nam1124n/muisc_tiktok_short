@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_flutter/ui/screen/audio/providers/audio_player_provider.dart';
@@ -29,10 +28,60 @@ class FullPlayerSheet extends ConsumerStatefulWidget {
 }
 
 class _FullPlayerSheetState extends ConsumerState<FullPlayerSheet> {
+  final GlobalKey _playerStackKey = GlobalKey();
+  final math.Random _random = math.Random();
+  final List<_ReactionBubble> _reactions = [];
+  static const List<String> _reactionEmojis = ['🔥', '👏', '🥺'];
   bool _showControls = false;
 
   void _toggleControls() {
     setState(() => _showControls = !_showControls);
+  }
+
+  void _spawnReaction(String emoji, Offset globalPosition) {
+    final renderBox =
+        _playerStackKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) {
+      return;
+    }
+
+    final start = renderBox.globalToLocal(globalPosition);
+    const burstCount = 18;
+
+    for (var index = 0; index < burstCount; index++) {
+      Future.delayed(Duration(milliseconds: index * 24), () {
+        if (!mounted) {
+          return;
+        }
+
+        final id =
+            '${DateTime.now().microsecondsSinceEpoch}-$index-${_random.nextInt(999)}';
+        final bubble = _ReactionBubble(
+          id: id,
+          emoji: index < 8
+              ? emoji
+              : _reactionEmojis[_random.nextInt(_reactionEmojis.length)],
+          start: start.translate(
+            (_random.nextDouble() * 52) - 26,
+            (_random.nextDouble() * 18) - 8,
+          ),
+          drift: (_random.nextDouble() * 150) - 75,
+          lift: 120 + _random.nextDouble() * 210,
+          size: 22 + _random.nextDouble() * 13,
+          duration: Duration(milliseconds: 1050 + _random.nextInt(650)),
+        );
+
+        setState(() => _reactions.add(bubble));
+        Future.delayed(bubble.duration + const Duration(milliseconds: 80), () {
+          if (!mounted) {
+            return;
+          }
+          setState(() {
+            _reactions.removeWhere((reaction) => reaction.id == id);
+          });
+        });
+      });
+    }
   }
 
   @override
@@ -56,134 +105,146 @@ class _FullPlayerSheetState extends ConsumerState<FullPlayerSheet> {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
-            child: Column(
+            child: Stack(
+              key: _playerStackKey,
               children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(28),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        _CoverImage(imageUrl: song.imageUrl),
-                        const DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Color(0x66000000),
-                                Color(0x26000000),
-                                Color(0xB8000000),
-                              ],
-                              stops: [0, 0.45, 1],
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 22,
-                          left: 20,
-                          right: 88,
-                          child: _showControls
-                              ? _CompactTrackHeading(
-                                  title: song.title,
-                                  artist: song.artist,
-                                )
-                              : _TrackHeading(
-                                  title: song.title,
-                                  artist: song.artist,
+                Column(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            _CoverImage(imageUrl: song.imageUrl),
+                            const DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Color(0x66000000),
+                                    Color(0x26000000),
+                                    Color(0xB8000000),
+                                  ],
+                                  stops: [0, 0.45, 1],
                                 ),
-                        ),
-                        Positioned(
-                          top: 18,
-                          right: 18,
-                          child: _RoundIconButton(
-                            icon: Icons.keyboard_arrow_down_rounded,
-                            iconSize: 38,
-                            backgroundColor: Colors.black,
-                            onTap: () => Navigator.of(context).pop(),
-                          ),
-                        ),
-                        Positioned.fill(
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 180),
-                            child: _showControls
-                                ? _CompactControlsOverlay(
-                                    key: const ValueKey('compact-controls'),
-                                    onToggle: _toggleControls,
-                                    isPlaying: playerState.isPlaying,
-                                    isLoading: playerState.isLoading,
-                                    canGoPrevious:
-                                        playerState.currentIndex > 0 ||
-                                        playerState.position.inSeconds > 3,
-                                    canGoNext:
-                                        playerState.currentIndex <
-                                        playerState.playlist.length - 1,
-                                    position: playerState.position,
-                                    duration: playerState.duration,
-                                    progress: progress,
-                                    onPrevious: playerNotifier.previous,
-                                    onPlayPause: () {
-                                      if (playerState.isPlaying) {
-                                        playerNotifier.pause();
-                                      } else {
-                                        playerNotifier.resume();
-                                      }
-                                    },
-                                    onNext: playerNotifier.next,
-                                    onSeek: (value) {
-                                      playerNotifier.seek(
-                                        _positionFromProgress(
-                                          value,
-                                          playerState.duration,
+                              ),
+                            ),
+                            Positioned(
+                              top: 22,
+                              left: 20,
+                              right: 88,
+                              child: _showControls
+                                  ? _CompactTrackHeading(
+                                      title: song.title,
+                                      artist: song.artist,
+                                    )
+                                  : _TrackHeading(
+                                      title: song.title,
+                                      artist: song.artist,
+                                    ),
+                            ),
+                            Positioned(
+                              top: 18,
+                              right: 18,
+                              child: _RoundIconButton(
+                                icon: Icons.keyboard_arrow_down_rounded,
+                                iconSize: 38,
+                                backgroundColor: Colors.black,
+                                onTap: () => Navigator.of(context).pop(),
+                              ),
+                            ),
+                            Positioned.fill(
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 180),
+                                child: _showControls
+                                    ? _CompactControlsOverlay(
+                                        key: const ValueKey('compact-controls'),
+                                        onToggle: _toggleControls,
+                                        isPlaying: playerState.isPlaying,
+                                        isLoading: playerState.isLoading,
+                                        canGoPrevious:
+                                            playerState.currentIndex > 0 ||
+                                            playerState.position.inSeconds > 3,
+                                        canGoNext:
+                                            playerState.currentIndex <
+                                            playerState.playlist.length - 1,
+                                        position: playerState.position,
+                                        duration: playerState.duration,
+                                        progress: progress,
+                                        onPrevious: playerNotifier.previous,
+                                        onPlayPause: () {
+                                          if (playerState.isPlaying) {
+                                            playerNotifier.pause();
+                                          } else {
+                                            playerNotifier.resume();
+                                          }
+                                        },
+                                        onNext: playerNotifier.next,
+                                        onSeek: (value) {
+                                          playerNotifier.seek(
+                                            _positionFromProgress(
+                                              value,
+                                              playerState.duration,
+                                            ),
+                                          );
+                                        },
+                                      )
+                                    : _WaveformOverlay(
+                                        key: const ValueKey(
+                                          'waveform-controls',
                                         ),
-                                      );
-                                    },
-                                  )
-                                : _WaveformOverlay(
-                                    key: const ValueKey('waveform-controls'),
-                                    onToggle: _toggleControls,
-                                    progress: progress,
-                                    position: playerState.position,
-                                    duration: playerState.duration,
-                                    onSeek: (value) {
-                                      playerNotifier.seek(
-                                        _positionFromProgress(
-                                          value,
-                                          playerState.duration,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                          ),
+                                        onToggle: _toggleControls,
+                                        progress: progress,
+                                        position: playerState.position,
+                                        duration: playerState.duration,
+                                        onSeek: (value) {
+                                          playerNotifier.seek(
+                                            _positionFromProgress(
+                                              value,
+                                              playerState.duration,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                              ),
+                            ),
+                          ],
                         ),
-                        Positioned(
-                          left: 24,
-                          right: 24,
-                          bottom: 28,
-                          child: GestureDetector(
-                            onTap: () {},
-                            child: const _CommentBar(),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    GestureDetector(
+                      onVerticalDragEnd: (details) {
+                        final velocity = details.primaryVelocity ?? 0;
+                        if (velocity < -300) {
+                          showAudioQueueSheet(context);
+                        }
+                      },
+                      child: _ActionBar(
+                        isFavorite: isFavorite,
+                        isFavoriteBusy: isFavoriteBusy,
+                        onFavorite: () => ref
+                            .read(favoriteNotifierProvider.notifier)
+                            .toggleFavorite(song),
+                        onReaction: _spawnReaction,
+                        onQueue: () => showAudioQueueSheet(context),
+                      ),
+                    ),
+                  ],
+                ),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Stack(
+                      children: [
+                        for (final reaction in _reactions)
+                          _FlyingReaction(
+                            key: ValueKey(reaction.id),
+                            reaction: reaction,
                           ),
-                        ),
                       ],
                     ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                GestureDetector(
-                  onVerticalDragEnd: (details) {
-                    final velocity = details.primaryVelocity ?? 0;
-                    if (velocity < -300) {
-                      showAudioQueueSheet(context);
-                    }
-                  },
-                  child: _ActionBar(
-                    isFavorite: isFavorite,
-                    isFavoriteBusy: isFavoriteBusy,
-                    onFavorite: () => ref
-                        .read(favoriteNotifierProvider.notifier)
-                        .toggleFavorite(song),
-                    onQueue: () => showAudioQueueSheet(context),
                   ),
                 ),
               ],
@@ -265,7 +326,7 @@ class _TrackHeading extends StatelessWidget {
           title,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 28,
+            fontSize: 26,
             height: 1.15,
             fontWeight: FontWeight.w800,
           ),
@@ -276,10 +337,10 @@ class _TrackHeading extends StatelessWidget {
         Text(
           artist,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.72),
-            fontSize: 24,
+            color: Colors.white.withValues(alpha: 0.68),
+            fontSize: 20,
             height: 1.12,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -289,15 +350,15 @@ class _TrackHeading extends StatelessWidget {
           children: [
             Icon(
               Icons.graphic_eq_rounded,
-              color: Colors.white.withValues(alpha: 0.78),
-              size: 22,
+              color: Colors.white.withValues(alpha: 0.72),
+              size: 18,
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 9),
             Text(
               'Behind this track',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.78),
-                fontSize: 18,
+                color: Colors.white.withValues(alpha: 0.72),
+                fontSize: 15,
                 height: 1.15,
                 fontWeight: FontWeight.w600,
               ),
@@ -324,7 +385,7 @@ class _CompactTrackHeading extends StatelessWidget {
           title,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 26,
+            fontSize: 24,
             height: 1.25,
             fontWeight: FontWeight.w800,
           ),
@@ -336,9 +397,9 @@ class _CompactTrackHeading extends StatelessWidget {
           artist,
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.68),
-            fontSize: 23,
+            fontSize: 19,
             height: 1.15,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w600,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -349,14 +410,14 @@ class _CompactTrackHeading extends StatelessWidget {
             Icon(
               Icons.graphic_eq_rounded,
               color: Colors.white.withValues(alpha: 0.68),
-              size: 22,
+              size: 18,
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 9),
             Text(
               'Behind this track',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.68),
-                fontSize: 18,
+                fontSize: 15,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -396,13 +457,13 @@ class _WaveformOverlay extends StatelessWidget {
         Positioned(
           left: 0,
           right: 0,
-          bottom: 146,
+          bottom: 92,
           child: _WaveformProgress(progress: progress, onSeek: onSeek),
         ),
         Positioned(
           left: 0,
           right: 0,
-          bottom: 116,
+          bottom: 74,
           child: Center(
             child: _TimePill(position: position, duration: duration),
           ),
@@ -466,8 +527,9 @@ class _CompactControlsOverlay extends StatelessWidget {
                 const SizedBox(width: 38),
                 _RoundIconButton(
                   icon: Icons.skip_previous_rounded,
-                  iconSize: 38,
-                  backgroundColor: Colors.black,
+                  iconSize: 32,
+                  size: 52,
+                  backgroundColor: Colors.black.withValues(alpha: 0.44),
                   foregroundColor: canGoPrevious
                       ? Colors.white
                       : Colors.white38,
@@ -477,9 +539,9 @@ class _CompactControlsOverlay extends StatelessWidget {
                   icon: isPlaying
                       ? Icons.pause_rounded
                       : Icons.play_arrow_rounded,
-                  iconSize: 48,
-                  size: 76,
-                  backgroundColor: Colors.black,
+                  iconSize: 40,
+                  size: 66,
+                  backgroundColor: Colors.black.withValues(alpha: 0.58),
                   foregroundColor: Colors.white,
                   isLoading: isLoading,
                   loadingColor: Colors.white,
@@ -487,8 +549,9 @@ class _CompactControlsOverlay extends StatelessWidget {
                 ),
                 _RoundIconButton(
                   icon: Icons.skip_next_rounded,
-                  iconSize: 38,
-                  backgroundColor: Colors.black,
+                  iconSize: 32,
+                  size: 52,
+                  backgroundColor: Colors.black.withValues(alpha: 0.44),
                   foregroundColor: canGoNext ? Colors.white : Colors.white38,
                   onTap: canGoNext ? onNext : null,
                 ),
@@ -594,7 +657,7 @@ class _WaveformProgress extends StatelessWidget {
         onSeek(details.localPosition.dx / width);
       },
       child: SizedBox(
-        height: 128,
+        height: 82,
         child: CustomPaint(
           painter: _WaveformPainter(progress: progress),
           size: Size.infinite,
@@ -637,7 +700,7 @@ class _WaveformPainter extends CustomPainter {
       final x = gap * i + gap / 2;
       final wave = math.sin(i * 0.47) * 0.34 + math.sin(i * 0.19 + 1.8) * 0.24;
       final normalized = (0.52 + wave).clamp(0.18, 1.0);
-      final height = 22 + normalized * 58;
+      final height = 16 + normalized * 40;
       final paint = x <= progressX ? playedPaint : remainingPaint;
       canvas.drawLine(
         Offset(x, centerY - height / 2),
@@ -662,7 +725,7 @@ class _TimePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       color: Colors.black.withValues(alpha: 0.9),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -671,16 +734,16 @@ class _TimePill extends StatelessWidget {
             _formatDuration(position),
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 13,
               fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Text(
             _formatDuration(duration),
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.62),
-              fontSize: 16,
+              fontSize: 13,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -690,37 +753,86 @@ class _TimePill extends StatelessWidget {
   }
 }
 
-class _CommentBar extends StatelessWidget {
-  const _CommentBar();
+class _ReactionButton extends StatelessWidget {
+  const _ReactionButton({required this.emoji, required this.onReaction});
+
+  final String emoji;
+  final void Function(String emoji, Offset globalPosition) onReaction;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 58,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF3F3A37).withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) {
+        final renderBox = context.findRenderObject() as RenderBox?;
+        if (renderBox == null) {
+          return;
+        }
+
+        onReaction(
+          emoji,
+          renderBox.localToGlobal(renderBox.size.center(Offset.zero)),
+        );
+      },
+      child: AnimatedScale(
+        scale: 1,
+        duration: const Duration(milliseconds: 120),
+        child: Text(emoji, style: const TextStyle(fontSize: 24)),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              'Comment...',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.62),
-                fontSize: 18,
-              ),
-            ),
+    );
+  }
+}
+
+class _ReactionBubble {
+  const _ReactionBubble({
+    required this.id,
+    required this.emoji,
+    required this.start,
+    required this.drift,
+    required this.lift,
+    required this.size,
+    required this.duration,
+  });
+
+  final String id;
+  final String emoji;
+  final Offset start;
+  final double drift;
+  final double lift;
+  final double size;
+  final Duration duration;
+}
+
+class _FlyingReaction extends StatelessWidget {
+  const _FlyingReaction({super.key, required this.reaction});
+
+  final _ReactionBubble reaction;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: reaction.duration,
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        final wobble = math.sin(value * math.pi * 2.6) * 14;
+        final x = reaction.start.dx + reaction.drift * value + wobble;
+        final y = reaction.start.dy - reaction.lift * value;
+        final opacity = value < 0.12
+            ? (value / 0.12).clamp(0.0, 1.0)
+            : (1 - value).clamp(0.0, 1.0);
+        final scale = 0.58 + math.sin(value * math.pi) * 0.48;
+
+        return Positioned(
+          left: x - 16,
+          top: y - 16,
+          child: Opacity(
+            opacity: opacity,
+            child: Transform.scale(scale: scale, child: child),
           ),
-          const Text('🔥', style: TextStyle(fontSize: 24)),
-          const SizedBox(width: 24),
-          const Text('👏', style: TextStyle(fontSize: 24)),
-          const SizedBox(width: 24),
-          const Text('🥺', style: TextStyle(fontSize: 24)),
-        ],
-      ),
+        );
+      },
+      child: Text(reaction.emoji, style: TextStyle(fontSize: reaction.size)),
     );
   }
 }
@@ -730,18 +842,20 @@ class _ActionBar extends StatelessWidget {
     required this.isFavorite,
     required this.isFavoriteBusy,
     required this.onFavorite,
+    required this.onReaction,
     required this.onQueue,
   });
 
   final bool isFavorite;
   final bool isFavoriteBusy;
   final VoidCallback onFavorite;
+  final void Function(String emoji, Offset globalPosition) onReaction;
   final VoidCallback onQueue;
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _ActionButton(
           icon: isFavorite ? Icons.favorite_rounded : Icons.favorite_border,
@@ -749,66 +863,18 @@ class _ActionBar extends StatelessWidget {
           isBusy: isFavoriteBusy,
           onTap: isFavoriteBusy ? null : onFavorite,
         ),
-        _ActionButton(
-          icon: Icons.mode_comment_outlined,
-          label: '4',
-          onTap: () => _showActionMessage(context, 'Comments are coming soon.'),
-        ),
-        _ActionButton(
-          icon: Icons.ios_share_rounded,
-          onTap: () => _showActionMessage(context, 'Share is coming soon.'),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _ReactionButton(emoji: '🔥', onReaction: onReaction),
+            const SizedBox(width: 18),
+            _ReactionButton(emoji: '👏', onReaction: onReaction),
+            const SizedBox(width: 18),
+            _ReactionButton(emoji: '🥺', onReaction: onReaction),
+          ],
         ),
         _ActionButton(icon: Icons.queue_music_rounded, onTap: onQueue),
-        _ActionButton(
-          icon: Icons.more_horiz_rounded,
-          onTap: () => _showMoreMenu(context),
-        ),
       ],
-    );
-  }
-
-  void _showActionMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
-  Future<void> _showMoreMenu(BuildContext context) {
-    return showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: const Color(0xFF18181A),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                _MoreMenuTile(
-                  icon: Icons.playlist_add_rounded,
-                  label: 'Add to playlist',
-                ),
-                _MoreMenuTile(
-                  icon: Icons.report_gmailerrorred_rounded,
-                  label: 'Report track',
-                ),
-                _MoreMenuTile(
-                  icon: Icons.info_outline_rounded,
-                  label: 'Track details',
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }
@@ -838,51 +904,29 @@ class _ActionButton extends StatelessWidget {
           children: [
             if (isBusy)
               const SizedBox(
-                width: 28,
-                height: 28,
+                width: 24,
+                height: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: Colors.white,
                 ),
               )
             else
-              Icon(icon, color: Colors.white, size: 28),
+              Icon(icon, color: Colors.white, size: 25),
             if (label != null) ...[
               const SizedBox(width: 6),
               Text(
                 label!,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ],
         ),
       ),
-    );
-  }
-}
-
-class _MoreMenuTile extends StatelessWidget {
-  const _MoreMenuTile({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.white),
-      title: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      onTap: () => Navigator.of(context).pop(),
     );
   }
 }
