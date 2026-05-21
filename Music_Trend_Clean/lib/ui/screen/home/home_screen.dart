@@ -4,7 +4,7 @@ import 'package:login_flutter/ui/screen/audio/providers/audio_player_provider.da
 import 'package:login_flutter/ui/screen/create_audio/create_audio_screen.dart';
 import 'package:login_flutter/ui/screen/discover/discover_screen.dart';
 import 'package:login_flutter/ui/screen/discover/widgets/custom_bottom_nav.dart';
-import 'package:login_flutter/ui/screen/genre/genre_screen.dart';
+import 'package:login_flutter/ui/screen/feed/feed_screen.dart';
 import 'package:login_flutter/ui/screen/my_audios/my_audios_screen.dart';
 import 'package:login_flutter/ui/screen/discover/widgets/mini_player.dart';
 import 'package:login_flutter/ui/screen/profile/profile_screen.dart';
@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentIndex,
         children: [
           const DiscoverContent(),
-          const GenreScreen(),
+          const FeedScreen(),
           const MyAudiosScreen(),
           const ProfileScreen(),
         ],
@@ -64,25 +64,36 @@ class _HomeBottomBar extends ConsumerWidget {
     final hasCurrentSong = ref.watch(
       audioPlayerNotifierProvider.select((state) => state.currentSong != null),
     );
+    final isFeedTab = currentIndex == 1;
+    final showMiniPlayer = hasCurrentSong && !isFeedTab;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isCompact = screenWidth < 360;
     final isTablet = screenWidth >= 700;
-    final createButtonSize = isTablet ? 60.0 : (isCompact ? 52.0 : 56.0);
-    final navHeight = isTablet ? 76.0 : (isCompact ? 68.0 : 72.0);
-    final navTopOffset = createButtonSize / 2 - (isCompact ? 8.0 : 9.0);
+    final createButtonSize = isFeedTab
+        ? (isTablet ? 54.0 : 48.0)
+        : isTablet
+        ? 60.0
+        : (isCompact ? 52.0 : 56.0);
+    final navHeight = isFeedTab
+        ? (isTablet ? 66.0 : 58.0)
+        : isTablet
+        ? 76.0
+        : (isCompact ? 68.0 : 72.0);
+    final navTopOffset =
+        createButtonSize / 2 - (isFeedTab ? 7.0 : (isCompact ? 8.0 : 9.0));
     final barHeight = navHeight + navTopOffset;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (hasCurrentSong)
+        if (showMiniPlayer)
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: MiniPlayer(),
           ),
-        if (hasCurrentSong) const SizedBox(height: 8),
+        if (showMiniPlayer) const SizedBox(height: 8),
         Container(
-          color: Colors.white,
+          color: isFeedTab ? Colors.black : Colors.white,
           child: SafeArea(
             top: false,
             child: SizedBox(
@@ -97,6 +108,7 @@ class _HomeBottomBar extends ConsumerWidget {
                       currentIndex: currentIndex,
                       onTap: onTabChanged,
                       height: navHeight,
+                      isDark: isFeedTab,
                     ),
                   ),
                   Positioned(

@@ -7,11 +7,13 @@ class CustomBottomNav extends StatelessWidget {
     required this.currentIndex,
     required this.onTap,
     this.height = 72,
+    this.isDark = false,
   });
 
   final int currentIndex;
   final ValueChanged<int> onTap;
   final double height;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -22,9 +24,14 @@ class CustomBottomNav extends StatelessWidget {
     return Container(
       height: height,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? Colors.black : Colors.white,
         border: Border(
-          top: BorderSide(color: Colors.grey.withValues(alpha: 0.2), width: 1),
+          top: BorderSide(
+            color: (isDark ? Colors.white : Colors.grey).withValues(
+              alpha: isDark ? 0.08 : 0.2,
+            ),
+            width: 1,
+          ),
         ),
       ),
       child: Padding(
@@ -38,14 +45,16 @@ class CustomBottomNav extends StatelessWidget {
               icon: Icons.explore_outlined,
               activeIcon: Icons.explore,
               label: l10n.discoverLabel,
+              isDark: isDark,
             ),
             _buildNavItem(
               context: context,
               metrics: metrics,
               index: 1,
-              icon: Icons.calendar_month_outlined,
-              activeIcon: Icons.calendar_month,
-              label: l10n.genreLabel,
+              icon: Icons.dynamic_feed_outlined,
+              activeIcon: Icons.dynamic_feed,
+              label: 'Feed',
+              isDark: isDark,
             ),
             SizedBox(width: metrics.centerGap),
             _buildNavItem(
@@ -55,6 +64,7 @@ class CustomBottomNav extends StatelessWidget {
               icon: Icons.library_music_outlined,
               activeIcon: Icons.library_music,
               label: l10n.yourAudioLabel,
+              isDark: isDark,
             ),
             _buildNavItem(
               context: context,
@@ -63,6 +73,7 @@ class CustomBottomNav extends StatelessWidget {
               icon: Icons.person_outline,
               activeIcon: Icons.person,
               label: l10n.profileTitle,
+              isDark: isDark,
             ),
           ],
         ),
@@ -77,10 +88,15 @@ class CustomBottomNav extends StatelessWidget {
     required IconData icon,
     required IconData activeIcon,
     required String label,
+    required bool isDark,
   }) {
     final bool isActive = currentIndex == index;
-    const activeColor = Color(0xFF8C52FF);
-    final Color color = isActive ? activeColor : Colors.grey.shade600;
+    final activeColor = isDark ? Colors.white : const Color(0xFF8C52FF);
+    final Color color = isActive
+        ? activeColor
+        : isDark
+        ? Colors.white.withValues(alpha: 0.52)
+        : Colors.grey.shade600;
 
     return Expanded(
       child: Material(
@@ -104,7 +120,7 @@ class CustomBottomNav extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isActive
-                        ? activeColor.withValues(alpha: 0.12)
+                        ? activeColor.withValues(alpha: isDark ? 0.14 : 0.12)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(
                       metrics.activePillRadius,

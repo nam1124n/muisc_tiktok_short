@@ -160,6 +160,7 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
     SongEntity song, {
     List<SongEntity>? playlist,
     Duration initialPosition = Duration.zero,
+    bool loopSingle = false,
   }) async {
     try {
       final previousSong = state.currentSong;
@@ -193,6 +194,7 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
         duration: Duration.zero,
       );
 
+      await _audioPlayer.setLoopMode(loopSingle ? LoopMode.one : LoopMode.off);
       await _audioPlayer.setUrl(song.audioUrl);
       if (initialPosition > Duration.zero) {
         await _audioPlayer.seek(initialPosition);
