@@ -8,4 +8,7 @@ abstract class ProfileRepository {
     required String username,
     required String ageGroup,
   });
+  Future<void> toggleFollowUser(String targetUserId);
+  Stream<bool> watchIsFollowing(String targetUserId);
+  Future<List<String>> getFollowingIds();
 }

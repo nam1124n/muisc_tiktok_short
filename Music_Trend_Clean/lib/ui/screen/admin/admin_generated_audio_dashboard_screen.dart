@@ -170,7 +170,10 @@ class _AdminGeneratedAudioDashboardScreenState
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.play_circle_fill, color: Color(0xFF8C52FF)),
+              icon: const Icon(
+                Icons.play_circle_fill,
+                color: Color(0xFF8C52FF),
+              ),
               onPressed: () => _playTrack(track),
             ),
             IconButton(
@@ -218,10 +221,9 @@ class _AdminGeneratedAudioDashboardScreenState
       trackInWeeklyStats: false,
     );
 
-    ref.read(audioPlayerNotifierProvider.notifier).playSong(
-      dummySong,
-      playlist: [dummySong],
-    );
+    ref
+        .read(audioPlayerNotifierProvider.notifier)
+        .playSong(dummySong, playlist: [dummySong]);
   }
 
   void _confirmDelete(GeneratedAudioEntity track) {
@@ -230,7 +232,9 @@ class _AdminGeneratedAudioDashboardScreenState
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Xóa bài nhạc AI này?'),
-          content: Text('Bạn có chắc chắn muốn xóa "${track.title}"? Thao tác này không thể hoàn tác.'),
+          content: Text(
+            'Bạn có chắc chắn muốn xóa "${track.title}"? Thao tác này không thể hoàn tác.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
@@ -260,7 +264,9 @@ class _AdminGeneratedAudioDashboardScreenState
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Phát hành bài nhạc?'),
-          content: Text('Bạn có chắc chắn muốn đăng bài "${track.title}" lên thư viện chính cho tất cả mọi người cùng nghe không?'),
+          content: Text(
+            'Bạn có chắc chắn muốn đăng bài "${track.title}" lên thư viện chính cho tất cả mọi người cùng nghe không?',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
@@ -279,7 +285,10 @@ class _AdminGeneratedAudioDashboardScreenState
     );
   }
 
-  Future<void> _executePublish(GeneratedAudioEntity track, ScaffoldMessengerState scaffold) async {
+  Future<void> _executePublish(
+    GeneratedAudioEntity track,
+    ScaffoldMessengerState scaffold,
+  ) async {
     try {
       await ref.read(adminGeneratedAudioProvider.notifier).publishTrack(track);
       if (!mounted) return;

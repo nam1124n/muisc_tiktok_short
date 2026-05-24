@@ -75,6 +75,28 @@ class SongRepositoryImpl implements SongRepository {
   }
 
   @override
+  Future<SongPageEntity> fetchFollowingFeedSongsPage({
+    required List<String> followingIds,
+    int limit = 20,
+    SongPageCursor? startAfter,
+  }) async {
+    final page = await remoteDataSource.fetchFollowingFeedSongsPage(
+      followingIds: followingIds,
+      limit: limit,
+      startAfter: startAfter,
+    );
+    final visibleSongs =
+        page.songs.where((song) => song.isVisibleToListeners).toList()
+          ..sort(_compareFeedSongs);
+
+    return SongPageEntity(
+      songs: visibleSongs,
+      nextCursor: page.nextCursor,
+      hasMore: page.hasMore,
+    );
+  }
+
+  @override
   Stream<List<TrendingSongEntity>> getWeeklyTrendingSongs({int limit = 4}) {
     return remoteDataSource.getWeeklyTrendingSongsStream().map((snapshot) {
       final rankedSongs =
@@ -112,6 +134,11 @@ class SongRepositoryImpl implements SongRepository {
   }
 
   @override
+  Future<List<SongEntity>> getSongsByUploaderId(String uploaderId, {int limit = 10}) async {
+    return remoteDataSource.fetchSongsByUploaderId(uploaderId, limit: limit);
+  }
+
+  @override
   Future<void> addSong(
     SongEntity song,
     XFile imageFile,
@@ -126,6 +153,27 @@ class SongRepositoryImpl implements SongRepository {
     final audioUrl = results[1];
 
     final model = SongModel.fromEntity(_withPublishDates(song));
+    await remoteDataSource.addSong({
+      ...model.toMap(),
+      'imageUrl': imageUrl,
+      'audioUrl': audioUrl,
+    });
+  }
+
+  @override
+  Future<void> userUploadSong(
+    SongEntity song,
+    XFile imageFile,
+    XFile audioFile,
+  ) async {
+    final results = await Future.wait([
+      remoteDataSource.uploadImage(imageFile),
+      remoteDataSource.uploadAudio(audioFile),
+    ]);
+    final imageUrl = results[0];
+    final audioUrl = results[1];
+
+    final model = SongModel.fromEntity(song.copyWith(status: SongStatuses.pending));
     await remoteDataSource.addSong({
       ...model.toMap(),
       'imageUrl': imageUrl,
@@ -191,7 +239,9 @@ class SongRepositoryImpl implements SongRepository {
   SongEntity _withPublishDates(SongEntity song) {
     final now = DateTime.now();
     return song.copyWith(
-      publishedAt: song.isPublished ? song.publishedAt ?? now : song.publishedAt,
+      publishedAt: song.isPublished
+          ? song.publishedAt ?? now
+          : song.publishedAt,
       updatedAt: now,
     );
   }

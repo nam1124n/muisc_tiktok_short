@@ -12,9 +12,14 @@ import 'package:login_flutter/ui/screen/admin/providers/song_provider.dart';
 import 'package:login_flutter/ui/screen/discover/providers/favorites_provider.dart';
 import 'package:login_flutter/ui/screen/profile/providers/profile_provider.dart';
 
+import 'package:login_flutter/domain/repositories/profile_repository.dart';
+import 'package:login_flutter/domain/repositories/song_repository.dart';
+
 final feedProvider = StateNotifierProvider<FeedNotifier, FeedState>((ref) {
   return FeedNotifier(
     getFeedSongsPageUseCase: ref.read(getFeedSongsPageUseCaseProvider),
+    songRepository: ref.read(songRepositoryProvider),
+    profileRepository: ref.read(profileRepositoryProvider),
     interactionRepository: ref.read(interactionRepositoryProvider),
     getProfileUseCase: ref.read(getProfileUseCaseProvider),
     userId: ref.watch(sessionCurrentUserIdProvider) ?? 'guest',
@@ -196,6 +201,8 @@ class FeedState extends Equatable {
 class FeedNotifier extends StateNotifier<FeedState> {
   FeedNotifier({
     required this.getFeedSongsPageUseCase,
+    required this.songRepository,
+    required this.profileRepository,
     required this.interactionRepository,
     required this.getProfileUseCase,
     required this.userId,
@@ -211,12 +218,17 @@ class FeedNotifier extends StateNotifier<FeedState> {
   static const int _pageSize = 12;
 
   final GetFeedSongsPageUseCase getFeedSongsPageUseCase;
+  final SongRepository songRepository;
+  final ProfileRepository profileRepository;
   final InteractionRepository interactionRepository;
   final GetProfileUseCase getProfileUseCase;
   final String userId;
   final String userName;
   SongPageCursor? _nextCursor;
   bool _discoverHasMore = true;
+
+  SongPageCursor? _followingNextCursor;
+  bool _followingHasMore = true;
 
   bool get _isGuest => userId == 'guest' || userId == 'guest_user';
 
@@ -247,13 +259,13 @@ class FeedNotifier extends StateNotifier<FeedState> {
     if (tab == FeedTabType.following) {
       state = state.copyWith(
         selectedTab: tab,
-        isInitialLoading: false,
-        isRefreshing: false,
-        isLoadingMore: false,
-        hasMore: false,
+        hasMore: _followingHasMore,
         initialErrorMessage: null,
         loadMoreErrorMessage: null,
       );
+      if (state.followingSongs.isEmpty) {
+        loadInitial();
+      }
       return;
     }
 
@@ -272,22 +284,19 @@ class FeedNotifier extends StateNotifier<FeedState> {
   Future<void> refresh() => loadInitial(keepSongs: true);
 
   Future<void> loadInitial({bool keepSongs = false}) async {
-    if (state.selectedTab == FeedTabType.following) {
-      state = state.copyWith(
-        isInitialLoading: false,
-        isRefreshing: false,
-        isLoadingMore: false,
-        hasMore: false,
-        initialErrorMessage: null,
-        loadMoreErrorMessage: null,
-      );
-      return;
+    final isFollowingTab = state.selectedTab == FeedTabType.following;
+
+    if (isFollowingTab) {
+      _followingNextCursor = null;
+      _followingHasMore = true;
+    } else {
+      _nextCursor = null;
+      _discoverHasMore = true;
     }
 
-    _nextCursor = null;
-    _discoverHasMore = true;
     state = state.copyWith(
-      discoverSongs: keepSongs ? state.discoverSongs : const [],
+      discoverSongs: isFollowingTab ? state.discoverSongs : (keepSongs ? state.discoverSongs : const []),
+      followingSongs: isFollowingTab ? (keepSongs ? state.followingSongs : const []) : state.followingSongs,
       isInitialLoading: !keepSongs,
       isRefreshing: keepSongs,
       isLoadingMore: false,
@@ -297,13 +306,26 @@ class FeedNotifier extends StateNotifier<FeedState> {
     );
 
     try {
-      final page = await getFeedSongsPageUseCase(limit: _pageSize);
+      SongPageEntity page;
+      if (isFollowingTab) {
+        final followingIds = await profileRepository.getFollowingIds();
+        page = await songRepository.fetchFollowingFeedSongsPage(
+          followingIds: followingIds,
+          limit: _pageSize,
+        );
+        _followingNextCursor = page.nextCursor;
+        _followingHasMore = page.hasMore;
+      } else {
+        page = await getFeedSongsPageUseCase(limit: _pageSize);
+        _nextCursor = page.nextCursor;
+        _discoverHasMore = page.hasMore;
+      }
+
       if (!mounted) return;
 
-      _nextCursor = page.nextCursor;
-      _discoverHasMore = page.hasMore;
       state = state.copyWith(
-        discoverSongs: page.songs,
+        discoverSongs: isFollowingTab ? state.discoverSongs : page.songs,
+        followingSongs: isFollowingTab ? page.songs : state.followingSongs,
         favoriteCountDeltas: const {},
         commentCountDeltas: const {},
         isInitialLoading: false,
@@ -332,26 +354,40 @@ class FeedNotifier extends StateNotifier<FeedState> {
 
   Future<void> loadMore() async {
     if (state.isInitialLoading ||
-        state.selectedTab == FeedTabType.following ||
         state.isRefreshing ||
         state.isLoadingMore ||
         !state.hasMore) {
       return;
     }
 
+    final isFollowingTab = state.selectedTab == FeedTabType.following;
     state = state.copyWith(isLoadingMore: true, loadMoreErrorMessage: null);
 
     try {
-      final page = await getFeedSongsPageUseCase(
-        limit: _pageSize,
-        startAfter: _nextCursor,
-      );
+      SongPageEntity page;
+      if (isFollowingTab) {
+        final followingIds = await profileRepository.getFollowingIds();
+        page = await songRepository.fetchFollowingFeedSongsPage(
+          followingIds: followingIds,
+          limit: _pageSize,
+          startAfter: _followingNextCursor,
+        );
+        _followingNextCursor = page.nextCursor ?? _followingNextCursor;
+        _followingHasMore = page.hasMore;
+      } else {
+        page = await getFeedSongsPageUseCase(
+          limit: _pageSize,
+          startAfter: _nextCursor,
+        );
+        _nextCursor = page.nextCursor ?? _nextCursor;
+        _discoverHasMore = page.hasMore;
+      }
+
       if (!mounted) return;
 
-      _nextCursor = page.nextCursor ?? _nextCursor;
-      _discoverHasMore = page.hasMore;
       state = state.copyWith(
-        discoverSongs: _mergeSongs(state.discoverSongs, page.songs),
+        discoverSongs: isFollowingTab ? state.discoverSongs : _mergeSongs(state.discoverSongs, page.songs),
+        followingSongs: isFollowingTab ? _mergeSongs(state.followingSongs, page.songs) : state.followingSongs,
         isLoadingMore: false,
         hasMore: page.hasMore,
         loadMoreErrorMessage: null,

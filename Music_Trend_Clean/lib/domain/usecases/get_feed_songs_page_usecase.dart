@@ -7,9 +7,6 @@ class GetFeedSongsPageUseCase {
   final SongRepository repository;
 
   Future<SongPageEntity> call({int limit = 20, SongPageCursor? startAfter}) {
-    return repository.fetchFeedSongsPage(
-      limit: limit,
-      startAfter: startAfter,
-    );
+    return repository.fetchFeedSongsPage(limit: limit, startAfter: startAfter);
   }
 }

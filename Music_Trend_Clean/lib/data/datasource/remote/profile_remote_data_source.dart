@@ -11,6 +11,9 @@ abstract class ProfileRemoteDataSource {
   });
   Future<ProfileModel> getProfile();
   Future<ProfileModel> getProfileById(String userId);
+  Future<void> toggleFollowUser(String targetUserId);
+  Stream<bool> watchIsFollowing(String targetUserId);
+  Future<List<String>> getFollowingIds();
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -83,10 +86,68 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
           '@user_${userId.substring(0, 5)}',
       id: userId,
       avatarUrl: data['avatarUrl'] ?? '',
-      followers: data['followers'] ?? 1200,
-      following: data['following'] ?? 450,
-      likes: data['likes'] ?? 15000,
+      followers: data['followers'] ?? 0,
+      following: data['following'] ?? 0,
+      likes: data['likes'] ?? 0,
       ageGroup: ProfileAgeGroups.normalize(data['ageGroup']?.toString()),
     );
+  }
+
+  @override
+  Future<void> toggleFollowUser(String targetUserId) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) throw Exception('Yêu cầu đăng nhập để theo dõi.');
+    if (currentUser.uid == targetUserId) throw Exception('Bạn không thể theo dõi chính mình.');
+
+    final followerRef = _db.collection('users').doc(targetUserId).collection('followers').doc(currentUser.uid);
+    final followingRef = _db.collection('users').doc(currentUser.uid).collection('following').doc(targetUserId);
+
+    final targetUserRef = _db.collection('users').doc(targetUserId);
+    final currentUserRef = _db.collection('users').doc(currentUser.uid);
+
+    await _db.runTransaction((tx) async {
+      final followerDoc = await tx.get(followerRef);
+      if (followerDoc.exists) {
+        // Unfollow
+        tx.delete(followerRef);
+        tx.delete(followingRef);
+        tx.set(targetUserRef, {'followers': FieldValue.increment(-1)}, SetOptions(merge: true));
+        tx.set(currentUserRef, {'following': FieldValue.increment(-1)}, SetOptions(merge: true));
+      } else {
+        // Follow
+        tx.set(followerRef, {'timestamp': FieldValue.serverTimestamp()});
+        tx.set(followingRef, {'timestamp': FieldValue.serverTimestamp()});
+        tx.set(targetUserRef, {'followers': FieldValue.increment(1)}, SetOptions(merge: true));
+        tx.set(currentUserRef, {'following': FieldValue.increment(1)}, SetOptions(merge: true));
+      }
+    });
+  }
+
+  @override
+  Stream<bool> watchIsFollowing(String targetUserId) {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return Stream.value(false);
+
+    return _db
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('following')
+        .doc(targetUserId)
+        .snapshots()
+        .map((doc) => doc.exists);
+  }
+
+  @override
+  Future<List<String>> getFollowingIds() async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return [];
+
+    final snapshot = await _db
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('following')
+        .get();
+
+    return snapshot.docs.map((doc) => doc.id).toList();
   }
 }

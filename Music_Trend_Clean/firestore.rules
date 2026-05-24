@@ -55,16 +55,26 @@ service cloud.firestore {
           ]) &&
           request.resource.data.role == resource.data.role &&
           request.resource.data.followers == resource.data.followers &&
-          request.resource.data.following == resource.data.following &&
           request.resource.data.likes == resource.data.likes &&
           request.resource.data.createdAt == resource.data.createdAt;
     }
 
     match /users/{userId} {
-      allow read: if isOwner(userId);
+      allow read: if isSignedIn();
       allow create: if userProfileCreateIsSafe(userId);
-      allow update: if userProfileUpdateIsSafe(userId);
+      allow update: if userProfileUpdateIsSafe(userId) ||
+                    (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followers']));
       allow delete: if false;
+
+      match /followers/{followerId} {
+        allow read: if isSignedIn();
+        allow write: if isOwner(followerId);
+      }
+
+      match /following/{followingId} {
+        allow read: if isSignedIn();
+        allow write: if isOwner(userId);
+      }
 
       match /favorites/{favoriteId} {
         allow read, write: if isOwner(userId);

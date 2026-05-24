@@ -104,14 +104,14 @@ class GeneratedAudioLibraryRemoteDataSource {
         .get();
 
     return snapshot.docs.map((doc) {
-      return {
-        ...doc.data(),
-        'id': doc.id,
-      };
+      return {...doc.data(), 'id': doc.id};
     }).toList();
   }
 
-  Future<void> deleteGeneratedTrackByAdmin(String trackId, String userId) async {
+  Future<void> deleteGeneratedTrackByAdmin(
+    String trackId,
+    String userId,
+  ) async {
     final trackRef = _trackCollection(userId).doc(trackId);
     await trackRef.delete();
   }

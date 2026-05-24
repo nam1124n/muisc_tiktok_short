@@ -42,4 +42,19 @@ class ProfileRepositoryImpl implements ProfileRepository {
       ageGroup: ageGroup,
     );
   }
+
+  @override
+  Future<void> toggleFollowUser(String targetUserId) async {
+    return remoteDataSource.toggleFollowUser(targetUserId);
+  }
+
+  @override
+  Stream<bool> watchIsFollowing(String targetUserId) {
+    return remoteDataSource.watchIsFollowing(targetUserId);
+  }
+
+  @override
+  Future<List<String>> getFollowingIds() async {
+    return remoteDataSource.getFollowingIds();
+  }
 }

@@ -165,7 +165,10 @@ class SongRemoteDataSource {
         .limit(limit);
 
     if (startAfter != null) {
-      query = query.startAfter([startAfter.sortAt, startAfter.id]);
+      query = query.startAfter([
+        startAfter.sortAt?.toIso8601String(),
+        startAfter.id,
+      ]);
     }
 
     final snapshot = await query.get();
@@ -188,6 +191,52 @@ class SongRemoteDataSource {
     );
   }
 
+  Future<SongPageEntity> fetchFollowingFeedSongsPage({
+    required List<String> followingIds,
+    int limit = 20,
+    SongPageCursor? startAfter,
+  }) async {
+    if (followingIds.isEmpty) return const SongPageEntity(songs: [], hasMore: false, nextCursor: null);
+
+    final targetIds = followingIds.take(10).toList();
+
+    final query = _db
+        .collection(_songsCollection)
+        .where('uploaderId', whereIn: targetIds)
+        .where('status', isEqualTo: SongStatuses.published);
+
+    final snapshot = await query.get();
+    final songs = snapshot.docs
+        .map((doc) => SongModel.fromFirestore(doc.data(), doc.id))
+        .toList();
+
+    songs.sort((a, b) {
+      final aDate = a.publishedAt ?? a.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final bDate = b.publishedAt ?? b.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return bDate.compareTo(aDate);
+    });
+
+    final startIdx = startAfter == null ? 0 : songs.indexWhere((s) => s.id == startAfter.id) + 1;
+    if (startIdx < 0 || startIdx >= songs.length) {
+      return const SongPageEntity(songs: [], hasMore: false, nextCursor: null);
+    }
+
+    final pagedSongs = songs.skip(startIdx).take(limit).toList();
+    final lastSong = pagedSongs.isEmpty ? null : pagedSongs.last;
+
+    return SongPageEntity(
+      songs: pagedSongs,
+      nextCursor: lastSong == null
+          ? null
+          : SongPageCursor(
+              title: lastSong.title,
+              id: lastSong.id,
+              sortAt: lastSong.publishedAt ?? lastSong.updatedAt,
+            ),
+      hasMore: startIdx + pagedSongs.length < songs.length,
+    );
+  }
+
   Stream<QuerySnapshot<Map<String, dynamic>>> getWeeklyTrendingSongsStream() {
     return _db
         .collection(_weeklyStatsCollection)
@@ -195,6 +244,22 @@ class SongRemoteDataSource {
         .collection('songs')
         .orderBy('uniqueUserCount', descending: true)
         .snapshots();
+  }
+
+  Future<List<SongEntity>> fetchSongsByUploaderId(String uploaderId, {int limit = 10}) async {
+    final snapshot = await _db
+        .collection(_songsCollection)
+        .where('uploaderId', isEqualTo: uploaderId)
+        .where('status', isEqualTo: SongStatuses.published)
+        .get();
+
+    final songs = snapshot.docs
+        .map((doc) => SongModel.fromFirestore(doc.data(), doc.id))
+        .toList();
+
+    songs.sort((a, b) => b.totalPlayCount.compareTo(a.totalPlayCount));
+
+    return songs.take(limit).toList();
   }
 
   Future<void> trackSongListen(Map<String, dynamic> songData) async {

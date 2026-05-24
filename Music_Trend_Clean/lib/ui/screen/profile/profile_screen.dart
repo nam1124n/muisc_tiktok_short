@@ -15,6 +15,7 @@ import 'package:login_flutter/ui/screen/profile/widgets/profile_info.dart';
 import 'package:login_flutter/ui/screen/auth/login_screen.dart';
 import 'package:login_flutter/ui/screen/discover/providers/favorites_provider.dart';
 import 'package:login_flutter/ui/screen/discover/providers/recents_provider.dart';
+import 'package:login_flutter/ui/screen/upload/user_upload_screen.dart';
 
 String? _playlistErrorText(BuildContext context, PlaylistState state) {
   final l10n = AppLocalizations.of(context)!;
@@ -174,6 +175,30 @@ class ProfileContent extends ConsumerWidget {
               textPrimary: ProfileScreen._textPrimary,
             ),
             const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const UserUploadScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: ProfileScreen._primary,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: const BorderSide(color: ProfileScreen._primary, width: 2),
+                ),
+                elevation: 0,
+              ),
+              icon: const Icon(Icons.cloud_upload_rounded),
+              label: const Text(
+                'Tải nhạc lên',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 16),
             ProfileActions(
               profile: profile,
               primaryColor: ProfileScreen._primary,

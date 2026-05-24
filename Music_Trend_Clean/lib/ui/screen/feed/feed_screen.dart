@@ -17,6 +17,8 @@ import 'package:login_flutter/ui/screen/discover/providers/favorites_provider.da
 import 'package:login_flutter/ui/screen/feed/feed_provider.dart';
 import 'package:login_flutter/ui/screen/profile/providers/profile_provider.dart';
 import 'package:login_flutter/ui/screen/profile/providers/playlist_provider.dart';
+import 'package:login_flutter/ui/screen/profile/artist_profile_screen.dart';
+import 'package:login_flutter/ui/screen/profile/providers/follow_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 const _feedBlack = Color(0xFF000000);
@@ -203,7 +205,10 @@ Future<void> _showAddToPlaylistSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => _AddToPlaylistSheet(song: song),
+    builder: (_) => Scaffold(
+      backgroundColor: Colors.transparent,
+      body: _AddToPlaylistSheet(song: song),
+    ),
   );
 }
 
@@ -286,60 +291,12 @@ Future<void> _showReportDialog(
   }
 
   final l10n = AppLocalizations.of(context)!;
-  final controller = TextEditingController();
-  final submitted = await showDialog<bool>(
+  final reason = await showDialog<String>(
     context: context,
-    builder: (dialogContext) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Text(
-          l10n.feedReportTitle,
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              song.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              minLines: 2,
-              maxLines: 4,
-              decoration: InputDecoration(
-                labelText: l10n.feedReportDetailsLabel,
-                hintText: l10n.feedReportDetailsHint,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (controller.text.trim().isEmpty) {
-                return;
-              }
-              Navigator.of(dialogContext).pop(true);
-            },
-            child: Text(l10n.feedSubmitAction),
-          ),
-        ],
-      );
-    },
+    builder: (dialogContext) => _ReportDialog(song: song),
   );
-  final reason = controller.text.trim();
-  controller.dispose();
 
-  if (submitted == true && context.mounted) {
+  if (reason != null && reason.isNotEmpty && context.mounted) {
     final success = await ref
         .read(feedProvider.notifier)
         .submitReport(song: song, reason: reason);
@@ -357,6 +314,80 @@ Future<void> _showReportDialog(
         ),
         backgroundColor: success ? null : Colors.red,
       ),
+    );
+  }
+}
+
+class _ReportDialog extends StatefulWidget {
+  final SongEntity song;
+  const _ReportDialog({required this.song});
+
+  @override
+  State<_ReportDialog> createState() => _ReportDialogState();
+}
+
+class _ReportDialogState extends State<_ReportDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      title: Text(
+        l10n.feedReportTitle,
+        style: const TextStyle(fontWeight: FontWeight.w800),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            widget.song.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _controller,
+            minLines: 2,
+            maxLines: 4,
+            decoration: InputDecoration(
+              labelText: l10n.feedReportDetailsLabel,
+              hintText: l10n.feedReportDetailsHint,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: () {
+            final text = _controller.text.trim();
+            if (text.isEmpty) {
+              return;
+            }
+            Navigator.of(context).pop(text);
+          },
+          child: Text(l10n.feedSubmitAction),
+        ),
+      ],
     );
   }
 }
@@ -439,10 +470,16 @@ class _FeedScreenState extends ConsumerState<FeedScreen>
     }
 
     _lastAutoPlayedSongId = song.id;
+
+    final playerState = ref.read(audioPlayerNotifierProvider);
+    if (playerState.currentSong?.id == song.id) {
+      return;
+    }
+
     unawaited(
       ref
           .read(audioPlayerNotifierProvider.notifier)
-          .playSong(song, playlist: songs, loopSingle: false),
+          .playSong(song, playlist: songs, loopSingle: true),
     );
   }
 
@@ -463,6 +500,31 @@ class _FeedScreenState extends ConsumerState<FeedScreen>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(
+      audioPlayerNotifierProvider,
+      (previous, next) {
+        final currentSong = next.currentSong;
+        if (currentSong == null) return;
+
+        final feedState = ref.read(feedProvider);
+        final songs = feedState.songs;
+        final songIndex = songs.indexWhere((song) => song.id == currentSong.id);
+
+        if (songIndex != -1 && songIndex != _currentIndex) {
+          setState(() {
+            _currentIndex = songIndex;
+          });
+          if (_pageController.hasClients) {
+            _pageController.animateToPage(
+              songIndex,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          }
+        }
+      },
+    );
+
     final feedState = ref.watch(feedProvider);
     final trendingSongs = ref.watch(adminWeeklyTrendingProvider).valueOrNull;
     final statsBySongId = {
@@ -2347,44 +2409,43 @@ class _FeedMetadata extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        _ArtistAvatar(song: song),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            song.artist,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0,
+                    GestureDetector(
+                      onTap: () {
+                        final uploaderId = song.uploaderId;
+                        if (uploaderId != null && uploaderId.isNotEmpty) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ArtistProfileScreen(artistId: uploaderId),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Không thể xem hồ sơ (Admin upload)')),
+                          );
+                        }
+                      },
+                      child: Row(
+                        children: [
+                          _ArtistAvatar(song: song),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              song.artist,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.22),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            AppLocalizations.of(context)!.feedFollowAction,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0,
-                            ),
-                          ),
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          _FeedFollowButton(uploaderId: song.uploaderId),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -2806,4 +2867,51 @@ String _commentInitial(String value) {
   }
 
   return trimmed.substring(0, 1).toUpperCase();
+}
+
+class _FeedFollowButton extends ConsumerWidget {
+  final String? uploaderId;
+  const _FeedFollowButton({this.uploaderId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (uploaderId == null || uploaderId!.isEmpty) return const SizedBox.shrink();
+    
+    final isFollowingAsync = ref.watch(isFollowingProvider(uploaderId!));
+    final isFollowing = isFollowingAsync.maybeWhen(data: (val) => val, orElse: () => false);
+    final followControllerState = ref.watch(followControllerProvider(uploaderId!));
+    final isLoading = followControllerState is AsyncLoading;
+
+    return GestureDetector(
+      onTap: isLoading ? null : () {
+        ref.read(followControllerProvider(uploaderId!).notifier).toggleFollow();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 6,
+        ),
+        decoration: BoxDecoration(
+          color: isFollowing ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.22),
+          borderRadius: BorderRadius.circular(999),
+          border: isFollowing ? Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1) : null,
+        ),
+        child: isLoading
+            ? const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 1.5),
+              )
+            : Text(
+                isFollowing ? 'Đang theo dõi' : AppLocalizations.of(context)!.feedFollowAction,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0,
+                ),
+              ),
+      ),
+    );
+  }
 }

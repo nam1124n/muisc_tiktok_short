@@ -36,10 +36,7 @@ class AppLaunchState extends Equatable {
   final bool isLoading;
   final bool hasCompletedOnboarding;
 
-  AppLaunchState copyWith({
-    bool? isLoading,
-    bool? hasCompletedOnboarding,
-  }) {
+  AppLaunchState copyWith({bool? isLoading, bool? hasCompletedOnboarding}) {
     return AppLaunchState(
       isLoading: isLoading ?? this.isLoading,
       hasCompletedOnboarding:
@@ -70,9 +67,6 @@ class AppLaunchNotifier extends StateNotifier<AppLaunchState> {
 
   Future<void> completeOnboarding() async {
     await sharedPreferences.setBool(_hasCompletedOnboardingKey, true);
-    state = state.copyWith(
-      isLoading: false,
-      hasCompletedOnboarding: true,
-    );
+    state = state.copyWith(isLoading: false, hasCompletedOnboarding: true);
   }
 }

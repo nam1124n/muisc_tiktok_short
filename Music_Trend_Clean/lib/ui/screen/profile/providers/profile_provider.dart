@@ -63,7 +63,7 @@ final profileNotifierProvider =
 
 final publicProfileProvider = FutureProvider.autoDispose
     .family<ProfileEntity, String>((ref, userId) async {
-      return ref.read(getProfileByIdUseCaseProvider)(userId);
+      return ref.watch(getProfileByIdUseCaseProvider)(userId);
     });
 
 class ProfileNotifier extends StateNotifier<ProfileState> {

@@ -47,6 +47,7 @@ class SongEntity {
   final DateTime? publishedAt;
   final DateTime? updatedAt;
   final DateTime? deletedAt;
+  final String? uploaderId;
   final int favoriteCount;
   final int commentCount;
   final int totalPlayCount;
@@ -69,6 +70,7 @@ class SongEntity {
     this.publishedAt,
     this.updatedAt,
     this.deletedAt,
+    this.uploaderId,
     this.favoriteCount = 0,
     this.commentCount = 0,
     this.totalPlayCount = 0,
@@ -93,6 +95,7 @@ class SongEntity {
       publishedAt: _readDateTime(json['publishedAt']),
       updatedAt: _readDateTime(json['updatedAt']),
       deletedAt: _readDateTime(json['deletedAt']),
+      uploaderId: json['uploaderId']?.toString(),
       favoriteCount: _readInt(json['favoriteCount']),
       commentCount: _readInt(json['commentCount']),
       totalPlayCount: _readInt(json['totalPlayCount']),
@@ -118,6 +121,7 @@ class SongEntity {
       if (publishedAt != null) 'publishedAt': publishedAt!.toIso8601String(),
       if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
       if (deletedAt != null) 'deletedAt': deletedAt!.toIso8601String(),
+      if (uploaderId != null) 'uploaderId': uploaderId,
       'favoriteCount': favoriteCount,
       'commentCount': commentCount,
       'totalPlayCount': totalPlayCount,
@@ -142,6 +146,7 @@ class SongEntity {
     Object? publishedAt = _songEntityNoChange,
     DateTime? updatedAt,
     Object? deletedAt = _songEntityNoChange,
+    Object? uploaderId = _songEntityNoChange,
     int? favoriteCount,
     int? commentCount,
     int? totalPlayCount,
@@ -170,6 +175,9 @@ class SongEntity {
       deletedAt: deletedAt == _songEntityNoChange
           ? this.deletedAt
           : deletedAt as DateTime?,
+      uploaderId: uploaderId == _songEntityNoChange
+          ? this.uploaderId
+          : uploaderId as String?,
       favoriteCount: favoriteCount ?? this.favoriteCount,
       commentCount: commentCount ?? this.commentCount,
       totalPlayCount: totalPlayCount ?? this.totalPlayCount,
