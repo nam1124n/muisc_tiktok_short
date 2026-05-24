@@ -154,6 +154,40 @@ class SongRemoteDataSource {
     );
   }
 
+  Future<SongPageEntity> fetchFeedSongsPage({
+    int limit = 20,
+    SongPageCursor? startAfter,
+  }) async {
+    Query<Map<String, dynamic>> query = _db
+        .collection(_songsCollection)
+        .orderBy('publishedAt', descending: true)
+        .orderBy(FieldPath.documentId)
+        .limit(limit);
+
+    if (startAfter != null) {
+      query = query.startAfter([startAfter.sortAt, startAfter.id]);
+    }
+
+    final snapshot = await query.get();
+    final songs = snapshot.docs
+        .map((doc) => SongModel.fromFirestore(doc.data(), doc.id))
+        .toList();
+    final lastDocument = snapshot.docs.isEmpty ? null : snapshot.docs.last;
+    final lastSong = songs.isEmpty ? null : songs.last;
+
+    return SongPageEntity(
+      songs: songs,
+      nextCursor: lastDocument == null || lastSong == null
+          ? null
+          : SongPageCursor(
+              title: lastSong.title,
+              id: lastDocument.id,
+              sortAt: lastSong.publishedAt ?? lastSong.updatedAt,
+            ),
+      hasMore: snapshot.docs.length == limit,
+    );
+  }
+
   Stream<QuerySnapshot<Map<String, dynamic>>> getWeeklyTrendingSongsStream() {
     return _db
         .collection(_weeklyStatsCollection)

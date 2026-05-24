@@ -43,6 +43,8 @@ final audioPlaybackForSongProvider =
             currentSongId: state.currentSong?.id,
             isPlaying: state.isPlaying,
             isLoading: state.isLoading,
+            position: state.position,
+            duration: state.duration,
           ),
         ),
       );
@@ -52,6 +54,8 @@ final audioPlaybackForSongProvider =
         isCurrentSong: isCurrentSong,
         isPlaying: isCurrentSong && playbackSnapshot.isPlaying,
         isLoading: isCurrentSong && playbackSnapshot.isLoading,
+        position: isCurrentSong ? playbackSnapshot.position : Duration.zero,
+        duration: isCurrentSong ? playbackSnapshot.duration : Duration.zero,
       );
     });
 
@@ -426,14 +430,32 @@ class AudioSongPlaybackState extends Equatable {
     required this.isCurrentSong,
     required this.isPlaying,
     required this.isLoading,
+    required this.position,
+    required this.duration,
   });
 
   final bool isCurrentSong;
   final bool isPlaying;
   final bool isLoading;
+  final Duration position;
+  final Duration duration;
+
+  double get progress {
+    if (duration.inMilliseconds <= 0) {
+      return 0;
+    }
+
+    return (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);
+  }
 
   @override
-  List<Object?> get props => [isCurrentSong, isPlaying, isLoading];
+  List<Object?> get props => [
+    isCurrentSong,
+    isPlaying,
+    isLoading,
+    position,
+    duration,
+  ];
 }
 
 class MiniPlayerState extends Equatable {

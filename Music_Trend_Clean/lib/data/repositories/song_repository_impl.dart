@@ -55,6 +55,26 @@ class SongRepositoryImpl implements SongRepository {
   }
 
   @override
+  Future<SongPageEntity> fetchFeedSongsPage({
+    int limit = 20,
+    SongPageCursor? startAfter,
+  }) async {
+    final page = await remoteDataSource.fetchFeedSongsPage(
+      limit: limit,
+      startAfter: startAfter,
+    );
+    final visibleSongs =
+        page.songs.where((song) => song.isVisibleToListeners).toList()
+          ..sort(_compareFeedSongs);
+
+    return SongPageEntity(
+      songs: visibleSongs,
+      nextCursor: page.nextCursor,
+      hasMore: page.hasMore,
+    );
+  }
+
+  @override
   Stream<List<TrendingSongEntity>> getWeeklyTrendingSongs({int limit = 4}) {
     return remoteDataSource.getWeeklyTrendingSongsStream().map((snapshot) {
       final rankedSongs =
@@ -105,7 +125,7 @@ class SongRepositoryImpl implements SongRepository {
     final imageUrl = results[0];
     final audioUrl = results[1];
 
-    final model = SongModel.fromEntity(song);
+    final model = SongModel.fromEntity(_withPublishDates(song));
     await remoteDataSource.addSong({
       ...model.toMap(),
       'imageUrl': imageUrl,
@@ -131,7 +151,7 @@ class SongRepositoryImpl implements SongRepository {
       audioUrl = await remoteDataSource.uploadAudio(audioFile);
     }
 
-    final model = SongModel.fromEntity(song);
+    final model = SongModel.fromEntity(_withPublishDates(song));
     await remoteDataSource.updateSong(song.id, {
       ...model.toMap(),
       'imageUrl': imageUrl,
@@ -149,5 +169,30 @@ class SongRepositoryImpl implements SongRepository {
   Future<void> trackSongListen(SongEntity song) async {
     final model = SongModel.fromEntity(song);
     await remoteDataSource.trackSongListen({...model.toMap(), 'id': song.id});
+  }
+
+  int _compareFeedSongs(SongEntity left, SongEntity right) {
+    final rightTime = _feedSortTime(right);
+    final leftTime = _feedSortTime(left);
+    final timeCompare = rightTime.compareTo(leftTime);
+    if (timeCompare != 0) {
+      return timeCompare;
+    }
+
+    return right.title.compareTo(left.title);
+  }
+
+  int _feedSortTime(SongEntity song) {
+    return (song.publishedAt ?? song.updatedAt ?? song.savedAt)
+            ?.millisecondsSinceEpoch ??
+        0;
+  }
+
+  SongEntity _withPublishDates(SongEntity song) {
+    final now = DateTime.now();
+    return song.copyWith(
+      publishedAt: song.isPublished ? song.publishedAt ?? now : song.publishedAt,
+      updatedAt: now,
+    );
   }
 }

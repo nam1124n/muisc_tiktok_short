@@ -11,6 +11,10 @@ abstract class SongRepository {
     int limit = 20,
     SongPageCursor? startAfter,
   });
+  Future<SongPageEntity> fetchFeedSongsPage({
+    int limit = 20,
+    SongPageCursor? startAfter,
+  });
   Stream<List<TrendingSongEntity>> getWeeklyTrendingSongs({int limit = 4});
   Future<void> addSong(SongEntity song, XFile imageFile, XFile audioFile);
   Future<void> updateSong(

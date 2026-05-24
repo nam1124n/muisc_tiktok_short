@@ -2,13 +2,14 @@ import 'package:equatable/equatable.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
 
 class SongPageCursor extends Equatable {
-  const SongPageCursor({required this.title, required this.id});
+  const SongPageCursor({required this.title, required this.id, this.sortAt});
 
   final String title;
   final String id;
+  final DateTime? sortAt;
 
   @override
-  List<Object?> get props => [title, id];
+  List<Object?> get props => [title, id, sortAt];
 }
 
 class SongPageEntity extends Equatable {

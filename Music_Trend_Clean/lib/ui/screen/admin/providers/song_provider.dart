@@ -9,6 +9,7 @@ import 'package:login_flutter/domain/repositories/song_repository.dart';
 import 'package:login_flutter/domain/usecases/add_song_usecase.dart';
 import 'package:login_flutter/domain/usecases/delete_song_usecase.dart';
 import 'package:login_flutter/domain/usecases/get_admin_songs_usecase.dart';
+import 'package:login_flutter/domain/usecases/get_feed_songs_page_usecase.dart';
 import 'package:login_flutter/domain/usecases/get_songs_page_usecase.dart';
 import 'package:login_flutter/domain/usecases/get_songs_usecase.dart';
 import 'package:login_flutter/domain/usecases/get_weekly_trending_songs_usecase.dart';
@@ -36,6 +37,12 @@ final getAdminSongsUseCaseProvider = Provider<GetAdminSongsUseCase>((ref) {
 
 final getSongsPageUseCaseProvider = Provider<GetSongsPageUseCase>((ref) {
   return GetSongsPageUseCase(ref.read(songRepositoryProvider));
+});
+
+final getFeedSongsPageUseCaseProvider = Provider<GetFeedSongsPageUseCase>((
+  ref,
+) {
+  return GetFeedSongsPageUseCase(ref.read(songRepositoryProvider));
 });
 
 final addSongUseCaseProvider = Provider<AddSongUseCase>((ref) {

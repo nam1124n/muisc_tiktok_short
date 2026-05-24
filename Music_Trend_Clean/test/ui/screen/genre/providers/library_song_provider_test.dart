@@ -52,6 +52,14 @@ class FakeSongRepository implements SongRepository {
   }
 
   @override
+  Future<SongPageEntity> fetchFeedSongsPage({
+    int limit = 20,
+    SongPageCursor? startAfter,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
   Stream<List<TrendingSongEntity>> getWeeklyTrendingSongs({int limit = 4}) {
     return const Stream.empty();
   }
