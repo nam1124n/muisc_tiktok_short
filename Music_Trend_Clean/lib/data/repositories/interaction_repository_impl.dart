@@ -1,4 +1,5 @@
 import 'package:login_flutter/domain/entities/song_entity.dart';
+import 'package:login_flutter/domain/entities/feed_comment_entity.dart';
 import 'package:login_flutter/domain/entities/listening_history_entry_entity.dart';
 import 'package:login_flutter/domain/repositories/interaction_repository.dart';
 import 'package:login_flutter/data/datasource/remote/interaction_remote_data_source.dart';
@@ -63,5 +64,62 @@ class InteractionRepositoryImpl implements InteractionRepository {
   @override
   Future<void> clearRecents(String userId, List<String> songIds) async {
     await remoteDataSource.clearRecents(userId, songIds);
+  }
+
+  @override
+  Future<Set<String>> getHiddenFeedSongIds(String userId) async {
+    final songIds = await remoteDataSource.getHiddenFeedSongIds(userId);
+    return songIds.toSet();
+  }
+
+  @override
+  Future<void> hideFeedSong(String userId, SongEntity song) async {
+    await remoteDataSource.hideFeedSong(userId, song.toJson());
+  }
+
+  @override
+  Future<void> reportSong({
+    required String userId,
+    required SongEntity song,
+    required String reason,
+  }) async {
+    await remoteDataSource.reportSong(
+      userId: userId,
+      songData: song.toJson(),
+      reason: reason,
+    );
+  }
+
+  @override
+  Stream<List<FeedCommentEntity>> watchSongComments(String songId) {
+    return remoteDataSource.watchSongComments(songId).map((comments) {
+      return comments.map((json) => FeedCommentEntity.fromJson(json)).toList();
+    });
+  }
+
+  @override
+  Future<void> addSongComment({
+    required String userId,
+    required String userName,
+    required String songId,
+    required String text,
+  }) async {
+    await remoteDataSource.addSongComment(
+      userId: userId,
+      userName: userName,
+      songId: songId,
+      text: text,
+    );
+  }
+
+  @override
+  Future<void> deleteSongComment({
+    required String songId,
+    required String commentId,
+  }) async {
+    await remoteDataSource.deleteSongComment(
+      songId: songId,
+      commentId: commentId,
+    );
   }
 }

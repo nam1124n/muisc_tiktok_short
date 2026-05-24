@@ -573,5 +573,77 @@
     }
   },
   "coverImageRequiredMessage": "Please choose a cover image!",
-  "audioFileRequiredMessage": "Please choose an audio file!"
+  "audioFileRequiredMessage": "Please choose an audio file!",
+  "feedSignInLikeMessage": "Sign in to like tracks and sync your favorites.",
+  "feedSignInPlaylistMessage": "Sign in to save tracks into your playlists.",
+  "feedSignInReportMessage": "Sign in to report tracks.",
+  "feedSignInCommentMessage": "Sign in to comment on tracks.",
+  "feedHiddenMessage": "Hidden from this feed.",
+  "feedReportTitle": "Report track",
+  "feedReportDetailsLabel": "Details",
+  "feedReportDetailsHint": "Tell us what is wrong with this track.",
+  "feedSubmitAction": "Submit",
+  "feedReportSubmittedMessage": "Report submitted.",
+  "feedReportFailedMessage": "Report failed.",
+  "feedCannotLoadTitle": "Cannot load feed",
+  "feedRetryAction": "Retry",
+  "feedEmptyTitle": "Feed is empty",
+  "feedEmptySubtitle": "Pull to refresh or check back when new tracks are published.",
+  "feedFollowingEmptyTitle": "Following feed is empty",
+  "feedFollowingEmptySubtitle": "Follow artists to see their latest tracks here.",
+  "feedDiscoverTab": "Discover",
+  "feedFollowingTab": "Following",
+  "feedRefreshAction": "Refresh",
+  "feedTapToPreview": "Tap to preview",
+  "feedPauseAction": "Pause",
+  "feedPlayAction": "Play",
+  "feedShareAction": "Share",
+  "feedAddToPlaylistAction": "Add to playlist",
+  "feedReportAction": "Report",
+  "feedHideAction": "Hide",
+  "feedFollowAction": "Follow",
+  "feedCommentsTitle": "Comments",
+  "feedNoCommentsTitle": "No comments yet",
+  "feedAddCommentHint": "Add a comment",
+  "feedCommentFailedMessage": "Could not add comment.",
+  "feedDeleteCommentFailedMessage": "Could not delete comment.",
+  "feedListenerFallbackName": "Listener",
+  "feedAlreadyInPlaylistMessage": "Already in \"{name}\".",
+  "@feedAlreadyInPlaylistMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "feedAddedToPlaylistMessage": "Added to \"{name}\".",
+  "@feedAddedToPlaylistMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "feedEnterPlaylistNameMessage": "Enter a playlist name.",
+  "feedCreatePlaylistFailedMessage": "Could not create playlist.",
+  "feedNewPlaylistNotFoundMessage": "Could not find the new playlist.",
+  "feedNewTrackLabel": "New on Music Trend",
+  "feedPlaysCount": "{count} plays",
+  "@feedPlaysCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "feedLoadingMoreMessage": "Loading more tracks...",
+  "feedLoadMoreFailedMessage": "Could not load more tracks.",
+  "feedTrackCount": "{count, plural, =1{1 track} other{{count} tracks}}",
+  "@feedTrackCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

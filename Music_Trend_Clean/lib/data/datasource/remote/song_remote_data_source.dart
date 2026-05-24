@@ -212,16 +212,20 @@ class SongRemoteDataSource {
         .collection('songs')
         .doc(songId);
     final listenerRef = statsRef.collection('listeners').doc(userId);
+    final songRef = _db.collection(_songsCollection).doc(songId);
+    final songListenerRef = songRef.collection('listeners').doc(userId);
 
     await _db.runTransaction((transaction) async {
       final statsSnapshot = await transaction.get(statsRef);
       final listenerSnapshot = await transaction.get(listenerRef);
+      final songListenerSnapshot = await transaction.get(songListenerRef);
 
       final currentTotal =
           (statsSnapshot.data()?['totalPlayCount'] as num?)?.toInt() ?? 0;
       final currentUnique =
           (statsSnapshot.data()?['uniqueUserCount'] as num?)?.toInt() ?? 0;
       final isNewUniqueListener = !listenerSnapshot.exists;
+      final isNewGlobalListener = !songListenerSnapshot.exists;
 
       transaction.set(statsRef, {
         ...songData,
@@ -234,6 +238,17 @@ class SongRemoteDataSource {
       }, SetOptions(merge: true));
 
       transaction.set(listenerRef, {
+        'userId': userId,
+        'listenedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      transaction.set(songRef, {
+        'totalPlayCount': FieldValue.increment(1),
+        if (isNewGlobalListener) 'uniqueListenerCount': FieldValue.increment(1),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      transaction.set(songListenerRef, {
         'userId': userId,
         'listenedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));

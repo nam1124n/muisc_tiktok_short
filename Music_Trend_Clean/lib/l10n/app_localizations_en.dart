@@ -1070,4 +1070,155 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get audioFileRequiredMessage => 'Please choose an audio file!';
+
+  @override
+  String get feedSignInLikeMessage =>
+      'Sign in to like tracks and sync your favorites.';
+
+  @override
+  String get feedSignInPlaylistMessage =>
+      'Sign in to save tracks into your playlists.';
+
+  @override
+  String get feedSignInReportMessage => 'Sign in to report tracks.';
+
+  @override
+  String get feedSignInCommentMessage => 'Sign in to comment on tracks.';
+
+  @override
+  String get feedHiddenMessage => 'Hidden from this feed.';
+
+  @override
+  String get feedReportTitle => 'Report track';
+
+  @override
+  String get feedReportDetailsLabel => 'Details';
+
+  @override
+  String get feedReportDetailsHint => 'Tell us what is wrong with this track.';
+
+  @override
+  String get feedSubmitAction => 'Submit';
+
+  @override
+  String get feedReportSubmittedMessage => 'Report submitted.';
+
+  @override
+  String get feedReportFailedMessage => 'Report failed.';
+
+  @override
+  String get feedCannotLoadTitle => 'Cannot load feed';
+
+  @override
+  String get feedRetryAction => 'Retry';
+
+  @override
+  String get feedEmptyTitle => 'Feed is empty';
+
+  @override
+  String get feedEmptySubtitle =>
+      'Pull to refresh or check back when new tracks are published.';
+
+  @override
+  String get feedFollowingEmptyTitle => 'Following feed is empty';
+
+  @override
+  String get feedFollowingEmptySubtitle =>
+      'Follow artists to see their latest tracks here.';
+
+  @override
+  String get feedDiscoverTab => 'Discover';
+
+  @override
+  String get feedFollowingTab => 'Following';
+
+  @override
+  String get feedRefreshAction => 'Refresh';
+
+  @override
+  String get feedTapToPreview => 'Tap to preview';
+
+  @override
+  String get feedPauseAction => 'Pause';
+
+  @override
+  String get feedPlayAction => 'Play';
+
+  @override
+  String get feedShareAction => 'Share';
+
+  @override
+  String get feedAddToPlaylistAction => 'Add to playlist';
+
+  @override
+  String get feedReportAction => 'Report';
+
+  @override
+  String get feedHideAction => 'Hide';
+
+  @override
+  String get feedFollowAction => 'Follow';
+
+  @override
+  String get feedCommentsTitle => 'Comments';
+
+  @override
+  String get feedNoCommentsTitle => 'No comments yet';
+
+  @override
+  String get feedAddCommentHint => 'Add a comment';
+
+  @override
+  String get feedCommentFailedMessage => 'Could not add comment.';
+
+  @override
+  String get feedDeleteCommentFailedMessage => 'Could not delete comment.';
+
+  @override
+  String get feedListenerFallbackName => 'Listener';
+
+  @override
+  String feedAlreadyInPlaylistMessage(String name) {
+    return 'Already in \"$name\".';
+  }
+
+  @override
+  String feedAddedToPlaylistMessage(String name) {
+    return 'Added to \"$name\".';
+  }
+
+  @override
+  String get feedEnterPlaylistNameMessage => 'Enter a playlist name.';
+
+  @override
+  String get feedCreatePlaylistFailedMessage => 'Could not create playlist.';
+
+  @override
+  String get feedNewPlaylistNotFoundMessage =>
+      'Could not find the new playlist.';
+
+  @override
+  String get feedNewTrackLabel => 'New on Music Trend';
+
+  @override
+  String feedPlaysCount(String count) {
+    return '$count plays';
+  }
+
+  @override
+  String get feedLoadingMoreMessage => 'Loading more tracks...';
+
+  @override
+  String get feedLoadMoreFailedMessage => 'Could not load more tracks.';
+
+  @override
+  String feedTrackCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tracks',
+      one: '1 track',
+    );
+    return '$_temp0';
+  }
 }

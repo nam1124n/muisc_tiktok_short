@@ -1068,4 +1068,155 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get audioFileRequiredMessage => 'Vui lòng chọn file audio!';
+
+  @override
+  String get feedSignInLikeMessage =>
+      'Đăng nhập để thích bài hát và đồng bộ danh sách yêu thích.';
+
+  @override
+  String get feedSignInPlaylistMessage =>
+      'Đăng nhập để lưu bài hát vào playlist của bạn.';
+
+  @override
+  String get feedSignInReportMessage => 'Đăng nhập để báo cáo bài hát.';
+
+  @override
+  String get feedSignInCommentMessage => 'Đăng nhập để bình luận bài hát.';
+
+  @override
+  String get feedHiddenMessage => 'Đã ẩn khỏi feed này.';
+
+  @override
+  String get feedReportTitle => 'Báo cáo bài hát';
+
+  @override
+  String get feedReportDetailsLabel => 'Chi tiết';
+
+  @override
+  String get feedReportDetailsHint =>
+      'Cho chúng tôi biết bài hát này có vấn đề gì.';
+
+  @override
+  String get feedSubmitAction => 'Gửi';
+
+  @override
+  String get feedReportSubmittedMessage => 'Đã gửi báo cáo.';
+
+  @override
+  String get feedReportFailedMessage => 'Không thể gửi báo cáo.';
+
+  @override
+  String get feedCannotLoadTitle => 'Không thể tải feed';
+
+  @override
+  String get feedRetryAction => 'Thử lại';
+
+  @override
+  String get feedEmptyTitle => 'Feed đang trống';
+
+  @override
+  String get feedEmptySubtitle =>
+      'Kéo để làm mới hoặc quay lại khi có bài mới.';
+
+  @override
+  String get feedFollowingEmptyTitle => 'Feed đang theo dõi trống';
+
+  @override
+  String get feedFollowingEmptySubtitle =>
+      'Theo dõi nghệ sĩ để xem bài mới của họ tại đây.';
+
+  @override
+  String get feedDiscoverTab => 'Khám phá';
+
+  @override
+  String get feedFollowingTab => 'Đang theo dõi';
+
+  @override
+  String get feedRefreshAction => 'Làm mới';
+
+  @override
+  String get feedTapToPreview => 'Chạm để nghe thử';
+
+  @override
+  String get feedPauseAction => 'Tạm dừng';
+
+  @override
+  String get feedPlayAction => 'Phát';
+
+  @override
+  String get feedShareAction => 'Chia sẻ';
+
+  @override
+  String get feedAddToPlaylistAction => 'Thêm vào playlist';
+
+  @override
+  String get feedReportAction => 'Báo cáo';
+
+  @override
+  String get feedHideAction => 'Ẩn';
+
+  @override
+  String get feedFollowAction => 'Theo dõi';
+
+  @override
+  String get feedCommentsTitle => 'Bình luận';
+
+  @override
+  String get feedNoCommentsTitle => 'Chưa có bình luận';
+
+  @override
+  String get feedAddCommentHint => 'Thêm bình luận';
+
+  @override
+  String get feedCommentFailedMessage => 'Không thể thêm bình luận.';
+
+  @override
+  String get feedDeleteCommentFailedMessage => 'Không thể xoá bình luận.';
+
+  @override
+  String get feedListenerFallbackName => 'Người nghe';
+
+  @override
+  String feedAlreadyInPlaylistMessage(String name) {
+    return 'Đã có trong \"$name\".';
+  }
+
+  @override
+  String feedAddedToPlaylistMessage(String name) {
+    return 'Đã thêm vào \"$name\".';
+  }
+
+  @override
+  String get feedEnterPlaylistNameMessage => 'Nhập tên playlist.';
+
+  @override
+  String get feedCreatePlaylistFailedMessage => 'Không thể tạo playlist.';
+
+  @override
+  String get feedNewPlaylistNotFoundMessage => 'Không tìm thấy playlist mới.';
+
+  @override
+  String get feedNewTrackLabel => 'Mới trên Music Trend';
+
+  @override
+  String feedPlaysCount(String count) {
+    return '$count lượt phát';
+  }
+
+  @override
+  String get feedLoadingMoreMessage => 'Đang tải thêm bài hát...';
+
+  @override
+  String get feedLoadMoreFailedMessage => 'Không thể tải thêm bài hát.';
+
+  @override
+  String feedTrackCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bài',
+      one: '1 bài',
+    );
+    return '$_temp0';
+  }
 }

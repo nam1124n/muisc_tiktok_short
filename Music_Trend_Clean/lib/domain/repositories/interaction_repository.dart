@@ -1,4 +1,5 @@
 import 'package:login_flutter/domain/entities/listening_history_entry_entity.dart';
+import 'package:login_flutter/domain/entities/feed_comment_entity.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
 
 abstract class InteractionRepository {
@@ -15,4 +16,22 @@ abstract class InteractionRepository {
     bool markCompleted = false,
   });
   Future<void> clearRecents(String userId, List<String> songIds);
+  Future<Set<String>> getHiddenFeedSongIds(String userId);
+  Future<void> hideFeedSong(String userId, SongEntity song);
+  Future<void> reportSong({
+    required String userId,
+    required SongEntity song,
+    required String reason,
+  });
+  Stream<List<FeedCommentEntity>> watchSongComments(String songId);
+  Future<void> addSongComment({
+    required String userId,
+    required String userName,
+    required String songId,
+    required String text,
+  });
+  Future<void> deleteSongComment({
+    required String songId,
+    required String commentId,
+  });
 }

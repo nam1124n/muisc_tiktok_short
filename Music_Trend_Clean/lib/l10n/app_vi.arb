@@ -573,5 +573,77 @@
     }
   },
   "coverImageRequiredMessage": "Vui lòng chọn ảnh bìa!",
-  "audioFileRequiredMessage": "Vui lòng chọn file audio!"
+  "audioFileRequiredMessage": "Vui lòng chọn file audio!",
+  "feedSignInLikeMessage": "Đăng nhập để thích bài hát và đồng bộ danh sách yêu thích.",
+  "feedSignInPlaylistMessage": "Đăng nhập để lưu bài hát vào playlist của bạn.",
+  "feedSignInReportMessage": "Đăng nhập để báo cáo bài hát.",
+  "feedSignInCommentMessage": "Đăng nhập để bình luận bài hát.",
+  "feedHiddenMessage": "Đã ẩn khỏi feed này.",
+  "feedReportTitle": "Báo cáo bài hát",
+  "feedReportDetailsLabel": "Chi tiết",
+  "feedReportDetailsHint": "Cho chúng tôi biết bài hát này có vấn đề gì.",
+  "feedSubmitAction": "Gửi",
+  "feedReportSubmittedMessage": "Đã gửi báo cáo.",
+  "feedReportFailedMessage": "Không thể gửi báo cáo.",
+  "feedCannotLoadTitle": "Không thể tải feed",
+  "feedRetryAction": "Thử lại",
+  "feedEmptyTitle": "Feed đang trống",
+  "feedEmptySubtitle": "Kéo để làm mới hoặc quay lại khi có bài mới.",
+  "feedFollowingEmptyTitle": "Feed đang theo dõi trống",
+  "feedFollowingEmptySubtitle": "Theo dõi nghệ sĩ để xem bài mới của họ tại đây.",
+  "feedDiscoverTab": "Khám phá",
+  "feedFollowingTab": "Đang theo dõi",
+  "feedRefreshAction": "Làm mới",
+  "feedTapToPreview": "Chạm để nghe thử",
+  "feedPauseAction": "Tạm dừng",
+  "feedPlayAction": "Phát",
+  "feedShareAction": "Chia sẻ",
+  "feedAddToPlaylistAction": "Thêm vào playlist",
+  "feedReportAction": "Báo cáo",
+  "feedHideAction": "Ẩn",
+  "feedFollowAction": "Theo dõi",
+  "feedCommentsTitle": "Bình luận",
+  "feedNoCommentsTitle": "Chưa có bình luận",
+  "feedAddCommentHint": "Thêm bình luận",
+  "feedCommentFailedMessage": "Không thể thêm bình luận.",
+  "feedDeleteCommentFailedMessage": "Không thể xoá bình luận.",
+  "feedListenerFallbackName": "Người nghe",
+  "feedAlreadyInPlaylistMessage": "Đã có trong \"{name}\".",
+  "@feedAlreadyInPlaylistMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "feedAddedToPlaylistMessage": "Đã thêm vào \"{name}\".",
+  "@feedAddedToPlaylistMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "feedEnterPlaylistNameMessage": "Nhập tên playlist.",
+  "feedCreatePlaylistFailedMessage": "Không thể tạo playlist.",
+  "feedNewPlaylistNotFoundMessage": "Không tìm thấy playlist mới.",
+  "feedNewTrackLabel": "Mới trên Music Trend",
+  "feedPlaysCount": "{count} lượt phát",
+  "@feedPlaysCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "feedLoadingMoreMessage": "Đang tải thêm bài hát...",
+  "feedLoadMoreFailedMessage": "Không thể tải thêm bài hát.",
+  "feedTrackCount": "{count, plural, =1{1 bài} other{{count} bài}}",
+  "@feedTrackCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

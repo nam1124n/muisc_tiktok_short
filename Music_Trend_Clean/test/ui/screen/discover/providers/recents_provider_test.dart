@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:login_flutter/domain/entities/feed_comment_entity.dart';
 import 'package:login_flutter/domain/entities/listening_history_entry_entity.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/domain/repositories/interaction_repository.dart';
@@ -217,6 +218,40 @@ class FakeInteractionRepository implements InteractionRepository {
   Future<void> clearFavorites(String userId, List<String> songIds) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<Set<String>> getHiddenFeedSongIds(String userId) async {
+    return const {};
+  }
+
+  @override
+  Future<void> hideFeedSong(String userId, SongEntity song) async {}
+
+  @override
+  Future<void> reportSong({
+    required String userId,
+    required SongEntity song,
+    required String reason,
+  }) async {}
+
+  @override
+  Stream<List<FeedCommentEntity>> watchSongComments(String songId) {
+    return const Stream.empty();
+  }
+
+  @override
+  Future<void> addSongComment({
+    required String userId,
+    required String userName,
+    required String songId,
+    required String text,
+  }) async {}
+
+  @override
+  Future<void> deleteSongComment({
+    required String songId,
+    required String commentId,
+  }) async {}
 
   ListeningHistoryEntryEntity? _firstEntryBySongId(String songId) {
     for (final entry in _entries) {

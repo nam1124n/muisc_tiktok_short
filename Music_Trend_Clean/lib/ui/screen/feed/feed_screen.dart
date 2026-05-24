@@ -4,7 +4,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_flutter/app/providers/session_provider.dart';
+import 'package:login_flutter/app/utils/error_message_mapper.dart';
 import 'package:login_flutter/domain/entities/playlist_entity.dart';
+import 'package:login_flutter/domain/entities/feed_comment_entity.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/domain/entities/trending_song_entity.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
@@ -13,6 +15,7 @@ import 'package:login_flutter/ui/screen/auth/login_screen.dart';
 import 'package:login_flutter/ui/screen/audio/providers/audio_player_provider.dart';
 import 'package:login_flutter/ui/screen/discover/providers/favorites_provider.dart';
 import 'package:login_flutter/ui/screen/feed/feed_provider.dart';
+import 'package:login_flutter/ui/screen/profile/providers/profile_provider.dart';
 import 'package:login_flutter/ui/screen/profile/providers/playlist_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -164,13 +167,20 @@ Future<void> _toggleFavorite(
   final canContinue = await _ensureSignedIn(
     context,
     ref,
-    message: 'Sign in to like tracks and sync your favorites.',
+    message: AppLocalizations.of(context)!.feedSignInLikeMessage,
   );
   if (!canContinue) {
     return;
   }
 
+  final wasFavorite = ref.read(isFavoriteSongProvider(song.id));
   await ref.read(favoriteNotifierProvider.notifier).toggleFavorite(song);
+  final isFavorite = ref.read(isFavoriteSongProvider(song.id));
+  if (wasFavorite != isFavorite) {
+    ref
+        .read(feedProvider.notifier)
+        .applyFavoriteDelta(song.id, isFavorite ? 1 : -1);
+  }
 }
 
 Future<void> _showAddToPlaylistSheet(
@@ -181,7 +191,7 @@ Future<void> _showAddToPlaylistSheet(
   final canContinue = await _ensureSignedIn(
     context,
     ref,
-    message: 'Sign in to save tracks into your playlists.',
+    message: AppLocalizations.of(context)!.feedSignInPlaylistMessage,
   );
   if (!canContinue || !context.mounted) {
     return;
@@ -207,6 +217,19 @@ Future<void> _shareSong(SongEntity song) async {
   await SharePlus.instance.share(ShareParams(text: text));
 }
 
+Future<void> _showCommentSheet(
+  BuildContext context,
+  WidgetRef ref,
+  SongEntity song,
+) async {
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => _FeedCommentSheet(song: song),
+  );
+}
+
 Future<void> _showFeedMoreMenu(
   BuildContext context,
   WidgetRef ref,
@@ -228,17 +251,19 @@ Future<void> _showFeedMoreMenu(
         },
         onReport: () {
           Navigator.of(sheetContext).pop();
-          unawaited(_showReportDialog(context, song));
+          unawaited(_showReportDialog(context, ref, song));
         },
         onHide: () {
           Navigator.of(sheetContext).pop();
-          ref.read(feedProvider.notifier).hideSong(song.id);
+          unawaited(ref.read(feedProvider.notifier).hideSong(song));
           final currentSong = ref.read(audioPlayerNotifierProvider).currentSong;
           if (currentSong?.id == song.id) {
             ref.read(audioPlayerNotifierProvider.notifier).pause();
           }
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Hidden from this feed.')),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.feedHiddenMessage),
+            ),
           );
         },
       );
@@ -246,7 +271,20 @@ Future<void> _showFeedMoreMenu(
   );
 }
 
-Future<void> _showReportDialog(BuildContext context, SongEntity song) async {
+Future<void> _showReportDialog(
+  BuildContext context,
+  WidgetRef ref,
+  SongEntity song,
+) async {
+  final canContinue = await _ensureSignedIn(
+    context,
+    ref,
+    message: AppLocalizations.of(context)!.feedSignInReportMessage,
+  );
+  if (!canContinue || !context.mounted) {
+    return;
+  }
+
   final l10n = AppLocalizations.of(context)!;
   final controller = TextEditingController();
   final submitted = await showDialog<bool>(
@@ -254,9 +292,9 @@ Future<void> _showReportDialog(BuildContext context, SongEntity song) async {
     builder: (dialogContext) {
       return AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Text(
-          'Report track',
-          style: TextStyle(fontWeight: FontWeight.w800),
+        title: Text(
+          l10n.feedReportTitle,
+          style: const TextStyle(fontWeight: FontWeight.w800),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -273,9 +311,9 @@ Future<void> _showReportDialog(BuildContext context, SongEntity song) async {
               controller: controller,
               minLines: 2,
               maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: 'Details',
-                hintText: 'Tell us what is wrong with this track.',
+              decoration: InputDecoration(
+                labelText: l10n.feedReportDetailsLabel,
+                hintText: l10n.feedReportDetailsHint,
               ),
             ),
           ],
@@ -286,19 +324,40 @@ Future<void> _showReportDialog(BuildContext context, SongEntity song) async {
             child: Text(l10n.cancel),
           ),
           FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Submit'),
+            onPressed: () {
+              if (controller.text.trim().isEmpty) {
+                return;
+              }
+              Navigator.of(dialogContext).pop(true);
+            },
+            child: Text(l10n.feedSubmitAction),
           ),
         ],
       );
     },
   );
+  final reason = controller.text.trim();
   controller.dispose();
 
   if (submitted == true && context.mounted) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Report submitted.')));
+    final success = await ref
+        .read(feedProvider.notifier)
+        .submitReport(song: song, reason: reason);
+    if (!context.mounted) {
+      return;
+    }
+
+    final errorMessage = ref.read(feedProvider).actionErrorMessage;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? l10n.feedReportSubmittedMessage
+              : errorMessage ?? l10n.feedReportFailedMessage,
+        ),
+        backgroundColor: success ? null : Colors.red,
+      ),
+    );
   }
 }
 
@@ -309,15 +368,62 @@ class FeedScreen extends ConsumerStatefulWidget {
   ConsumerState<FeedScreen> createState() => _FeedScreenState();
 }
 
-class _FeedScreenState extends ConsumerState<FeedScreen> {
+class _FeedScreenState extends ConsumerState<FeedScreen>
+    with WidgetsBindingObserver {
   final PageController _pageController = PageController(viewportFraction: 0.97);
   int _currentIndex = 0;
   String? _lastAutoPlayedSongId;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _pauseCurrentFeedSong();
+    }
+  }
+
+  void _pauseCurrentFeedSong() {
+    final currentSong = ref.read(audioPlayerNotifierProvider).currentSong;
+    if (currentSong == null) {
+      return;
+    }
+
+    final isFeedSong = ref
+        .read(feedProvider)
+        .songs
+        .any((song) => song.id == currentSong.id);
+    if (isFeedSong) {
+      ref.read(audioPlayerNotifierProvider.notifier).pause();
+    }
+  }
+
+  void _selectTab(FeedTabType tab) {
+    if (tab == ref.read(feedProvider).selectedTab) {
+      return;
+    }
+
+    _pauseCurrentFeedSong();
+    _lastAutoPlayedSongId = null;
+    setState(() => _currentIndex = 0);
+    ref.read(feedProvider.notifier).selectTab(tab);
+
+    if (_pageController.hasClients) {
+      _pageController.jumpToPage(0);
+    }
   }
 
   void _activateSong(List<SongEntity> songs, int index) {
@@ -336,7 +442,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     unawaited(
       ref
           .read(audioPlayerNotifierProvider.notifier)
-          .playSong(song, playlist: [song], loopSingle: true),
+          .playSong(song, playlist: songs, loopSingle: false),
     );
   }
 
@@ -369,22 +475,31 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     }
 
     if (feedState.hasInitialError) {
+      final l10n = AppLocalizations.of(context)!;
       return _FeedMessageView(
         icon: Icons.error_outline,
-        title: 'Cannot load feed',
+        title: l10n.feedCannotLoadTitle,
         subtitle: feedState.initialErrorMessage!,
-        actionLabel: 'Retry',
+        actionLabel: l10n.feedRetryAction,
         onAction: () => ref.read(feedProvider.notifier).refresh(),
       );
     }
 
     if (feedState.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
+      final isFollowing = feedState.selectedTab == FeedTabType.following;
       return _FeedMessageView(
         icon: Icons.dynamic_feed_outlined,
-        title: 'Feed is empty',
-        subtitle: 'Pull to refresh or check back when new tracks are published.',
-        actionLabel: 'Refresh',
-        onAction: () => ref.read(feedProvider.notifier).refresh(),
+        title: isFollowing ? l10n.feedFollowingEmptyTitle : l10n.feedEmptyTitle,
+        subtitle: isFollowing
+            ? l10n.feedFollowingEmptySubtitle
+            : l10n.feedEmptySubtitle,
+        actionLabel: isFollowing
+            ? l10n.feedDiscoverTab
+            : l10n.feedRefreshAction,
+        onAction: isFollowing
+            ? () => _selectTab(FeedTabType.discover)
+            : () => ref.read(feedProvider.notifier).refresh(),
       );
     }
 
@@ -438,6 +553,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 currentIndex: currentIndex,
                 song: song,
                 stats: statsBySongId[song.id],
+                selectedTab: feedState.selectedTab,
+                onTabSelected: _selectTab,
               );
             },
           ),
@@ -454,6 +571,8 @@ class _FeedSongPage extends ConsumerWidget {
     required this.currentIndex,
     required this.song,
     required this.stats,
+    required this.selectedTab,
+    required this.onTabSelected,
   });
 
   final PageController controller;
@@ -461,12 +580,17 @@ class _FeedSongPage extends ConsumerWidget {
   final int currentIndex;
   final SongEntity song;
   final TrendingSongEntity? stats;
+  final FeedTabType selectedTab;
+  final ValueChanged<FeedTabType> onTabSelected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final playback = ref.watch(audioPlaybackForSongProvider(song.id));
     final isFavorite = ref.watch(isFavoriteSongProvider(song.id));
     final isFavoriteBusy = ref.watch(isFavoriteSongBusyProvider(song.id));
+    final feedState = ref.watch(feedProvider);
+    final favoriteCount = feedState.favoriteCountFor(song);
+    final commentCount = feedState.commentCountFor(song);
     final screenWidth = MediaQuery.sizeOf(context).width;
     final outerPadding = screenWidth >= 700 ? 28.0 : 12.0;
     final innerPadding = screenWidth >= 700 ? 24.0 : 16.0;
@@ -521,6 +645,8 @@ class _FeedSongPage extends ConsumerWidget {
                   left: innerPadding,
                   right: innerPadding,
                   child: _FeedTopBar(
+                    selectedTab: selectedTab,
+                    onTabSelected: onTabSelected,
                     onMore: () => _showFeedMoreMenu(context, ref, song),
                   ),
                 ),
@@ -532,10 +658,13 @@ class _FeedSongPage extends ConsumerWidget {
                     child: _FeedActions(
                       isFavorite: isFavorite,
                       isFavoriteBusy: isFavoriteBusy,
-                      playCount: stats?.totalPlayCount,
-                      listenerCount: stats?.uniqueUserCount,
+                      favoriteCount: favoriteCount,
+                      commentCount: commentCount,
                       onFavorite: () {
                         unawaited(_toggleFavorite(context, ref, song));
+                      },
+                      onComment: () {
+                        unawaited(_showCommentSheet(context, ref, song));
                       },
                       onAddPlaylist: () {
                         unawaited(_showAddToPlaylistSheet(context, ref, song));
@@ -549,7 +678,9 @@ class _FeedSongPage extends ConsumerWidget {
                   bottom: 124,
                   child: FadeTransitionLike(
                     opacity: opacity,
-                    child: _FeedPreTitle(song: song),
+                    child: _FeedPreTitle(
+                      playCount: stats?.totalPlayCount ?? song.totalPlayCount,
+                    ),
                   ),
                 ),
                 Positioned(
@@ -722,10 +853,10 @@ class _FeedArtworkGestureLayerState extends State<_FeedArtworkGestureLayer> {
                       children: [
                         Text(
                           showPreviewPrompt
-                              ? 'Tap to preview'
+                              ? AppLocalizations.of(context)!.feedTapToPreview
                               : widget.isPlaying
-                              ? 'Pause'
-                              : 'Play',
+                              ? AppLocalizations.of(context)!.feedPauseAction
+                              : AppLocalizations.of(context)!.feedPlayAction,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white,
@@ -812,8 +943,14 @@ class _FeedScrim extends StatelessWidget {
 }
 
 class _FeedTopBar extends StatelessWidget {
-  const _FeedTopBar({this.onMore});
+  const _FeedTopBar({
+    this.selectedTab = FeedTabType.discover,
+    this.onTabSelected,
+    this.onMore,
+  });
 
+  final FeedTabType selectedTab;
+  final ValueChanged<FeedTabType>? onTabSelected;
   final VoidCallback? onMore;
 
   @override
@@ -821,7 +958,14 @@ class _FeedTopBar extends StatelessWidget {
     return Row(
       children: [
         const SizedBox(width: 42),
-        const Expanded(child: Center(child: _FeedTabs())),
+        Expanded(
+          child: Center(
+            child: _FeedTabs(
+              selectedTab: selectedTab,
+              onTabSelected: onTabSelected,
+            ),
+          ),
+        ),
         IconButton(
           onPressed: onMore,
           icon: const Icon(Icons.more_horiz, color: Colors.white, size: 28),
@@ -832,7 +976,10 @@ class _FeedTopBar extends StatelessWidget {
 }
 
 class _FeedTabs extends StatelessWidget {
-  const _FeedTabs();
+  const _FeedTabs({required this.selectedTab, required this.onTabSelected});
+
+  final FeedTabType selectedTab;
+  final ValueChanged<FeedTabType>? onTabSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -847,9 +994,17 @@ class _FeedTabs extends StatelessWidget {
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
-          children: const [
-            _FeedTab(label: 'Discover', isActive: true),
-            _FeedTab(label: 'Following', isActive: false),
+          children: [
+            _FeedTab(
+              label: AppLocalizations.of(context)!.feedDiscoverTab,
+              isActive: selectedTab == FeedTabType.discover,
+              onTap: () => onTabSelected?.call(FeedTabType.discover),
+            ),
+            _FeedTab(
+              label: AppLocalizations.of(context)!.feedFollowingTab,
+              isActive: selectedTab == FeedTabType.following,
+              onTap: () => onTabSelected?.call(FeedTabType.following),
+            ),
           ],
         ),
       ),
@@ -858,31 +1013,40 @@ class _FeedTabs extends StatelessWidget {
 }
 
 class _FeedTab extends StatelessWidget {
-  const _FeedTab({required this.label, required this.isActive});
+  const _FeedTab({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
 
   final String label;
   final bool isActive;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 22),
-      decoration: BoxDecoration(
-        color: isActive
-            ? const Color(0xFF4B4E4F).withValues(alpha: 0.88)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 13,
-          fontWeight: isActive ? FontWeight.w800 : FontWeight.w700,
-          letterSpacing: 0,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 22),
+        decoration: BoxDecoration(
+          color: isActive
+              ? const Color(0xFF4B4E4F).withValues(alpha: 0.88)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: isActive ? FontWeight.w800 : FontWeight.w700,
+            letterSpacing: 0,
+          ),
         ),
       ),
     );
@@ -893,17 +1057,19 @@ class _FeedActions extends StatelessWidget {
   const _FeedActions({
     required this.isFavorite,
     required this.isFavoriteBusy,
-    required this.playCount,
-    required this.listenerCount,
+    required this.favoriteCount,
+    required this.commentCount,
     required this.onFavorite,
+    required this.onComment,
     required this.onAddPlaylist,
   });
 
   final bool isFavorite;
   final bool isFavoriteBusy;
-  final int? playCount;
-  final int? listenerCount;
+  final int favoriteCount;
+  final int? commentCount;
   final VoidCallback onFavorite;
+  final VoidCallback onComment;
   final VoidCallback onAddPlaylist;
 
   @override
@@ -912,7 +1078,7 @@ class _FeedActions extends StatelessWidget {
       children: [
         _FeedActionButton(
           icon: isFavorite ? Icons.favorite : Icons.favorite_border,
-          label: _formatCount(playCount),
+          label: _formatCount(favoriteCount),
           color: isFavorite ? _feedAccent : Colors.white,
           isBusy: isFavoriteBusy,
           onTap: onFavorite,
@@ -920,8 +1086,8 @@ class _FeedActions extends StatelessWidget {
         const SizedBox(height: 10),
         _FeedActionButton(
           icon: Icons.chat_bubble_outline,
-          label: listenerCount == null ? '10' : _formatCount(listenerCount),
-          onTap: () {},
+          label: _formatCount(commentCount),
+          onTap: onComment,
         ),
         const SizedBox(height: 10),
         _FeedActionButton(
@@ -1034,6 +1200,7 @@ class _FeedMoreSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       top: false,
       child: Container(
@@ -1102,22 +1269,22 @@ class _FeedMoreSheet extends StatelessWidget {
             const SizedBox(height: 14),
             _FeedMoreAction(
               icon: Icons.ios_share_rounded,
-              label: 'Share',
+              label: l10n.feedShareAction,
               onTap: onShare,
             ),
             _FeedMoreAction(
               icon: Icons.playlist_add_rounded,
-              label: 'Add to playlist',
+              label: l10n.feedAddToPlaylistAction,
               onTap: onAddPlaylist,
             ),
             _FeedMoreAction(
               icon: Icons.flag_outlined,
-              label: 'Report',
+              label: l10n.feedReportAction,
               onTap: onReport,
             ),
             _FeedMoreAction(
               icon: Icons.visibility_off_outlined,
-              label: 'Hide',
+              label: l10n.feedHideAction,
               isDestructive: true,
               onTap: onHide,
             ),
@@ -1175,6 +1342,348 @@ class _FeedMoreAction extends StatelessWidget {
   }
 }
 
+class _FeedCommentSheet extends ConsumerStatefulWidget {
+  const _FeedCommentSheet({required this.song});
+
+  final SongEntity song;
+
+  @override
+  ConsumerState<_FeedCommentSheet> createState() => _FeedCommentSheetState();
+}
+
+class _FeedCommentSheetState extends ConsumerState<_FeedCommentSheet> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty) {
+      return;
+    }
+
+    final canContinue = await _ensureSignedIn(
+      context,
+      ref,
+      message: AppLocalizations.of(context)!.feedSignInCommentMessage,
+    );
+    if (!canContinue || !mounted) {
+      return;
+    }
+
+    final success = await ref
+        .read(feedProvider.notifier)
+        .addComment(song: widget.song, text: text);
+    if (!mounted) {
+      return;
+    }
+
+    if (success) {
+      _controller.clear();
+      return;
+    }
+
+    final errorMessage =
+        ref.read(feedProvider).actionErrorMessage ??
+        AppLocalizations.of(context)!.feedCommentFailedMessage;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+    );
+  }
+
+  Future<void> _delete(FeedCommentEntity comment) async {
+    final success = await ref
+        .read(feedProvider.notifier)
+        .deleteComment(comment);
+    if (!mounted || success) {
+      return;
+    }
+
+    final errorMessage =
+        ref.read(feedProvider).actionErrorMessage ??
+        AppLocalizations.of(context)!.feedDeleteCommentFailedMessage;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final comments = ref.watch(feedCommentsProvider(widget.song.id));
+    final l10n = AppLocalizations.of(context)!;
+    final isSending = ref.watch(
+      feedProvider.select(
+        (state) => state.commentingSongIds.contains(widget.song.id),
+      ),
+    );
+
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.68,
+      minChildSize: 0.45,
+      maxChildSize: 0.92,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 12, 12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.feedCommentsTitle,
+                              style: const TextStyle(
+                                color: Color(0xFF151515),
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              widget.song.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.black.withValues(alpha: 0.56),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: comments.when(
+                    data: (items) {
+                      if (items.isEmpty) {
+                        return ListView(
+                          controller: scrollController,
+                          padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
+                          children: [
+                            Icon(
+                              Icons.chat_bubble_outline_rounded,
+                              size: 52,
+                              color: Colors.black.withValues(alpha: 0.22),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              l10n.feedNoCommentsTitle,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Color(0xFF151515),
+                                fontSize: 17,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0,
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+
+                      return ListView.separated(
+                        controller: scrollController,
+                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+                        itemCount: items.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final comment = items[index];
+                          return _FeedCommentTile(
+                            comment: comment,
+                            onDelete: () => _delete(comment),
+                          );
+                        },
+                      );
+                    },
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(color: _feedAccent),
+                    ),
+                    error: (error, _) => ListView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
+                      children: [
+                        const Icon(
+                          Icons.error_outline_rounded,
+                          color: Colors.black38,
+                          size: 52,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          ErrorMessageMapper.map(error),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.black.withValues(alpha: 0.62),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    14,
+                    10,
+                    14,
+                    10 + MediaQuery.viewInsetsOf(context).bottom,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _controller,
+                          enabled: !isSending,
+                          minLines: 1,
+                          maxLines: 4,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _send(),
+                          decoration: InputDecoration(
+                            hintText: l10n.feedAddCommentHint,
+                            isDense: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      IconButton.filled(
+                        onPressed: isSending ? null : _send,
+                        style: IconButton.styleFrom(
+                          backgroundColor: _feedAccent,
+                          foregroundColor: Colors.white,
+                        ),
+                        icon: isSending
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.send_rounded),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FeedCommentTile extends ConsumerWidget {
+  const _FeedCommentTile({required this.comment, required this.onDelete});
+
+  final FeedCommentEntity comment;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentUserId = ref.watch(sessionCurrentUserIdProvider);
+    final profile = comment.userId.trim().isEmpty
+        ? null
+        : ref.watch(publicProfileProvider(comment.userId));
+    final profileName = profile?.valueOrNull?.username.trim() ?? '';
+    final displayName = profileName.isNotEmpty ? profileName : comment.userName;
+    final avatarUrl = profile?.valueOrNull?.avatarUrl.trim() ?? '';
+    final fallbackName = AppLocalizations.of(context)!.feedListenerFallbackName;
+    final canDelete = currentUserId != null && currentUserId == comment.userId;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CircleAvatar(
+          radius: 17,
+          backgroundColor: _feedAccent.withValues(alpha: 0.12),
+          backgroundImage: avatarUrl.isEmpty ? null : NetworkImage(avatarUrl),
+          child: avatarUrl.isEmpty
+              ? Text(
+                  _commentInitial(displayName),
+                  style: const TextStyle(
+                    color: _feedAccent,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0,
+                  ),
+                )
+              : null,
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                displayName.trim().isEmpty ? fallbackName : displayName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFF151515),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                comment.text,
+                style: TextStyle(
+                  color: Colors.black.withValues(alpha: 0.72),
+                  fontSize: 14,
+                  height: 1.35,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (canDelete)
+          IconButton(
+            onPressed: onDelete,
+            icon: const Icon(Icons.delete_outline_rounded, size: 20),
+            color: Colors.black45,
+          ),
+      ],
+    );
+  }
+}
+
 class _AddToPlaylistSheet extends ConsumerStatefulWidget {
   const _AddToPlaylistSheet({required this.song});
 
@@ -1203,7 +1712,13 @@ class _AddToPlaylistSheetState extends ConsumerState<_AddToPlaylistSheet> {
     if (playlist.songIds.contains(widget.song.id)) {
       navigator.pop();
       messenger.showSnackBar(
-        SnackBar(content: Text('Already in "${playlist.name}".')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(
+              context,
+            )!.feedAlreadyInPlaylistMessage(playlist.name),
+          ),
+        ),
       );
       return;
     }
@@ -1231,7 +1746,13 @@ class _AddToPlaylistSheetState extends ConsumerState<_AddToPlaylistSheet> {
 
     navigator.pop();
     messenger.showSnackBar(
-      SnackBar(content: Text('Added to "${playlist.name}".')),
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(
+            context,
+          )!.feedAddedToPlaylistMessage(playlist.name),
+        ),
+      ),
     );
   }
 
@@ -1239,7 +1760,11 @@ class _AddToPlaylistSheetState extends ConsumerState<_AddToPlaylistSheet> {
     final messenger = ScaffoldMessenger.of(context);
     final name = _nameController.text.trim();
     if (name.isEmpty || _isCreatingAndAdding) {
-      setState(() => _localErrorMessage = 'Enter a playlist name.');
+      setState(
+        () => _localErrorMessage = AppLocalizations.of(
+          context,
+        )!.feedEnterPlaylistNameMessage,
+      );
       return;
     }
 
@@ -1267,7 +1792,9 @@ class _AddToPlaylistSheetState extends ConsumerState<_AddToPlaylistSheet> {
       );
       setState(() {
         _isCreatingAndAdding = false;
-        _localErrorMessage = errorMessage ?? 'Could not create playlist.';
+        _localErrorMessage =
+            errorMessage ??
+            AppLocalizations.of(context)!.feedCreatePlaylistFailedMessage;
       });
       ref.read(playlistNotifierProvider.notifier).clearError();
       return;
@@ -1286,7 +1813,9 @@ class _AddToPlaylistSheetState extends ConsumerState<_AddToPlaylistSheet> {
     if (createdPlaylist == null) {
       setState(() {
         _isCreatingAndAdding = false;
-        _localErrorMessage = 'Could not find the new playlist.';
+        _localErrorMessage = AppLocalizations.of(
+          context,
+        )!.feedNewPlaylistNotFoundMessage;
       });
       return;
     }
@@ -1317,7 +1846,13 @@ class _AddToPlaylistSheetState extends ConsumerState<_AddToPlaylistSheet> {
 
     Navigator.of(context).pop();
     messenger.showSnackBar(
-      SnackBar(content: Text('Added to "${createdPlaylist.name}".')),
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(
+            context,
+          )!.feedAddedToPlaylistMessage(createdPlaylist.name),
+        ),
+      ),
     );
   }
 
@@ -1635,7 +2170,9 @@ class _PlaylistChoiceTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _playlistTrackCountLabel(playlist.trackCount),
+                      AppLocalizations.of(
+                        context,
+                      )!.feedTrackCount(playlist.trackCount),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -1730,14 +2267,18 @@ class _PlaylistCover extends StatelessWidget {
 }
 
 class _FeedPreTitle extends StatelessWidget {
-  const _FeedPreTitle({required this.song});
+  const _FeedPreTitle({required this.playCount});
 
-  final SongEntity song;
+  final int playCount;
 
   @override
   Widget build(BuildContext context) {
     return Text(
-      'liked ${song.title}',
+      playCount > 0
+          ? AppLocalizations.of(
+              context,
+            )!.feedPlaysCount(_formatCount(playCount))
+          : AppLocalizations.of(context)!.feedNewTrackLabel,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: const TextStyle(
@@ -1833,9 +2374,9 @@ class _FeedMetadata extends StatelessWidget {
                             color: Colors.white.withValues(alpha: 0.22),
                             borderRadius: BorderRadius.circular(999),
                           ),
-                          child: const Text(
-                            'Follow',
-                            style: TextStyle(
+                          child: Text(
+                            AppLocalizations.of(context)!.feedFollowAction,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
@@ -2070,9 +2611,7 @@ class _FeedSkeletonPage extends StatelessWidget {
                 ),
               ),
             ),
-            const Center(
-              child: CircularProgressIndicator(color: _feedAccent),
-            ),
+            const Center(child: CircularProgressIndicator(color: _feedAccent)),
           ],
         ),
       ),
@@ -2081,10 +2620,7 @@ class _FeedSkeletonPage extends StatelessWidget {
 }
 
 class _FeedSkeletonBlock extends StatelessWidget {
-  const _FeedSkeletonBlock({
-    required this.height,
-    required this.widthFactor,
-  });
+  const _FeedSkeletonBlock({required this.height, required this.widthFactor});
 
   final double height;
   final double widthFactor;
@@ -2148,7 +2684,7 @@ class _FeedFooterPage extends StatelessWidget {
                 const CircularProgressIndicator(color: _feedAccent),
                 const SizedBox(height: 16),
                 Text(
-                  'Loading more tracks...',
+                  AppLocalizations.of(context)!.feedLoadingMoreMessage,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.72),
                     fontWeight: FontWeight.w700,
@@ -2162,7 +2698,8 @@ class _FeedFooterPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  message ?? 'Could not load more tracks.',
+                  message ??
+                      AppLocalizations.of(context)!.feedLoadMoreFailedMessage,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.7),
@@ -2176,7 +2713,7 @@ class _FeedFooterPage extends StatelessWidget {
                     backgroundColor: _feedAccent,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Retry'),
+                  child: Text(AppLocalizations.of(context)!.feedRetryAction),
                 ),
               ],
             ],
@@ -2262,6 +2799,11 @@ String _formatCount(int? value) {
   return value.toString();
 }
 
-String _playlistTrackCountLabel(int count) {
-  return count == 1 ? '1 track' : '$count tracks';
+String _commentInitial(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) {
+    return 'L';
+  }
+
+  return trimmed.substring(0, 1).toUpperCase();
 }

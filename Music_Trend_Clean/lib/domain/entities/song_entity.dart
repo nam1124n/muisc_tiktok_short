@@ -47,6 +47,10 @@ class SongEntity {
   final DateTime? publishedAt;
   final DateTime? updatedAt;
   final DateTime? deletedAt;
+  final int favoriteCount;
+  final int commentCount;
+  final int totalPlayCount;
+  final int uniqueListenerCount;
 
   const SongEntity({
     required this.id,
@@ -65,6 +69,10 @@ class SongEntity {
     this.publishedAt,
     this.updatedAt,
     this.deletedAt,
+    this.favoriteCount = 0,
+    this.commentCount = 0,
+    this.totalPlayCount = 0,
+    this.uniqueListenerCount = 0,
   });
 
   factory SongEntity.fromJson(Map<String, dynamic> json) {
@@ -85,6 +93,10 @@ class SongEntity {
       publishedAt: _readDateTime(json['publishedAt']),
       updatedAt: _readDateTime(json['updatedAt']),
       deletedAt: _readDateTime(json['deletedAt']),
+      favoriteCount: _readInt(json['favoriteCount']),
+      commentCount: _readInt(json['commentCount']),
+      totalPlayCount: _readInt(json['totalPlayCount']),
+      uniqueListenerCount: _readInt(json['uniqueListenerCount']),
     );
   }
 
@@ -106,6 +118,10 @@ class SongEntity {
       if (publishedAt != null) 'publishedAt': publishedAt!.toIso8601String(),
       if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
       if (deletedAt != null) 'deletedAt': deletedAt!.toIso8601String(),
+      'favoriteCount': favoriteCount,
+      'commentCount': commentCount,
+      'totalPlayCount': totalPlayCount,
+      'uniqueListenerCount': uniqueListenerCount,
     };
   }
 
@@ -126,6 +142,10 @@ class SongEntity {
     Object? publishedAt = _songEntityNoChange,
     DateTime? updatedAt,
     Object? deletedAt = _songEntityNoChange,
+    int? favoriteCount,
+    int? commentCount,
+    int? totalPlayCount,
+    int? uniqueListenerCount,
   }) {
     return SongEntity(
       id: id ?? this.id,
@@ -150,6 +170,10 @@ class SongEntity {
       deletedAt: deletedAt == _songEntityNoChange
           ? this.deletedAt
           : deletedAt as DateTime?,
+      favoriteCount: favoriteCount ?? this.favoriteCount,
+      commentCount: commentCount ?? this.commentCount,
+      totalPlayCount: totalPlayCount ?? this.totalPlayCount,
+      uniqueListenerCount: uniqueListenerCount ?? this.uniqueListenerCount,
     );
   }
 
@@ -211,6 +235,15 @@ class SongEntity {
       num v => v.toInt(),
       String v => int.tryParse(v),
       _ => null,
+    };
+  }
+
+  static int _readInt(Object? value) {
+    return switch (value) {
+      int v => v,
+      num v => v.toInt(),
+      String v => int.tryParse(v) ?? 0,
+      _ => 0,
     };
   }
 }

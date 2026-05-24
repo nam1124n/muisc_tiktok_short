@@ -18,6 +18,10 @@ class SongModel extends SongEntity {
     super.publishedAt,
     super.updatedAt,
     super.deletedAt,
+    super.favoriteCount = 0,
+    super.commentCount = 0,
+    super.totalPlayCount = 0,
+    super.uniqueListenerCount = 0,
   });
 
   factory SongModel.fromFirestore(Map<String, dynamic> map, String id) {
@@ -40,6 +44,10 @@ class SongModel extends SongEntity {
     'publishedAt': publishedAt?.toIso8601String(),
     'updatedAt': updatedAt?.toIso8601String(),
     'deletedAt': deletedAt?.toIso8601String(),
+    'favoriteCount': favoriteCount,
+    'commentCount': commentCount,
+    'totalPlayCount': totalPlayCount,
+    'uniqueListenerCount': uniqueListenerCount,
   };
 
   factory SongModel.fromEntity(SongEntity entity) => SongModel(
@@ -59,5 +67,9 @@ class SongModel extends SongEntity {
     publishedAt: entity.publishedAt,
     updatedAt: entity.updatedAt,
     deletedAt: entity.deletedAt,
+    favoriteCount: entity.favoriteCount,
+    commentCount: entity.commentCount,
+    totalPlayCount: entity.totalPlayCount,
+    uniqueListenerCount: entity.uniqueListenerCount,
   );
 }

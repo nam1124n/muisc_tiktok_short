@@ -257,7 +257,7 @@ abstract class AppLocalizations {
   /// No description provided for @genreLabel.
   ///
   /// In en, this message translates to:
-  /// **'By Year'**
+  /// **'Library'**
   String get genreLabel;
 
   /// No description provided for @discoverLabel.
@@ -281,13 +281,13 @@ abstract class AppLocalizations {
   /// No description provided for @genreScreenTitle.
   ///
   /// In en, this message translates to:
-  /// **'Short Tracks by Year'**
+  /// **'Music Library'**
   String get genreScreenTitle;
 
   /// No description provided for @genreScreenSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Short tracks are grouped by year so you can revisit the vibe of each period.'**
+  /// **'Filter the catalog by short clips, full tracks, and release year.'**
   String get genreScreenSubtitle;
 
   /// No description provided for @playlistsLabel.
@@ -437,7 +437,7 @@ abstract class AppLocalizations {
   /// No description provided for @adminYearSongsSectionLabel.
   ///
   /// In en, this message translates to:
-  /// **'By year music'**
+  /// **'Library by year'**
   String get adminYearSongsSectionLabel;
 
   /// No description provided for @adminAnalyticsSectionLabel.
@@ -1966,6 +1966,270 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please choose an audio file!'**
   String get audioFileRequiredMessage;
+
+  /// No description provided for @feedSignInLikeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to like tracks and sync your favorites.'**
+  String get feedSignInLikeMessage;
+
+  /// No description provided for @feedSignInPlaylistMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to save tracks into your playlists.'**
+  String get feedSignInPlaylistMessage;
+
+  /// No description provided for @feedSignInReportMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to report tracks.'**
+  String get feedSignInReportMessage;
+
+  /// No description provided for @feedSignInCommentMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to comment on tracks.'**
+  String get feedSignInCommentMessage;
+
+  /// No description provided for @feedHiddenMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden from this feed.'**
+  String get feedHiddenMessage;
+
+  /// No description provided for @feedReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report track'**
+  String get feedReportTitle;
+
+  /// No description provided for @feedReportDetailsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get feedReportDetailsLabel;
+
+  /// No description provided for @feedReportDetailsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us what is wrong with this track.'**
+  String get feedReportDetailsHint;
+
+  /// No description provided for @feedSubmitAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit'**
+  String get feedSubmitAction;
+
+  /// No description provided for @feedReportSubmittedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Report submitted.'**
+  String get feedReportSubmittedMessage;
+
+  /// No description provided for @feedReportFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Report failed.'**
+  String get feedReportFailedMessage;
+
+  /// No description provided for @feedCannotLoadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot load feed'**
+  String get feedCannotLoadTitle;
+
+  /// No description provided for @feedRetryAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get feedRetryAction;
+
+  /// No description provided for @feedEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed is empty'**
+  String get feedEmptyTitle;
+
+  /// No description provided for @feedEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull to refresh or check back when new tracks are published.'**
+  String get feedEmptySubtitle;
+
+  /// No description provided for @feedFollowingEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Following feed is empty'**
+  String get feedFollowingEmptyTitle;
+
+  /// No description provided for @feedFollowingEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow artists to see their latest tracks here.'**
+  String get feedFollowingEmptySubtitle;
+
+  /// No description provided for @feedDiscoverTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover'**
+  String get feedDiscoverTab;
+
+  /// No description provided for @feedFollowingTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Following'**
+  String get feedFollowingTab;
+
+  /// No description provided for @feedRefreshAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get feedRefreshAction;
+
+  /// No description provided for @feedTapToPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to preview'**
+  String get feedTapToPreview;
+
+  /// No description provided for @feedPauseAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get feedPauseAction;
+
+  /// No description provided for @feedPlayAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get feedPlayAction;
+
+  /// No description provided for @feedShareAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get feedShareAction;
+
+  /// No description provided for @feedAddToPlaylistAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to playlist'**
+  String get feedAddToPlaylistAction;
+
+  /// No description provided for @feedReportAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get feedReportAction;
+
+  /// No description provided for @feedHideAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get feedHideAction;
+
+  /// No description provided for @feedFollowAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow'**
+  String get feedFollowAction;
+
+  /// No description provided for @feedCommentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Comments'**
+  String get feedCommentsTitle;
+
+  /// No description provided for @feedNoCommentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No comments yet'**
+  String get feedNoCommentsTitle;
+
+  /// No description provided for @feedAddCommentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a comment'**
+  String get feedAddCommentHint;
+
+  /// No description provided for @feedCommentFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add comment.'**
+  String get feedCommentFailedMessage;
+
+  /// No description provided for @feedDeleteCommentFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete comment.'**
+  String get feedDeleteCommentFailedMessage;
+
+  /// No description provided for @feedListenerFallbackName.
+  ///
+  /// In en, this message translates to:
+  /// **'Listener'**
+  String get feedListenerFallbackName;
+
+  /// No description provided for @feedAlreadyInPlaylistMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in \"{name}\".'**
+  String feedAlreadyInPlaylistMessage(String name);
+
+  /// No description provided for @feedAddedToPlaylistMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to \"{name}\".'**
+  String feedAddedToPlaylistMessage(String name);
+
+  /// No description provided for @feedEnterPlaylistNameMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a playlist name.'**
+  String get feedEnterPlaylistNameMessage;
+
+  /// No description provided for @feedCreatePlaylistFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create playlist.'**
+  String get feedCreatePlaylistFailedMessage;
+
+  /// No description provided for @feedNewPlaylistNotFoundMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not find the new playlist.'**
+  String get feedNewPlaylistNotFoundMessage;
+
+  /// No description provided for @feedNewTrackLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New on Music Trend'**
+  String get feedNewTrackLabel;
+
+  /// No description provided for @feedPlaysCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} plays'**
+  String feedPlaysCount(String count);
+
+  /// No description provided for @feedLoadingMoreMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading more tracks...'**
+  String get feedLoadingMoreMessage;
+
+  /// No description provided for @feedLoadMoreFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load more tracks.'**
+  String get feedLoadMoreFailedMessage;
+
+  /// No description provided for @feedTrackCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 track} other{{count} tracks}}'**
+  String feedTrackCount(int count);
 }
 
 class _AppLocalizationsDelegate
