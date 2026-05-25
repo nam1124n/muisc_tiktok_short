@@ -6,10 +6,10 @@ import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/audio/providers/audio_player_provider.dart';
 import 'package:login_flutter/ui/screen/profile/playlist_detail_screen.dart';
+import 'package:login_flutter/ui/screen/profile/providers/artist_songs_provider.dart';
 import 'package:login_flutter/ui/screen/profile/providers/profile_provider.dart';
 import 'package:login_flutter/ui/screen/profile/providers/profile_state.dart';
 import 'package:login_flutter/ui/screen/profile/providers/playlist_provider.dart';
-import 'package:login_flutter/ui/screen/profile/widgets/profile_actions.dart';
 import 'package:login_flutter/ui/screen/profile/widgets/profile_header.dart';
 import 'package:login_flutter/ui/screen/profile/widgets/profile_info.dart';
 import 'package:login_flutter/ui/screen/auth/login_screen.dart';
@@ -71,14 +71,14 @@ class ProfileContent extends ConsumerWidget {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 430),
-            child: _buildBody(context, state),
+            child: _buildBody(context, ref, state),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildBody(BuildContext context, ProfileState state) {
+  Widget _buildBody(BuildContext context, WidgetRef ref, ProfileState state) {
     final l10n = AppLocalizations.of(context)!;
 
     if (state is ProfileLoading || state is ProfileInitial) {
@@ -167,7 +167,10 @@ class ProfileContent extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const ProfileHeader(textPrimary: ProfileScreen._textPrimary),
+            ProfileHeader(
+              profile: profile,
+              textPrimary: ProfileScreen._textPrimary,
+            ),
             const SizedBox(height: 18),
             ProfileInfo(
               profile: profile,
@@ -176,11 +179,13 @@ class ProfileContent extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const UserUploadScreen()),
                 );
+
+                ref.invalidate(userUploadedSongsProvider(profile.id));
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -188,7 +193,10 @@ class ProfileContent extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
-                  side: const BorderSide(color: ProfileScreen._primary, width: 2),
+                  side: const BorderSide(
+                    color: ProfileScreen._primary,
+                    width: 2,
+                  ),
                 ),
                 elevation: 0,
               ),
@@ -198,13 +206,8 @@ class ProfileContent extends ConsumerWidget {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
-            const SizedBox(height: 16),
-            ProfileActions(
-              profile: profile,
-              primaryColor: ProfileScreen._primary,
-            ),
             const SizedBox(height: 28),
-            const _LibrarySection(),
+            _LibrarySection(userId: profile.id),
           ],
         ),
       );
@@ -214,17 +217,319 @@ class ProfileContent extends ConsumerWidget {
   }
 }
 
-enum _ProfileLibraryTab { playlists, favorites, history }
+class _UploadedSongsSection extends ConsumerWidget {
+  const _UploadedSongsSection({super.key, required this.userId});
+
+  final String userId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uploadedSongsAsync = ref.watch(userUploadedSongsProvider(userId));
+
+    return uploadedSongsAsync.when(
+      loading: () => const _UploadedSongsStatusCard(
+        icon: Icons.library_music_rounded,
+        title: 'Đang tải bài hát của bạn',
+        subtitle: 'Danh sách nhạc cá nhân sẽ xuất hiện tại đây.',
+        trailing: CircularProgressIndicator(color: ProfileScreen._primary),
+      ),
+      error: (error, _) => _UploadedSongsStatusCard(
+        icon: Icons.error_outline_rounded,
+        title: 'Không tải được bài hát',
+        subtitle: error.toString(),
+      ),
+      data: (songs) {
+        if (songs.isEmpty) {
+          return const _UploadedSongsStatusCard(
+            icon: Icons.music_note_rounded,
+            title: 'Chưa có bài hát cá nhân',
+            subtitle: 'Tải nhạc lên để theo dõi trạng thái duyệt tại đây.',
+          );
+        }
+
+        final playableSongs = songs
+            .where((song) => song.isPublished && song.audioUrl.isNotEmpty)
+            .toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Bài hát của tôi',
+                    style: TextStyle(
+                      color: ProfileScreen._textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                if (playableSongs.isNotEmpty)
+                  IconButton(
+                    tooltip: 'Phát tất cả',
+                    onPressed: () {
+                      ref
+                          .read(audioPlayerNotifierProvider.notifier)
+                          .playSong(
+                            playableSongs.first,
+                            playlist: playableSongs,
+                          );
+                    },
+                    icon: const Icon(
+                      Icons.play_circle_fill_rounded,
+                      color: ProfileScreen._primary,
+                      size: 34,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            for (var index = 0; index < songs.length; index++) ...[
+              _UploadedSongCard(song: songs[index], playlist: playableSongs),
+              if (index < songs.length - 1) const SizedBox(height: 12),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _UploadedSongCard extends ConsumerWidget {
+  const _UploadedSongCard({required this.song, required this.playlist});
+
+  final SongEntity song;
+  final List<SongEntity> playlist;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final canPlay = song.isPublished && song.audioUrl.isNotEmpty;
+
+    return InkWell(
+      onTap: canPlay
+          ? () {
+              ref
+                  .read(audioPlayerNotifierProvider.notifier)
+                  .playSong(song, playlist: playlist);
+            }
+          : null,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.88),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: ProfileScreen._secondary.withValues(alpha: 0.28),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 58,
+              height: 58,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: ProfileScreen._primary.withValues(alpha: 0.12),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: song.imageUrl.isNotEmpty
+                  ? Image.network(
+                      song.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const Icon(
+                        Icons.music_note_rounded,
+                        color: ProfileScreen._primary,
+                        size: 26,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.music_note_rounded,
+                      color: ProfileScreen._primary,
+                      size: 26,
+                    ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    song.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: ProfileScreen._textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    song.artist,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: ProfileScreen._textMuted,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 9),
+                  Row(
+                    children: [
+                      _SongStatusBadge(status: song.status),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.play_arrow_rounded,
+                        size: 15,
+                        color: ProfileScreen._textMuted,
+                      ),
+                      Text(
+                        song.totalPlayCount.toString(),
+                        style: const TextStyle(
+                          color: ProfileScreen._textMuted,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              canPlay ? Icons.play_arrow_rounded : Icons.hourglass_top_rounded,
+              color: canPlay
+                  ? ProfileScreen._primary
+                  : ProfileScreen._textMuted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SongStatusBadge extends StatelessWidget {
+  const _SongStatusBadge({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (status) {
+      SongStatuses.pending => const Color(0xFFF59E0B),
+      SongStatuses.hidden => const Color(0xFF6B7280),
+      _ => ProfileScreen._primary,
+    };
+    final label = switch (status) {
+      SongStatuses.pending => 'Chờ duyệt',
+      SongStatuses.hidden => 'Đã ẩn',
+      _ => 'Công khai',
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _UploadedSongsStatusCard extends StatelessWidget {
+  const _UploadedSongsStatusCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.84),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: ProfileScreen._secondary.withValues(alpha: 0.28),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: ProfileScreen._primary, size: 30),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: ProfileScreen._textPrimary,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: ProfileScreen._textMuted,
+              fontSize: 13,
+              height: 1.35,
+            ),
+          ),
+          if (trailing != null) ...[const SizedBox(height: 14), trailing!],
+        ],
+      ),
+    );
+  }
+}
+
+enum _ProfileLibraryTab { uploadedSongs, playlists, favorites, history }
 
 class _LibrarySection extends StatefulWidget {
-  const _LibrarySection();
+  const _LibrarySection({required this.userId});
+
+  final String userId;
 
   @override
   State<_LibrarySection> createState() => _LibrarySectionState();
 }
 
 class _LibrarySectionState extends State<_LibrarySection> {
-  _ProfileLibraryTab _selectedTab = _ProfileLibraryTab.playlists;
+  _ProfileLibraryTab _selectedTab = _ProfileLibraryTab.uploadedSongs;
 
   @override
   Widget build(BuildContext context) {
@@ -247,6 +552,10 @@ class _LibrarySectionState extends State<_LibrarySection> {
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 180),
           child: switch (_selectedTab) {
+            _ProfileLibraryTab.uploadedSongs => _UploadedSongsSection(
+              key: const ValueKey('uploadedSongs'),
+              userId: widget.userId,
+            ),
             _ProfileLibraryTab.playlists => const _PlaylistLibraryContent(
               key: ValueKey('playlists'),
             ),
@@ -288,6 +597,14 @@ class _LibraryTabs extends StatelessWidget {
       ),
       child: Row(
         children: [
+          Expanded(
+            child: _LibraryTabItem(
+              label: 'Bài hát',
+              icon: Icons.music_note_rounded,
+              isActive: selectedTab == _ProfileLibraryTab.uploadedSongs,
+              onTap: () => onTabSelected(_ProfileLibraryTab.uploadedSongs),
+            ),
+          ),
           Expanded(
             child: _LibraryTabItem(
               label: l10n.playlistsLabel,

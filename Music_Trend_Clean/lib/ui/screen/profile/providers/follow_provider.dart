@@ -1,9 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_flutter/ui/screen/profile/providers/profile_provider.dart';
 
-final isFollowingProvider = StreamProvider.family<bool, String>((ref, targetUserId) {
+final isFollowingProvider = StreamProvider.family<bool, String>((
+  ref,
+  targetUserId,
+) {
   final repo = ref.watch(profileRepositoryProvider);
   return repo.watchIsFollowing(targetUserId);
+});
+
+final optimisticFollowingProvider = StateProvider.family<bool?, String>((
+  ref,
+  targetUserId,
+) {
+  return null;
 });
 
 class FollowController extends StateNotifier<AsyncValue<void>> {
@@ -20,12 +30,17 @@ class FollowController extends StateNotifier<AsyncValue<void>> {
       state = const AsyncData(null);
       // Invalidate profile to reflect the updated followers count
       _ref.invalidate(publicProfileProvider(targetUserId));
+      _ref.invalidate(isFollowingProvider(targetUserId));
     } catch (e, st) {
       state = AsyncError(e, st);
     }
   }
 }
 
-final followControllerProvider = StateNotifierProvider.family<FollowController, AsyncValue<void>, String>((ref, targetUserId) {
-  return FollowController(ref, targetUserId);
-});
+final followControllerProvider =
+    StateNotifierProvider.family<FollowController, AsyncValue<void>, String>((
+      ref,
+      targetUserId,
+    ) {
+      return FollowController(ref, targetUserId);
+    });

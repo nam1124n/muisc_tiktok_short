@@ -60,12 +60,16 @@ class InteractionRemoteDataSourceImpl implements InteractionRemoteDataSource {
     bool isFavorite,
   ) async {
     final songId = songData['id'] as String;
+    final uploaderId = songData['uploaderId']?.toString();
     final favoriteRef = _db
         .collection('users')
         .doc(userId)
         .collection('favorites')
         .doc(songId);
     final songRef = _db.collection('songs').doc(songId);
+    final uploaderRef = uploaderId == null || uploaderId.isEmpty
+        ? null
+        : _db.collection('users').doc(uploaderId);
 
     await _db.runTransaction((transaction) async {
       final favoriteSnapshot = await transaction.get(favoriteRef);
@@ -78,12 +82,24 @@ class InteractionRemoteDataSourceImpl implements InteractionRemoteDataSource {
           'favoriteCount': FieldValue.increment(1),
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
+        if (uploaderRef != null) {
+          transaction.set(uploaderRef, {
+            'likes': FieldValue.increment(1),
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        }
       } else if (!isFavorite && favoriteSnapshot.exists) {
         transaction.delete(favoriteRef);
         transaction.set(songRef, {
           'favoriteCount': FieldValue.increment(-1),
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
+        if (uploaderRef != null) {
+          transaction.set(uploaderRef, {
+            'likes': FieldValue.increment(-1),
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        }
       }
     });
   }
@@ -94,17 +110,38 @@ class InteractionRemoteDataSourceImpl implements InteractionRemoteDataSource {
       return;
     }
 
-    final batch = _db.batch();
     final collectionRef = _db
         .collection('users')
         .doc(userId)
         .collection('favorites');
 
-    for (final songId in songIds) {
-      batch.delete(collectionRef.doc(songId));
-    }
+    await _db.runTransaction((transaction) async {
+      for (final songId in songIds) {
+        final favoriteRef = collectionRef.doc(songId);
+        final favoriteSnapshot = await transaction.get(favoriteRef);
+        if (!favoriteSnapshot.exists) {
+          continue;
+        }
 
-    await batch.commit();
+        final favoriteData = favoriteSnapshot.data() ?? {};
+        final uploaderId = favoriteData['uploaderId']?.toString();
+        final uploaderRef = uploaderId == null || uploaderId.isEmpty
+            ? null
+            : _db.collection('users').doc(uploaderId);
+
+        transaction.delete(favoriteRef);
+        transaction.set(_db.collection('songs').doc(songId), {
+          'favoriteCount': FieldValue.increment(-1),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+        if (uploaderRef != null) {
+          transaction.set(uploaderRef, {
+            'likes': FieldValue.increment(-1),
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        }
+      }
+    });
   }
 
   @override

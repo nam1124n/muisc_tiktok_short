@@ -6,6 +6,7 @@ import 'package:login_flutter/data/datasource/remote/interaction_remote_data_sou
 import 'package:login_flutter/data/repositories/interaction_repository_impl.dart';
 import 'package:login_flutter/domain/entities/song_entity.dart';
 import 'package:login_flutter/domain/repositories/interaction_repository.dart';
+import 'package:login_flutter/ui/screen/profile/providers/profile_provider.dart';
 
 final interactionRemoteDataSourceProvider =
     Provider<InteractionRemoteDataSource>((ref) {
@@ -22,6 +23,7 @@ final favoriteNotifierProvider =
     StateNotifierProvider<FavoriteNotifier, FavoriteState>((ref) {
       final userId = ref.watch(sessionCurrentUserIdProvider) ?? 'guest';
       return FavoriteNotifier(
+        ref: ref,
         userId: userId,
         repository: ref.read(interactionRepositoryProvider),
       );
@@ -105,13 +107,17 @@ class FavoriteState extends Equatable {
 }
 
 class FavoriteNotifier extends StateNotifier<FavoriteState> {
-  FavoriteNotifier({required this.userId, required this.repository})
-    : super(const FavoriteState.initial()) {
+  FavoriteNotifier({
+    required this.ref,
+    required this.userId,
+    required this.repository,
+  }) : super(const FavoriteState.initial()) {
     if (userId != 'guest') {
       _loadFavorites();
     }
   }
 
+  final Ref ref;
   final String userId;
   final InteractionRepository repository;
 
@@ -194,6 +200,7 @@ class FavoriteNotifier extends StateNotifier<FavoriteState> {
       return;
     }
 
+    _refreshAuthorProfiles(song);
     state = state.copyWith(processingSongIds: _withoutProcessing(song.id));
   }
 
@@ -231,6 +238,9 @@ class FavoriteNotifier extends StateNotifier<FavoriteState> {
       return;
     }
 
+    for (final song in previousSongs) {
+      _refreshAuthorProfiles(song);
+    }
     state = state.copyWith(isClearing: false);
   }
 
@@ -240,6 +250,18 @@ class FavoriteNotifier extends StateNotifier<FavoriteState> {
 
   void clearError() {
     state = state.copyWith(clearErrorMessage: true);
+  }
+
+  void _refreshAuthorProfiles(SongEntity song) {
+    final uploaderId = song.uploaderId;
+    if (uploaderId == null || uploaderId.isEmpty) {
+      return;
+    }
+
+    ref.invalidate(publicProfileProvider(uploaderId));
+    if (uploaderId == userId) {
+      ref.invalidate(profileNotifierProvider);
+    }
   }
 
   Set<String> _withoutProcessing(String songId) {

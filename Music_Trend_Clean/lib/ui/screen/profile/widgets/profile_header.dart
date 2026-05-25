@@ -1,22 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
+import 'package:login_flutter/app/config/app_config.dart';
 import 'package:login_flutter/app/providers/app_language_provider.dart';
 import 'package:login_flutter/app/providers/app_language_state.dart';
 import 'package:login_flutter/app/providers/session_provider.dart';
+import 'package:login_flutter/domain/entities/profile_entity.dart';
 import 'package:login_flutter/l10n/app_localizations.dart';
 import 'package:login_flutter/ui/screen/admin/providers/song_provider.dart';
 import 'package:login_flutter/ui/screen/audio/providers/audio_player_provider.dart';
 import 'package:login_flutter/ui/screen/auth/providers/auth_provider.dart';
 import 'package:login_flutter/ui/screen/discover/providers/favorites_provider.dart';
 import 'package:login_flutter/ui/screen/discover/providers/recents_provider.dart';
+import 'package:login_flutter/ui/screen/profile/edit_profile_screen.dart';
 import 'package:login_flutter/ui/screen/profile/providers/profile_provider.dart';
 import 'package:login_flutter/ui/screen/profile/providers/playlist_provider.dart';
+import 'package:login_flutter/ui/screen/profile/public_profile_screen.dart';
 import 'package:login_flutter/ui/screen/search/providers/search_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ProfileHeader extends ConsumerWidget {
+  final ProfileEntity profile;
   final Color textPrimary;
 
-  const ProfileHeader({super.key, required this.textPrimary});
+  const ProfileHeader({
+    super.key,
+    required this.profile,
+    required this.textPrimary,
+  });
+
+  String _shareLink() {
+    return AppConfig.buildPublicProfileUrl(profile.id);
+  }
+
+  String _shareMessage(AppLocalizations l10n) {
+    return '${l10n.profileShareMessage(profile.username, profile.followers)}\n${_shareLink()}';
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -51,6 +70,41 @@ class ProfileHeader extends ConsumerWidget {
           ),
           offset: const Offset(0, 46),
           onSelected: (value) async {
+            if (value == 'edit_profile') {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => EditProfileScreen(currentProfile: profile),
+                ),
+              );
+              return;
+            }
+
+            if (value == 'share_profile') {
+              SharePlus.instance.share(ShareParams(text: _shareMessage(l10n)));
+              return;
+            }
+
+            if (value == 'copy_profile_link') {
+              await Clipboard.setData(ClipboardData(text: _shareLink()));
+              if (!context.mounted) {
+                return;
+              }
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.profileLinkCopiedMessage)),
+              );
+              return;
+            }
+
+            if (value == 'view_public_profile') {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => PublicProfileScreen(profileId: profile.id),
+                ),
+              );
+              return;
+            }
+
             if (value == 'vi' || value == 'en') {
               await ref
                   .read(appLanguageNotifierProvider.notifier)
@@ -114,6 +168,75 @@ class ProfileHeader extends ConsumerWidget {
             }
           },
           itemBuilder: (context) => [
+            PopupMenuItem<String>(
+              value: 'edit_profile',
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.edit_outlined,
+                    color: Color(0xFF20202B),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    l10n.editProfileButton,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'share_profile',
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.share_outlined,
+                    color: Color(0xFF20202B),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    l10n.shareButton,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'copy_profile_link',
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.link_rounded,
+                    color: Color(0xFF20202B),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    l10n.copyProfileLink,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'view_public_profile',
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.public_rounded,
+                    color: Color(0xFF20202B),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    l10n.viewPublicProfile,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+            const PopupMenuDivider(),
             PopupMenuItem<String>(
               enabled: false,
               height: 36,

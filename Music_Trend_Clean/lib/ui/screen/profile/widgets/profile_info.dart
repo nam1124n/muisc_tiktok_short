@@ -158,6 +158,34 @@ class ProfileInfo extends ConsumerWidget {
             ),
           ),
         ],
+        const SizedBox(height: 18),
+        Row(
+          children: [
+            Expanded(
+              child: _ProfileStatChip(
+                label: l10n.followersLabel,
+                value: profile.followers.toString(),
+                primaryColor: primaryColor,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _ProfileStatChip(
+                label: l10n.followingLabel,
+                value: profile.following.toString(),
+                primaryColor: primaryColor,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _ProfileStatChip(
+                label: l10n.likesLabel,
+                value: profile.likes.toString(),
+                primaryColor: primaryColor,
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -173,5 +201,59 @@ class ProfileInfo extends ConsumerWidget {
       default:
         return l10n.ageGroupPreferNotToSay;
     }
+  }
+}
+
+class _ProfileStatChip extends StatelessWidget {
+  const _ProfileStatChip({
+    required this.label,
+    required this.value,
+    required this.primaryColor,
+  });
+
+  final String label;
+  final String value;
+  final Color primaryColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.12)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              color: primaryColor,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFF8E889C),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

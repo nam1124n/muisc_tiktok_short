@@ -78,6 +78,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }) async {
     final doc = await _db.collection('users').doc(userId).get();
     final data = doc.data() ?? {};
+    final totalSongLikes = await _readTotalSongLikes(userId);
 
     return ProfileModel(
       username:
@@ -88,19 +89,50 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       avatarUrl: data['avatarUrl'] ?? '',
       followers: data['followers'] ?? 0,
       following: data['following'] ?? 0,
-      likes: data['likes'] ?? 0,
+      likes: totalSongLikes,
       ageGroup: ProfileAgeGroups.normalize(data['ageGroup']?.toString()),
     );
+  }
+
+  Future<int> _readTotalSongLikes(String userId) async {
+    final snapshot = await _db
+        .collection('songs')
+        .where('uploaderId', isEqualTo: userId)
+        .get();
+
+    var totalLikes = 0;
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      if (data['status'] == 'archived') {
+        continue;
+      }
+
+      totalLikes += (data['favoriteCount'] as num?)?.toInt() ?? 0;
+    }
+
+    return totalLikes;
   }
 
   @override
   Future<void> toggleFollowUser(String targetUserId) async {
     final currentUser = _auth.currentUser;
-    if (currentUser == null) throw Exception('Yêu cầu đăng nhập để theo dõi.');
-    if (currentUser.uid == targetUserId) throw Exception('Bạn không thể theo dõi chính mình.');
+    if (currentUser == null) {
+      throw Exception('Yêu cầu đăng nhập để theo dõi.');
+    }
+    if (currentUser.uid == targetUserId) {
+      throw Exception('Bạn không thể theo dõi chính mình.');
+    }
 
-    final followerRef = _db.collection('users').doc(targetUserId).collection('followers').doc(currentUser.uid);
-    final followingRef = _db.collection('users').doc(currentUser.uid).collection('following').doc(targetUserId);
+    final followerRef = _db
+        .collection('users')
+        .doc(targetUserId)
+        .collection('followers')
+        .doc(currentUser.uid);
+    final followingRef = _db
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('following')
+        .doc(targetUserId);
 
     final targetUserRef = _db.collection('users').doc(targetUserId);
     final currentUserRef = _db.collection('users').doc(currentUser.uid);
@@ -111,14 +143,22 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         // Unfollow
         tx.delete(followerRef);
         tx.delete(followingRef);
-        tx.set(targetUserRef, {'followers': FieldValue.increment(-1)}, SetOptions(merge: true));
-        tx.set(currentUserRef, {'following': FieldValue.increment(-1)}, SetOptions(merge: true));
+        tx.set(targetUserRef, {
+          'followers': FieldValue.increment(-1),
+        }, SetOptions(merge: true));
+        tx.set(currentUserRef, {
+          'following': FieldValue.increment(-1),
+        }, SetOptions(merge: true));
       } else {
         // Follow
         tx.set(followerRef, {'timestamp': FieldValue.serverTimestamp()});
         tx.set(followingRef, {'timestamp': FieldValue.serverTimestamp()});
-        tx.set(targetUserRef, {'followers': FieldValue.increment(1)}, SetOptions(merge: true));
-        tx.set(currentUserRef, {'following': FieldValue.increment(1)}, SetOptions(merge: true));
+        tx.set(targetUserRef, {
+          'followers': FieldValue.increment(1),
+        }, SetOptions(merge: true));
+        tx.set(currentUserRef, {
+          'following': FieldValue.increment(1),
+        }, SetOptions(merge: true));
       }
     });
   }

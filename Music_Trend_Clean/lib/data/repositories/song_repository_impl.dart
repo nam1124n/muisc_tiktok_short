@@ -134,8 +134,16 @@ class SongRepositoryImpl implements SongRepository {
   }
 
   @override
-  Future<List<SongEntity>> getSongsByUploaderId(String uploaderId, {int limit = 10}) async {
-    return remoteDataSource.fetchSongsByUploaderId(uploaderId, limit: limit);
+  Future<List<SongEntity>> getSongsByUploaderId(
+    String uploaderId, {
+    int limit = 10,
+    bool publishedOnly = true,
+  }) async {
+    return remoteDataSource.fetchSongsByUploaderId(
+      uploaderId,
+      limit: limit,
+      publishedOnly: publishedOnly,
+    );
   }
 
   @override
@@ -173,7 +181,9 @@ class SongRepositoryImpl implements SongRepository {
     final imageUrl = results[0];
     final audioUrl = results[1];
 
-    final model = SongModel.fromEntity(song.copyWith(status: SongStatuses.pending));
+    final model = SongModel.fromEntity(
+      song.copyWith(status: SongStatuses.pending),
+    );
     await remoteDataSource.addSong({
       ...model.toMap(),
       'imageUrl': imageUrl,

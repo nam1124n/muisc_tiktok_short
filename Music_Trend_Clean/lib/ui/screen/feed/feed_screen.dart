@@ -500,30 +500,27 @@ class _FeedScreenState extends ConsumerState<FeedScreen>
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(
-      audioPlayerNotifierProvider,
-      (previous, next) {
-        final currentSong = next.currentSong;
-        if (currentSong == null) return;
+    ref.listen(audioPlayerNotifierProvider, (previous, next) {
+      final currentSong = next.currentSong;
+      if (currentSong == null) return;
 
-        final feedState = ref.read(feedProvider);
-        final songs = feedState.songs;
-        final songIndex = songs.indexWhere((song) => song.id == currentSong.id);
+      final feedState = ref.read(feedProvider);
+      final songs = feedState.songs;
+      final songIndex = songs.indexWhere((song) => song.id == currentSong.id);
 
-        if (songIndex != -1 && songIndex != _currentIndex) {
-          setState(() {
-            _currentIndex = songIndex;
-          });
-          if (_pageController.hasClients) {
-            _pageController.animateToPage(
-              songIndex,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
-          }
+      if (songIndex != -1 && songIndex != _currentIndex) {
+        setState(() {
+          _currentIndex = songIndex;
+        });
+        if (_pageController.hasClients) {
+          _pageController.animateToPage(
+            songIndex,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
         }
-      },
-    );
+      }
+    });
 
     final feedState = ref.watch(feedProvider);
     final trendingSongs = ref.watch(adminWeeklyTrendingProvider).valueOrNull;
@@ -577,49 +574,62 @@ class _FeedScreenState extends ConsumerState<FeedScreen>
       color: _feedBlack,
       child: SafeArea(
         bottom: false,
-        child: RefreshIndicator(
-          color: _feedAccent,
-          backgroundColor: const Color(0xFF151515),
-          onRefresh: () => ref.read(feedProvider.notifier).refresh(),
-          child: PageView.builder(
-            controller: _pageController,
-            scrollDirection: Axis.vertical,
-            physics: const PageScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-            itemCount: songs.length + (feedState.hasMore ? 1 : 0),
-            onPageChanged: (index) {
-              if (index < songs.length) {
-                setState(() => _currentIndex = index);
-                _activateSong(songs, index);
-              }
-
-              if (index >= songs.length - 3 && feedState.hasMore) {
-                ref.read(feedProvider.notifier).loadMore();
-              }
-            },
-            itemBuilder: (context, index) {
-              if (index >= songs.length) {
-                return _FeedFooterPage(
-                  isLoading: feedState.isLoadingMore,
-                  message: feedState.loadMoreErrorMessage,
-                  onRetry: () =>
-                      ref.read(feedProvider.notifier).retryLoadMore(),
-                );
-              }
-
-              final song = songs[index];
-              return _FeedSongPage(
+        child: Stack(
+          children: [
+            RefreshIndicator(
+              color: _feedAccent,
+              backgroundColor: const Color(0xFF151515),
+              onRefresh: () => ref.read(feedProvider.notifier).refresh(),
+              child: PageView.builder(
                 controller: _pageController,
-                pageIndex: index,
-                currentIndex: currentIndex,
-                song: song,
-                stats: statsBySongId[song.id],
+                scrollDirection: Axis.vertical,
+                physics: const PageScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+                itemCount: songs.length + (feedState.hasMore ? 1 : 0),
+                onPageChanged: (index) {
+                  if (index < songs.length) {
+                    setState(() => _currentIndex = index);
+                    _activateSong(songs, index);
+                  }
+
+                  if (index >= songs.length - 3 && feedState.hasMore) {
+                    ref.read(feedProvider.notifier).loadMore();
+                  }
+                },
+                itemBuilder: (context, index) {
+                  if (index >= songs.length) {
+                    return _FeedFooterPage(
+                      isLoading: feedState.isLoadingMore,
+                      message: feedState.loadMoreErrorMessage,
+                      onRetry: () =>
+                          ref.read(feedProvider.notifier).retryLoadMore(),
+                    );
+                  }
+
+                  final song = songs[index];
+                  return _FeedSongPage(
+                    controller: _pageController,
+                    pageIndex: index,
+                    currentIndex: currentIndex,
+                    song: song,
+                    stats: statsBySongId[song.id],
+                  );
+                },
+              ),
+            ),
+            Positioned(
+              top: 16,
+              left: 16,
+              right: 16,
+              child: _FeedTopBar(
                 selectedTab: feedState.selectedTab,
                 onTabSelected: _selectTab,
-              );
-            },
-          ),
+                onMore: () =>
+                    _showFeedMoreMenu(context, ref, songs[currentIndex]),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -633,8 +643,6 @@ class _FeedSongPage extends ConsumerWidget {
     required this.currentIndex,
     required this.song,
     required this.stats,
-    required this.selectedTab,
-    required this.onTabSelected,
   });
 
   final PageController controller;
@@ -642,8 +650,6 @@ class _FeedSongPage extends ConsumerWidget {
   final int currentIndex;
   final SongEntity song;
   final TrendingSongEntity? stats;
-  final FeedTabType selectedTab;
-  final ValueChanged<FeedTabType> onTabSelected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -700,16 +706,6 @@ class _FeedSongPage extends ConsumerWidget {
                     onDoubleTap: () {
                       unawaited(_toggleFavorite(context, ref, song));
                     },
-                  ),
-                ),
-                Positioned(
-                  top: 16,
-                  left: innerPadding,
-                  right: innerPadding,
-                  child: _FeedTopBar(
-                    selectedTab: selectedTab,
-                    onTabSelected: onTabSelected,
-                    onMore: () => _showFeedMoreMenu(context, ref, song),
                   ),
                 ),
                 Positioned(
@@ -2354,7 +2350,7 @@ class _FeedPreTitle extends StatelessWidget {
   }
 }
 
-class _FeedMetadata extends StatelessWidget {
+class _FeedMetadata extends ConsumerWidget {
   const _FeedMetadata({
     required this.song,
     required this.isPlaying,
@@ -2370,9 +2366,16 @@ class _FeedMetadata extends StatelessWidget {
   final double progress;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final titleSize = screenWidth >= 700 ? 28.0 : 20.0;
+    final uploaderId = song.uploaderId;
+    final profileAsync = uploaderId == null || uploaderId.isEmpty
+        ? null
+        : ref.watch(publicProfileProvider(uploaderId));
+    final profile = profileAsync?.valueOrNull;
+    final displayName = profile?.username ?? song.artist;
+    final avatarUrl = profile?.avatarUrl ?? '';
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(11),
@@ -2411,27 +2414,35 @@ class _FeedMetadata extends StatelessWidget {
                     const SizedBox(height: 10),
                     GestureDetector(
                       onTap: () {
-                        final uploaderId = song.uploaderId;
                         if (uploaderId != null && uploaderId.isNotEmpty) {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => ArtistProfileScreen(artistId: uploaderId),
+                              builder: (_) =>
+                                  ArtistProfileScreen(artistId: uploaderId),
                             ),
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Không thể xem hồ sơ (Admin upload)')),
+                            const SnackBar(
+                              content: Text(
+                                'Không thể xem hồ sơ (Admin upload)',
+                              ),
+                            ),
                           );
                         }
                       },
                       child: Row(
                         children: [
-                          _ArtistAvatar(song: song),
+                          _ArtistAvatar(
+                            avatarUrl: avatarUrl,
+                            fallbackImageUrl: song.imageUrl,
+                            displayName: displayName,
+                          ),
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              song.artist,
+                              displayName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -2466,20 +2477,33 @@ class _FeedMetadata extends StatelessWidget {
 }
 
 class _ArtistAvatar extends StatelessWidget {
-  const _ArtistAvatar({required this.song});
+  const _ArtistAvatar({
+    required this.avatarUrl,
+    required this.fallbackImageUrl,
+    required this.displayName,
+  });
 
-  final SongEntity song;
+  final String avatarUrl;
+  final String fallbackImageUrl;
+  final String displayName;
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = avatarUrl.isNotEmpty ? avatarUrl : fallbackImageUrl;
+
     return CircleAvatar(
       radius: 16,
       backgroundColor: Colors.white.withValues(alpha: 0.16),
-      backgroundImage: song.imageUrl.isEmpty
-          ? null
-          : NetworkImage(song.imageUrl),
-      child: song.imageUrl.isEmpty
-          ? const Icon(Icons.person, color: Colors.white, size: 16)
+      backgroundImage: imageUrl.isEmpty ? null : NetworkImage(imageUrl),
+      child: imageUrl.isEmpty
+          ? Text(
+              _commentInitial(displayName),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+              ),
+            )
           : null,
     );
   }
@@ -2875,35 +2899,81 @@ class _FeedFollowButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (uploaderId == null || uploaderId!.isEmpty) return const SizedBox.shrink();
-    
-    final isFollowingAsync = ref.watch(isFollowingProvider(uploaderId!));
-    final isFollowing = isFollowingAsync.maybeWhen(data: (val) => val, orElse: () => false);
-    final followControllerState = ref.watch(followControllerProvider(uploaderId!));
+    if (uploaderId == null || uploaderId!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final targetUserId = uploaderId!;
+    final isFollowingAsync = ref.watch(isFollowingProvider(targetUserId));
+    final optimisticValue = ref.watch(
+      optimisticFollowingProvider(targetUserId),
+    );
+    final remoteIsFollowing = isFollowingAsync.maybeWhen(
+      data: (val) => val,
+      orElse: () => false,
+    );
+    final isFollowing = optimisticValue ?? remoteIsFollowing;
+    final followControllerState = ref.watch(
+      followControllerProvider(targetUserId),
+    );
     final isLoading = followControllerState is AsyncLoading;
 
+    ref.listen(isFollowingProvider(targetUserId), (_, next) {
+      next.whenData((value) {
+        final optimistic = ref.read(optimisticFollowingProvider(targetUserId));
+        if (optimistic == value) {
+          ref.read(optimisticFollowingProvider(targetUserId).notifier).state =
+              null;
+        }
+      });
+    });
+
+    ref.listen(followControllerProvider(targetUserId), (_, next) {
+      if (next is AsyncError) {
+        ref.read(optimisticFollowingProvider(targetUserId).notifier).state =
+            null;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(next.error.toString())));
+      }
+    });
+
     return GestureDetector(
-      onTap: isLoading ? null : () {
-        ref.read(followControllerProvider(uploaderId!).notifier).toggleFollow();
-      },
+      onTap: isLoading
+          ? null
+          : () {
+              ref
+                      .read(optimisticFollowingProvider(targetUserId).notifier)
+                      .state =
+                  !isFollowing;
+              ref
+                  .read(followControllerProvider(targetUserId).notifier)
+                  .toggleFollow();
+            },
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 6,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isFollowing ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.22),
+          color: isFollowing
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.white.withValues(alpha: 0.22),
           borderRadius: BorderRadius.circular(999),
-          border: isFollowing ? Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1) : null,
+          border: isFollowing
+              ? Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1)
+              : null,
         ),
         child: isLoading
             ? const SizedBox(
                 width: 14,
                 height: 14,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 1.5),
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 1.5,
+                ),
               )
             : Text(
-                isFollowing ? 'Đang theo dõi' : AppLocalizations.of(context)!.feedFollowAction,
+                isFollowing
+                    ? 'Following'
+                    : AppLocalizations.of(context)!.feedFollowAction,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,

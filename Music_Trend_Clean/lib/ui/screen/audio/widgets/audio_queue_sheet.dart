@@ -55,32 +55,19 @@ class AudioQueueSheet extends ConsumerWidget {
                 child: _QueueHeader(
                   isShuffleEnabled: playerState.isShuffleEnabled,
                   isRepeatEnabled: playerState.isRepeatEnabled,
+                  canReplay: currentSong != null,
                   onClose: () => Navigator.of(context).pop(),
+                  onReplay: () {
+                    playerNotifier.replayCurrent();
+                  },
                   onShuffle: playerNotifier.toggleShuffle,
-                  onRepeat: playerNotifier.toggleRepeat,
-                ),
-              ),
-              if (recentlyPlayed.isNotEmpty) ...[
-                const SliverToBoxAdapter(child: SizedBox(height: 6)),
-                SliverList.builder(
-                  itemCount: recentlyPlayed.length,
-                  itemBuilder: (context, index) {
-                    final song = recentlyPlayed[index];
-                    return _QueueSongTile(
-                      song: song,
-                      reserveLeadingSpace: false,
-                      onTap: () => playerNotifier.playSong(
-                        song,
-                        playlist: playerState.playlist.isEmpty
-                            ? [song]
-                            : playerState.playlist,
-                      ),
-                    );
+                  onRepeat: () {
+                    playerNotifier.toggleRepeat();
                   },
                 ),
-              ],
+              ),
               if (currentSong != null) ...[
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                const SliverToBoxAdapter(child: SizedBox(height: 6)),
                 const SliverToBoxAdapter(
                   child: _SectionTitle('Currently playing'),
                 ),
@@ -93,7 +80,7 @@ class AudioQueueSheet extends ConsumerWidget {
                   ),
                 ),
               ],
-              const SliverToBoxAdapter(child: SizedBox(height: 26)),
+              const SliverToBoxAdapter(child: SizedBox(height: 22)),
               const SliverToBoxAdapter(child: _SectionTitle('Playing next')),
               if (nextSongs.isEmpty)
                 const SliverToBoxAdapter(
@@ -150,6 +137,25 @@ class AudioQueueSheet extends ConsumerWidget {
                     },
                   ),
                 ),
+              if (recentlyPlayed.isNotEmpty) ...[
+                const SliverToBoxAdapter(child: SizedBox(height: 18)),
+                const SliverToBoxAdapter(
+                  child: _SectionTitle('Recently played'),
+                ),
+                SliverList.builder(
+                  itemCount: recentlyPlayed.length,
+                  itemBuilder: (context, index) {
+                    final song = recentlyPlayed[index];
+                    return _QueueSongTile(
+                      song: song,
+                      reserveLeadingSpace: false,
+                      onTap: () =>
+                          playerNotifier.playSong(song, playlist: [song]),
+                    );
+                  },
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              ],
             ],
           ),
         );
@@ -162,14 +168,18 @@ class _QueueHeader extends StatelessWidget {
   const _QueueHeader({
     required this.isShuffleEnabled,
     required this.isRepeatEnabled,
+    required this.canReplay,
     required this.onClose,
+    required this.onReplay,
     required this.onShuffle,
     required this.onRepeat,
   });
 
   final bool isShuffleEnabled;
   final bool isRepeatEnabled;
+  final bool canReplay;
   final VoidCallback onClose;
+  final VoidCallback onReplay;
   final VoidCallback onShuffle;
   final VoidCallback onRepeat;
 
@@ -209,29 +219,73 @@ class _QueueHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              IconButton(
-                onPressed: onShuffle,
-                icon: Icon(
-                  Icons.shuffle_rounded,
-                  color: isShuffleEnabled
-                      ? FullPlayerColors.accent
-                      : AudioQueueSheet._muted,
-                  size: 23,
-                ),
+              _QueueModeButton(
+                tooltip: 'Phát lại bài hiện tại',
+                icon: Icons.replay_rounded,
+                isActive: false,
+                onPressed: canReplay ? onReplay : null,
               ),
-              IconButton(
+              const SizedBox(width: 6),
+              _QueueModeButton(
+                tooltip: isShuffleEnabled ? 'Tắt tráo bài' : 'Tráo bài',
+                icon: Icons.shuffle_rounded,
+                isActive: isShuffleEnabled,
+                onPressed: onShuffle,
+              ),
+              const SizedBox(width: 6),
+              _QueueModeButton(
+                tooltip: isRepeatEnabled
+                    ? 'Tắt lặp bài hiện tại'
+                    : 'Lặp bài hiện tại',
+                icon: Icons.repeat_rounded,
+                isActive: isRepeatEnabled,
                 onPressed: onRepeat,
-                icon: Icon(
-                  Icons.repeat_rounded,
-                  color: isRepeatEnabled
-                      ? FullPlayerColors.accent
-                      : AudioQueueSheet._muted,
-                  size: 23,
-                ),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _QueueModeButton extends StatelessWidget {
+  const _QueueModeButton({
+    required this.tooltip,
+    required this.icon,
+    required this.isActive,
+    required this.onPressed,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final bool isActive;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isActive ? FullPlayerColors.accent : AudioQueueSheet._muted;
+
+    return Tooltip(
+      message: tooltip,
+      child: IconButton(
+        onPressed: onPressed,
+        style: IconButton.styleFrom(
+          backgroundColor: isActive
+              ? FullPlayerColors.accent.withValues(alpha: 0.16)
+              : Colors.white.withValues(alpha: 0.06),
+          disabledBackgroundColor: Colors.white.withValues(alpha: 0.04),
+          fixedSize: const Size(38, 38),
+          minimumSize: const Size(38, 38),
+          padding: EdgeInsets.zero,
+        ),
+        icon: Icon(
+          icon,
+          color: onPressed == null
+              ? AudioQueueSheet._softMuted.withValues(alpha: 0.55)
+              : color,
+          size: 22,
+        ),
       ),
     );
   }

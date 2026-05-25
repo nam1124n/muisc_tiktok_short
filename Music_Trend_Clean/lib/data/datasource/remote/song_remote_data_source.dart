@@ -196,7 +196,9 @@ class SongRemoteDataSource {
     int limit = 20,
     SongPageCursor? startAfter,
   }) async {
-    if (followingIds.isEmpty) return const SongPageEntity(songs: [], hasMore: false, nextCursor: null);
+    if (followingIds.isEmpty) {
+      return const SongPageEntity(songs: [], hasMore: false, nextCursor: null);
+    }
 
     final targetIds = followingIds.take(10).toList();
 
@@ -211,12 +213,20 @@ class SongRemoteDataSource {
         .toList();
 
     songs.sort((a, b) {
-      final aDate = a.publishedAt ?? a.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-      final bDate = b.publishedAt ?? b.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final aDate =
+          a.publishedAt ??
+          a.updatedAt ??
+          DateTime.fromMillisecondsSinceEpoch(0);
+      final bDate =
+          b.publishedAt ??
+          b.updatedAt ??
+          DateTime.fromMillisecondsSinceEpoch(0);
       return bDate.compareTo(aDate);
     });
 
-    final startIdx = startAfter == null ? 0 : songs.indexWhere((s) => s.id == startAfter.id) + 1;
+    final startIdx = startAfter == null
+        ? 0
+        : songs.indexWhere((s) => s.id == startAfter.id) + 1;
     if (startIdx < 0 || startIdx >= songs.length) {
       return const SongPageEntity(songs: [], hasMore: false, nextCursor: null);
     }
@@ -246,15 +256,24 @@ class SongRemoteDataSource {
         .snapshots();
   }
 
-  Future<List<SongEntity>> fetchSongsByUploaderId(String uploaderId, {int limit = 10}) async {
-    final snapshot = await _db
+  Future<List<SongEntity>> fetchSongsByUploaderId(
+    String uploaderId, {
+    int limit = 10,
+    bool publishedOnly = true,
+  }) async {
+    var query = _db
         .collection(_songsCollection)
-        .where('uploaderId', isEqualTo: uploaderId)
-        .where('status', isEqualTo: SongStatuses.published)
-        .get();
+        .where('uploaderId', isEqualTo: uploaderId);
+
+    if (publishedOnly) {
+      query = query.where('status', isEqualTo: SongStatuses.published);
+    }
+
+    final snapshot = await query.get();
 
     final songs = snapshot.docs
         .map((doc) => SongModel.fromFirestore(doc.data(), doc.id))
+        .where((song) => !song.isArchived)
         .toList();
 
     songs.sort((a, b) => b.totalPlayCount.compareTo(a.totalPlayCount));

@@ -129,11 +129,16 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
       if (processingState == ProcessingState.completed) {
         unawaited(_flushCurrentProgress(markCompleted: true));
         _lastSyncedProgressBucket = -1;
-        if (state.playlist.isNotEmpty &&
+        if (state.isRepeatEnabled && state.currentSong != null) {
+          if (state.currentIndex >= 0 &&
+              state.currentIndex < state.playlist.length) {
+            playAtIndex(state.currentIndex);
+          } else {
+            playSong(state.currentSong!);
+          }
+        } else if (state.playlist.isNotEmpty &&
             state.currentIndex < state.playlist.length - 1) {
           next();
-        } else if (state.isRepeatEnabled && state.playlist.isNotEmpty) {
-          playAtIndex(0);
         } else {
           state = state.copyWith(isPlaying: false, position: Duration.zero);
           _audioPlayer.seek(Duration.zero);
@@ -198,7 +203,9 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
         duration: Duration.zero,
       );
 
-      await _audioPlayer.setLoopMode(loopSingle ? LoopMode.one : LoopMode.off);
+      // Queue progression, repeat, and shuffle are handled by this notifier.
+      // Keeping just_audio loop off lets completion events advance the app queue.
+      await _audioPlayer.setLoopMode(LoopMode.off);
       await _audioPlayer.setUrl(song.audioUrl);
       if (initialPosition > Duration.zero) {
         await _audioPlayer.seek(initialPosition);
@@ -332,8 +339,23 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
     );
   }
 
-  void toggleRepeat() {
-    state = state.copyWith(isRepeatEnabled: !state.isRepeatEnabled);
+  Future<void> toggleRepeat() async {
+    final enableRepeat = !state.isRepeatEnabled;
+    state = state.copyWith(isRepeatEnabled: enableRepeat);
+    // Queue repeat is handled in the completion listener so it can advance
+    // through the app playlist instead of looping just_audio's single source.
+    await _audioPlayer.setLoopMode(LoopMode.off);
+  }
+
+  Future<void> replayCurrent() async {
+    if (state.currentSong == null) {
+      return;
+    }
+
+    _lastSyncedProgressBucket = -1;
+    await _audioPlayer.seek(Duration.zero);
+    state = state.copyWith(position: Duration.zero);
+    await _audioPlayer.play();
   }
 
   Future<void> _trackListenIfNeeded(Duration position) async {
